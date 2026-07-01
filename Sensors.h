@@ -41,25 +41,25 @@ struct Mesures {
 };
 extern Mesures mesures;
 
-void Mesures_Init();
-void Mesures_Update();
+void mesures_Init();
+void mesures_Update();
 
-bool Check_Securites();
-bool Detection_Butee();
+bool check_Securites();
+bool detection_Butee();
 
-void Get_Tension();
-void Get_Courant();
-void Get_Meuble();
-void Get_Codeur_Porte();
-void Get_Codeur_Moteur();
-void Get_Potentiometre();
+void get_Tension();
+void get_Courant();
+void get_Meuble();
+void get_Codeur_Porte();
+void get_Codeur_Moteur();
+void get_Potentiometre();
 
-void Set_Consigne();
+void set_Consigne();
 
 // Fonctions internes
-void ISR_Codeur();
-int32_t Encoder_GetTicks();
-void Encoder_ResetTicks();
+void isr_Codeur();
+int32_t encoder_GetTicks();
+void encoder_ResetTicks();
 float add_Courant(float current);
 
 #endif

@@ -4,7 +4,7 @@ volatile unsigned prev_time_bt = 0; // Pour éviter l'effet bouncing du bouton
 volatile bool demandeBoutonTest = false;
 volatile bool demandeBoutonSansFil = false;
 
-void Boutons_Init() {
+void boutons_Init() {
     pinMode(TEST_BT, INPUT_PULLUP);
     pinMode(WIRELESS_BT, INPUT_PULLUP);
 
@@ -28,7 +28,7 @@ void wirelessBt() {
     }
 }
 
-bool Get_BoutonTest() {
+bool get_BoutonTest() {
     noInterrupts();
     bool demande = demandeBoutonTest;
     demandeBoutonTest = false;
@@ -36,7 +36,7 @@ bool Get_BoutonTest() {
     return demande;
 }
 
-bool Get_BoutonSansFil() {
+bool get_BoutonSansFil() {
     noInterrupts();
     bool demande = demandeBoutonSansFil;
     demandeBoutonSansFil = false;

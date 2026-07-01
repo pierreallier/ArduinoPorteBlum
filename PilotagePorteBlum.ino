@@ -7,8 +7,8 @@
 
 
 void setup() {
-    Mesures_Init(); // Initialisation des capteurs
-    Boutons_Init(); // Initialisation des boutons de contrôle
+    mesures_Init(); // Initialisation des capteurs
+    boutons_Init(); // Initialisation des boutons de contrôle
     
     pinMode(LED_BUILTIN, OUTPUT);
 
@@ -34,22 +34,22 @@ void ordonnanceur() {
     uint32_t maintenant = millis();
     if (maintenant - tAcq >= 100) {
         tAcq += 100;
-        Mesures_Update();
+        mesures_Update();
         tVerif = maintenant; // on saute volontairement le cycle 10 ms
     } else if (maintenant - tVerif >= 10) {
         tVerif += 10;   
-        if (Check_Securites()) {
+        if (check_Securites()) {
             etat = EtatMachine::ERREUR;
         }
         // Vérification des boutons de commande
-        if (Get_BoutonTest()) {
+        if (get_BoutonTest()) {
             if (etat == EtatMachine::REPOS)
                 changerEtat(EtatMachine::PILOTE);
             else
                 changerEtat(EtatMachine::DEBRAYAGE);
         }
 
-        if (Get_BoutonSansFil()) {
+        if (get_BoutonSansFil()) {
             if (etat == EtatMachine::REPOS) {
                 if (mesures.angle_porte > 100) {
                     tEtat = millis(); 
