@@ -1,5 +1,10 @@
+#include <Arduino.h>
+#include "Sensors.h"
+#include "Boutons.h"
+#include "Motor.h"
+
 /* Définitions des états du système */
-enum class EtatMachine {
+enum class EtatMachine : byte {
     INIT,
     REPOS,
     OUVERTURE,
@@ -10,144 +15,102 @@ enum class EtatMachine {
     ERREUR
 };
 
+EtatMachine etat = EtatMachine::INIT;
 
-struct SystemState {
-    EtatMachine etat = EtatMachine::INIT;
-    bool limiteHaute = false;
-    bool limiteBasse = false;
-
-    bool calibre = false;
-    float angleMini = 416;
-    float angleMaxi = 392;
-    float angleZero = 13;
-};
-
-SystemState systemState;
-
-/* Codeur porte */
-#define CODEUR_PORTE A4
-
-void CodeurPorte_Update() {
-    // Lecture du codeur
-    // TODO (Détecter ces valeurs par une méthode d'étalonnage du codeur)
-    int codeurValue = map(analogRead(CODEUR_PORTE),0,655,0,360.0)-12;
-    if (codeurValue > 210)
-        codeurValue -= 360;
-    systemState.limiteHaute = (codeurValue >= 180) ? HIGH : LOW;
-    systemState.limiteBasse = (codeurValue <= -135) ? HIGH : LOW;
-    // Serial.print(codeurValue);
-    // Serial.print(", limite haute=");
-    // Serial.print(systemState.limiteHaute);
-    // Serial.print(", limite basse=");
-    // Serial.println(systemState.limiteBasse);
-
-    if (systemState.limiteHaute || systemState.limiteBasse) {
-        systemState.etat = EtatMachine::ERREUR;
-    }
+void ChangerEtat(EtatMachine etat_demande) {
+    etat = etat_demande;
 }
-
-/* Boutons de controle */
-#define TEST_BT 2 // Bouton de mise en fonctionnement / arrêt
-#define WIRELESS_BT 3 // Bouton sans fil 
-volatile unsigned prev_time_bt = 0; // Pour éviter l'effot bouncing du bouton
-
-void toogleBt() {
-    // BOouton de test
-    if (millis() - prev_time_bt >= 250){
-        prev_time_bt = millis();
-        if (systemState.etat == EtatMachine::REPOS) {
-        systemState.etat = EtatMachine::PILOTE;
-        } else {
-        systemState.etat = EtatMachine::DEBRAYAGE;
-        }
-    }
-}
-
-void wirelessBt() {
-    // Bouton sans fil du système réel
-    if (millis() - prev_time_bt >= 250){
-        prev_time_bt = millis();
-        if (systemState.etat == EtatMachine::REPOS) {
-            systemState.etat = EtatMachine::PILOTE;
-        } else {
-            systemState.etat = EtatMachine::DEBRAYAGE;
-        }
-    }
-}
-
-
-unsigned long timer5ms = 0;
-unsigned long timer100ms = 0;
 
 void setup() {
-    // Bouton de mise en fonctionnement
-    pinMode(TEST_BT, INPUT_PULLUP);
-    pinMode(WIRELESS_BT, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(TEST_BT), toogleBt, FALLING);
-    attachInterrupt(digitalPinToInterrupt(WIRELESS_BT), wirelessBt, FALLING);
+    Mesures_Init(); // Initialisation des capteurs
+    Boutons_Init(); // Initialisation des boutons de contrôle
+    
     pinMode(LED_BUILTIN, OUTPUT);
 
+    // Initialisation du port série
     Serial.begin(9600);
     Serial.flush();
 
-    //Motor_Begin();
+    // Initialisation de la machine à états
+    etat = EtatMachine::INIT;
+}
 
-    systemState.etat = EtatMachine::INIT;
+uint32_t tEtat = 0;
+uint32_t tVerif = 0;
+uint32_t tAcq = 0;
 
-    Serial.println(F("Pilotage Porte Blum"));
+void ordonnanceur() {
+    // Tâches périodiques
+    uint32_t maintenant = millis();
+    if (maintenant - tAcq >= 100) {
+        tAcq += 100;
+        Mesures_Update();
+        tVerif = maintenant; // on saute volontairement le cycle 5 ms
+    } else if (maintenant - tVerif >= 5) {
+        tVerif += 5;   
+        if (Check_Securites()) {
+            etat = EtatMachine::ERREUR;
+        }
+        // Vérification des boutons de commande
+        if (Get_BoutonTest()) {
+            if (etat == EtatMachine::REPOS)
+                ChangerEtat(EtatMachine::PILOTE);
+            else
+                ChangerEtat(EtatMachine::DEBRAYAGE);
+        }
+
+        if (Get_BoutonSansFil()) {
+            if (etat == EtatMachine::REPOS) {
+                if (mesures.angle_porte > 100) {
+                    tEtat = millis(); 
+                    ChangerEtat(EtatMachine::OUVERTURE);
+                }
+                else {
+                    tEtat = millis(); 
+                    ChangerEtat(EtatMachine::FERMETURE);
+                }
+            }
+            else {
+                ChangerEtat(EtatMachine::DEBRAYAGE);
+            }
+        }
+    }
 }
 
 void loop() {
-    unsigned long maintenant = millis();
+    ordonnanceur();
+    machineEtat();
+    //communicationSerie();
+}
 
-    //-----------------------------
-    // Tâches rapides (5 ms)
-    //-----------------------------
-
-    if (maintenant - timer5ms >= 5)
-    {
-        timer5ms += 5;
-
-        CodeurPorte_Update();
-    }
-
-    //-----------------------------
-    // Tâches lentes (100 ms)
-    //-----------------------------
-
-    if (maintenant - timer100ms >= 100)
-    {
-        timer100ms += 100;
-
-        //Sensors_UpdateSlow();
-        //Communication_Task();
-    }
-    //-----------------------------
-    // Machine d'état principale
-    //-----------------------------
-
-    switch(systemState.etat)
-    {
+void machineEtat() {
+    switch(etat) {
         case EtatMachine::INIT:
-
-            //Motor_Stop();
-            systemState.etat = EtatMachine::REPOS;
+            Serial.println(F("Pilotage Porte Blum"));
+            ChangerEtat(EtatMachine::REPOS);
             break;
 
         case EtatMachine::REPOS:
-
+            Serial.println(F("En attente"));
             break;
 
         case EtatMachine::OUVERTURE:
-
+            Serial.println("Ouverture en cours");
+            if (millis() - tEtat >= 2000) {
+                ChangerEtat(EtatMachine::REPOS);
+            }
             break;
 
         case EtatMachine::FERMETURE:
-
+            Serial.println("Fermeture en cours");
+            if (millis() - tEtat >= 2000) {
+                ChangerEtat(EtatMachine::REPOS);
+            }
             break;
 
         case EtatMachine::PILOTE:
-            Serial.println("Pilotage demandé");
+            Serial.println("Pilotage");
+            digitalWrite(LED_BUILTIN, HIGH);
             break;
 
         case EtatMachine::CALIBRATION:
@@ -156,13 +119,15 @@ void loop() {
 
             break;
 
-        case EtatMachine::DEBRAYAGE:
+        case EtatMachine::DEBRAYAGE: // ou Arrêt
             Serial.println("Arret demandé");
-            systemState.etat = EtatMachine::REPOS;
+            digitalWrite(LED_BUILTIN, LOW);
+            ChangerEtat(EtatMachine::REPOS);
             break;
 
-        case EtatMachine::ERREUR:
-            //Motor_Stop();
+        default: // EtatMachine::ERREUR
+            Serial.println("En Erreur");
+            digitalWrite(LED_BUILTIN, LOW);
             break;
     }
 
