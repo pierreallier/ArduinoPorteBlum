@@ -61,6 +61,7 @@ void Mesures_Update() {
     Get_Codeur_Moteur();
     Get_Tension();
     Get_Meuble();
+    Get_Potentiometre();
 }
 
 float add_Courant(float current) {
