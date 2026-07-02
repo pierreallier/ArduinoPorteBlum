@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include "Sensors.h"
 #include "StateMachine.h"
+#include "Motor.h"
 
 extern Mesures mesures;
 

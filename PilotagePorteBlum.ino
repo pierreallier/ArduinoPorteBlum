@@ -9,6 +9,7 @@
 void setup() {
     mesures_Init(); // Initialisation des capteurs
     boutons_Init(); // Initialisation des boutons de contrôle
+    moteur_Init(); // Initialisation du moteur et du driver
     
     pinMode(LED_BUILTIN, OUTPUT);
 
@@ -18,11 +19,9 @@ void setup() {
     machineEtat_Init();
 }
 
-uint32_t tEtat = 0;
-
 void loop() {
     ordonnanceur();
-    machineEtat(tEtat);
+    machineEtat();
     comSerie_Task();
 }
 
@@ -39,7 +38,8 @@ void ordonnanceur() {
     } else if (maintenant - tVerif >= 10) {
         tVerif += 10;   
         if (check_Securites()) {
-            etat = EtatMachine::ERREUR;
+            //changerEtat(EtatMachine::ERREUR);
+            Serial.println(F("ERREUR : sécurité activée"));
         }
         // Vérification des boutons de commande
         if (get_BoutonTest()) {
@@ -51,12 +51,10 @@ void ordonnanceur() {
 
         if (get_BoutonSansFil()) {
             if (etat == EtatMachine::REPOS) {
-                if (mesures.angle_porte > 100) {
-                    tEtat = millis(); 
+                if (mesures.angle_porte < -100) {
                     changerEtat(EtatMachine::OUVERTURE);
                 }
                 else {
-                    tEtat = millis(); 
                     changerEtat(EtatMachine::FERMETURE);
                 }
             }

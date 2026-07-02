@@ -57,8 +57,8 @@ bool check_Securites() {
 }
 
 void mesures_Update() {
-    get_Codeur_Moteur();
     check_Securites();
+    get_Codeur_Moteur();
     get_Tension();
     get_Meuble();
     get_Potentiometre();
