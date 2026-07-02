@@ -28,6 +28,8 @@ void changerEtat(EtatMachine etat_demande) {
     } else {
         moteur_Disable();
     }
+    if (etat == EtatMachine::DEBRAYAGE) 
+        moteur_Debrayage();
 }
 
 void machineEtat() {
@@ -74,12 +76,11 @@ void machineEtat() {
             break;
 
         case EtatMachine::DEBRAYAGE: // ou Arrêt
-            moteur_Debrayage();
-
+            
             int32_t delta_angle = abs(mesures.angle_moteur - moteur.codeur_avant_debrayage);
             float delta_courant = abs(mesures.courant_moyen - moteur.courant_avant_debrayage)/mesures.courant_moyen;
 
-            if (millis() - time_etat >= 200 || delta_angle > 20 || delta_courant > 0.05) {
+            if (millis() - time_etat >= 100 || delta_angle > 100 || delta_courant > 0.5) {
                 Serial.println(F("Debrayage terminé"));
                 moteur_Stop();
                 changerEtat(EtatMachine::REPOS);

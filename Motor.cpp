@@ -75,9 +75,9 @@ void moteur_Debrayage() {
     moteur.codeur_avant_debrayage = mesures.angle_moteur;
     moteur.courant_avant_debrayage = mesures.courant_moyen;
     if (moteur.direction == MotorDir::OUVERTURE) {
-        moteur_SetSpeed(-50); // Apply a small reverse speed to stop the motor
+        moteur_SetSpeedDir(-150); // Apply a small reverse speed to stop the motor
     } else if (moteur.direction == MotorDir::FERMETURE) {
-        moteur_SetSpeed(50); // Apply a small forward speed to stop the motor
+        moteur_SetSpeedDir(150); // Apply a small forward speed to stop the motor
     }
 }
 
