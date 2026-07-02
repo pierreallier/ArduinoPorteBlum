@@ -7,7 +7,7 @@
 
 
 void setup() {
-    mesures_Init(); // Initialisation des capteurs
+    capteurs_Init(); // Initialisation des capteurs
     boutons_Init(); // Initialisation des boutons de contrôle
     moteur_Init(); // Initialisation du moteur et du driver
     

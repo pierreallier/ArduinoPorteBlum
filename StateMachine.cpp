@@ -1,6 +1,7 @@
 #include "StateMachine.h"
 #include "Sensors.h"
 #include "Motor.h"
+#include "ComSerie.h"
 
 EtatMachine etat;
 
@@ -14,6 +15,7 @@ void machineEtat_Init() {
 void changerEtat(EtatMachine etat_demande) {
     if (etat != etat_demande) {
         time_etat = millis();
+        comSerie_SendEtat(etat_demande);
     }
     etat = etat_demande;
     if (etat == EtatMachine::PILOTE || 
@@ -85,7 +87,6 @@ void machineEtat() {
             break;
 
         case EtatMachine::ERREUR:
-            Serial.println(F("ERREUR"));
             changerEtat(EtatMachine::DEBRAYAGE);
             break;
 

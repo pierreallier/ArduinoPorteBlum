@@ -12,6 +12,8 @@ void comSerie_Init();
 void comSerie_Task();
 void comSerie_PrintMesures();
 void comSerie_GetCommandes();
+void comSerie_sendMesures();
+void comSerie_SendEtat(EtatMachine etat);
 
 // interne
 void comSerie_SET(String commande);

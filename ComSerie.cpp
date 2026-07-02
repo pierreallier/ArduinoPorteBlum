@@ -9,7 +9,8 @@ void comSerie_Task() {
     static uint32_t precedent = 0;
     if (millis() - precedent >= 200) {
         precedent += 200;
-        comSerie_PrintMesures();
+        //comSerie_PrintMesures();
+        comSerie_sendMesures();
         comSerie_GetCommandes();
     }
 }
@@ -73,6 +74,32 @@ void comSerie_PrintMesures() {
     Serial.println(mesures.limite_basse ? "B" : "N");
 }
 
+void comSerie_sendMesures() {
+    Serial.print("M;");
+    Serial.print(mesures.time_mesures);
+    Serial.print(";");
+    Serial.print(mesures.tension);
+    Serial.print(";");
+    Serial.print(moteur.pwm);
+    Serial.print(";");
+    Serial.print(mesures.courant_moyen);
+    Serial.print(";");
+    Serial.print(mesures.angle_moteur);
+    Serial.print(";");
+    Serial.print(mesures.vitesse_moteur);
+    Serial.print(";");
+    Serial.print(mesures.angle_porte);
+    Serial.print(";");
+    Serial.print(mesures.limite_haute);
+    Serial.print(";");
+    Serial.println(mesures.limite_basse);  
+}
+
+void comSerie_SendEtat(EtatMachine etat){
+    Serial.print("S");
+    Serial.println((int)etat);
+}
+
 void comSerie_GetCommandes() {
     if (Serial.available() > 0) {
         String command = Serial.readStringUntil('\n');
@@ -85,7 +112,7 @@ void comSerie_GetCommandes() {
         } else if (command.startsWith("DO")) {
             comSerie_DO(command.substring(2));
         } else {
-            Serial.println("Commande inconnue {SET,GET,DO}.");
+            Serial.println("E;Commande inconnue {SET,GET,DO}.");
         }
     }
 }
@@ -114,5 +141,5 @@ void comSerie_DO(String commande) {
     else if (commande == "STOP")
         changerEtat(EtatMachine::DEBRAYAGE);
     else 
-        Serial.println("Commande DO inconnue {OUVRIR,FERMER,PILOTER,DEBRAYER,STOP}.");
+        Serial.println("E;Commande DO inconnue {OUVRIR,FERMER,PILOTER,DEBRAYER,STOP}.");
 }

@@ -1,27 +1,27 @@
 #include "Sensors.h"
 
-volatile int32_t ticks_codeur;
-volatile uint8_t etat_codeur; // ancien état AB (2 bits)
-const int8_t tableCodeur[16] = { // table de transition quadrature
-  0, -1,  1,  0,
-  1,  0,  0, -1,
-  -1,  0,  0,  1,
-  0,  1, -1,  0
-};
+volatile int32_t ticks_codeur=0;
 
+int courant_offset = 0;
 unsigned int courant_idx = 0;
 float courant_tab[NB_MOY_COURANT];
 unsigned long time_detection_butee = 0;
 
 Mesures mesures;
 
-void mesures_Init() {
+void capteurs_Init() {
     pinMode(CODEUR_PORTE, INPUT);
     pinMode(DETECTEUR_MEUBLE, INPUT);
     pinMode(MOTOR_VOLTAGE, INPUT);
     pinMode(MOTOR_CURRENT, INPUT);
     pinMode(DRIVER_CURRENT, INPUT);
     pinMode(POTENTIOMETRE, INPUT);
+
+    // Calcul offset courant
+    for (int i = 0; i < 500; i++) {
+        courant_offset += analogRead(MOTOR_CURRENT);
+    }
+    courant_offset /= 500;
 
     // Initialisation du tableau du courant
     for (int i=0; i < NB_MOY_COURANT; i++) {
@@ -31,10 +31,7 @@ void mesures_Init() {
     // Initialisation du codeur du moteur
     pinMode(CODEUR_A_PIN, INPUT_PULLUP);
     pinMode(CODEUR_B_PIN, INPUT_PULLUP);
-    etat_codeur = (PIND >> 2) & 0x03;
-    ticks_codeur = 0;
-    attachInterrupt(digitalPinToInterrupt(CODEUR_A_PIN), isr_Codeur, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(CODEUR_B_PIN), isr_Codeur, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(CODEUR_A_PIN), isr_Codeur, RISING);
 
     mesures.time_mesures = millis();
 }
@@ -87,7 +84,7 @@ void get_Tension() {
 }
 
 void get_Courant() {
-    float current = ((analogRead(MOTOR_CURRENT) / 1023.0) * 5.0 - (5.0/2)) / 0.185; // en A
+    float current = (analogRead(MOTOR_CURRENT) - courant_offset)*0.02641938126; // en A
     mesures.courant_moyen = add_Courant(current);
 }
 
@@ -99,9 +96,9 @@ void get_Codeur_Moteur() {
     float codeur_Delta_Pos = encoder_GetTicks();
     encoder_ResetTicks();
 
-    mesures.vitesse_moteur = ((3.141592*codeur_Delta_Pos)/128.)/(millis()-mesures.time_mesures)*1000.0; // en rad/s
+    mesures.vitesse_moteur = ((3.141592*codeur_Delta_Pos)/512.)/(millis()-mesures.time_mesures)*1000.0; // en rad/s
     mesures.time_mesures = millis();
-    mesures.angle_moteur += ((3.141592*codeur_Delta_Pos)/128.);
+    mesures.angle_moteur += codeur_Delta_Pos*0.3515625;
 }
 
 int32_t encoder_GetTicks() {
@@ -120,10 +117,7 @@ void encoder_ResetTicks() {
 
 void isr_Codeur() {
     // Gestion interruption du codeur
-    uint8_t etat = (PIND >> 2) & 0x03;
-    uint8_t index = (etat_codeur << 2) | etat;
-    ticks_codeur += tableCodeur[index];
-    etat_codeur = etat;
+    ticks_codeur += (PIND & _BV(PD2)) ? -1 : +1;
 }
 
 bool detection_Butee() {

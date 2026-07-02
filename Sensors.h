@@ -19,7 +19,7 @@ const float LIMITE_COURANT = 2;
 const unsigned int NB_MOY_COURANT = 5;
 
 // Détections butées
-const float COURANT_BUTEE = 2.8;      // A
+const float COURANT_BUTEE = 0.5;      // A
 const float VITESSE_BUTEE = 5;        // impulsions/10 ms
 const uint16_t TEMPS_BUTEE = 50;      // ms
 
@@ -41,7 +41,7 @@ struct Mesures {
 };
 extern Mesures mesures;
 
-void mesures_Init();
+void capteurs_Init();
 void mesures_Update();
 
 bool check_Securites();
