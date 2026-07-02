@@ -15,23 +15,22 @@ void comSerie_Task() {
 }
 
 void comSerie_PrintMesures() {
-    Serial.print("t: ");
     Serial.print(mesures.time_mesures);
-    Serial.print(" ms; U: ");
+    Serial.print(" , U (V):");
     Serial.print(mesures.tension);
-    Serial.print(" V; PWM: ");
+    Serial.print(" , PWM:");
     Serial.print(moteur.pwm);
-    Serial.print(" ; I: ");
+    Serial.print(" , I (A):");
     Serial.print(mesures.courant_moyen);
-    Serial.print(" A; Am: ");
+    Serial.print(" , Am (deg):");
     Serial.print(mesures.angle_moteur);
-    Serial.print(" deg; Wm: ");
+    Serial.print(" , Wm (imp/10ms):");
     Serial.print(mesures.vitesse_moteur);
-    Serial.print(" imp/10ms; Ap: ");
+    Serial.print(" , Ap (deg):");
     Serial.print(mesures.angle_porte);
-    Serial.print(" deg; P: ");
+    Serial.print(" , P:");
     Serial.print(mesures.potentiometre);
-    Serial.print("; E:");
+    Serial.print(" , E:");
     switch(etat) {
         case EtatMachine::INIT:
             Serial.print("INIT");
@@ -58,9 +57,9 @@ void comSerie_PrintMesures() {
             Serial.print("ERREUR");
             break;
     }
-    Serial.print("; M:");
+    Serial.print(" , M:");
     Serial.print(moteur.enabled ? "ON" : "OFF");
-    Serial.print("; D:");
+    Serial.print(" , D:");
     switch(moteur.direction) {
         case MotorDir::OUVERTURE:
             Serial.print("OUVERTURE");
@@ -69,7 +68,7 @@ void comSerie_PrintMesures() {
             Serial.print("FERMETURE");
             break;
     }
-    Serial.print("; L:");
+    Serial.print(" , L:");
     Serial.print(mesures.limite_haute ? "H" : "N");
     Serial.println(mesures.limite_basse ? "B" : "N");
 }

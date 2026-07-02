@@ -83,7 +83,7 @@ void get_Codeur_Porte() {
 }
 
 void get_Tension() {
-    mesures.tension = analogRead(MOTOR_VOLTAGE)*(25/(255*1023.)); // en V
+    mesures.tension = analogRead(MOTOR_VOLTAGE)*(25/1023.); // en V
 }
 
 void get_Courant() {

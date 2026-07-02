@@ -40,8 +40,8 @@ void machineEtat() {
 
         case EtatMachine::OUVERTURE:
             moteur_SetDirection(MotorDir::OUVERTURE);
-            moteur_SetSpeed(100);
-            if (millis() - time_etat >= 2000 || mesures.limite_haute || detection_Butee()) {
+            moteur_SetSpeed(abs(mesures.potentiometre));
+            if (mesures.limite_haute || detection_Butee()) {
                 moteur_Stop();
                 changerEtat(EtatMachine::DEBRAYAGE);
             }
@@ -49,8 +49,8 @@ void machineEtat() {
 
         case EtatMachine::FERMETURE:
             moteur_SetDirection(MotorDir::FERMETURE);
-            moteur_SetSpeed(100);
-            if (millis() - time_etat >= 2000 || mesures.limite_basse || detection_Butee()) {
+            moteur_SetSpeed(abs(mesures.potentiometre));
+            if (mesures.limite_basse || detection_Butee()) {
                 moteur_Stop();
                 changerEtat(EtatMachine::DEBRAYAGE);
             }

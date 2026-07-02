@@ -4,6 +4,7 @@
 Motor moteur;
 
 void moteur_Init() {
+    TCCR4B = (TCCR4B & 0b11111000) | 0x01;
     // Initialisation du moteur et du driver
     pinMode(PWM_REV_PIN, OUTPUT);
     pinMode(PWM_FOR_PIN, OUTPUT);

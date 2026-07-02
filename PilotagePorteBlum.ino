@@ -38,8 +38,7 @@ void ordonnanceur() {
     } else if (maintenant - tVerif >= 10) {
         tVerif += 10;   
         if (check_Securites()) {
-            //changerEtat(EtatMachine::ERREUR);
-            Serial.println(F("ERREUR : sécurité activée"));
+            // Vérification des limites angulaires et courant
         }
         // Vérification des boutons de commande
         if (get_BoutonTest()) {

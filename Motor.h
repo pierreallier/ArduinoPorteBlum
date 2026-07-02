@@ -3,8 +3,8 @@
 
 #include <Arduino.h>
 
-#define PWM_REV_PIN  4 // Pin de commande PWM pour la rotation inverse du moteur
-#define PWM_FOR_PIN  5 // Pin de commande PWM pour la rotation avant du moteur
+#define PWM_REV_PIN  6 // Pin de commande PWM pour la rotation inverse du moteur
+#define PWM_FOR_PIN  7 // Pin de commande PWM pour la rotation avant du moteur
 #define STBY_PIN 8  // Driver du moteur : Standby input
 
 enum class MotorDir :bool {
