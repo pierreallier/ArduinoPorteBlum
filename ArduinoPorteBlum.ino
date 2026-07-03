@@ -5,34 +5,31 @@
 #include "ComSerie.h"
 #include "Motor.h"
 
-extern Motor moteur;
-extern Sensors capteurs;
-extern StateMachine machine(moteur,capteurs);
-//Serial portserie;
+Motor moteur;
+Sensors capteurs;
+StateMachine machine(moteur, capteurs);
+ComSerie portserie(machine, moteur, capteurs);
 
 void setup() {
+    pinMode(LED_BUILTIN, OUTPUT);
+
     moteur.init(); // Initialisation du moteur et du driver
     capteurs.init(); // Initialisation des capteurs
     boutons_Init(); // Initialisation des boutons de contrôle
-    
-    pinMode(LED_BUILTIN, OUTPUT);
-
-    comSerie_Init(); // Initialisation du port série
-    
-    // Initialisation de la machine à états
-    machine.init();
+    portserie.init(); // Initialisation du port série
+    machine.init(); // Initialisation de la machine à états
 }
 
 void loop() {
-    ordonnanceur(capteurs);
+    ordonnanceur();
     machine.exec();
-    comSerie_Task();
+    portserie.task();
 }
 
 uint32_t tVerif = 0;
 uint32_t tAcq = 0;
 
-void ordonnanceur(Sensors capteurs) {
+void ordonnanceur() {
     // Tâches périodiques
     uint32_t maintenant = millis();
     if (maintenant - tAcq >= 100) {

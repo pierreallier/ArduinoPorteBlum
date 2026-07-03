@@ -56,7 +56,7 @@ void Motor::disable() {
     enabled = false;
 }
 
-void Motor::debrayage(Sensors capteurs) {
+void Motor::debrayage(Sensors& capteurs) {
     // Arrête le moteur en enregistrant quelques mesures
     codeur_avant_debrayage = capteurs.angle_moteur;
     courant_avant_debrayage = capteurs.courant_moyen;
@@ -73,7 +73,7 @@ void Motor::stop(){
     disable();
 }
 
-void Motor::update(Sensors capteurs) {
+void Motor::update(Sensors& capteurs) {
     // Met à jour l'état du moteur en fonction de la consigne et des capteurs
     if (enabled == true) {
         digitalWrite(STBY_PIN, HIGH); // Ensure the motor driver is enabled

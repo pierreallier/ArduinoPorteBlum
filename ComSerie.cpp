@@ -1,21 +1,24 @@
 #include "ComSerie.h"
 
-void comSerie_Init() {
+ComSerie::ComSerie(StateMachine& s, Motor& m, Sensors& c) : machine(s),moteur(m),capteurs(c) {
+
+}
+
+void ComSerie::init() {
     Serial.begin(115200);
     Serial.flush();
 }
 
-void comSerie_Task() {
-    static uint32_t precedent = 0;
-    if (millis() - precedent >= 200) {
-        precedent += 200;
-        //comSerie_PrintMesures();
-        comSerie_sendMesures();
-        comSerie_GetCommandes();
+void ComSerie::task() {
+    if (millis() - time_precedent >= 200) {
+        time_precedent += 200;
+        printMesures();
+        sendMesures();
+        getCommandes();
     }
 }
 
-void comSerie_PrintMesures() {
+void ComSerie::printMesures() {
     Serial.print(capteurs.time_mesures);
     Serial.print(" , U (V):");
     Serial.print(capteurs.tension);
@@ -74,7 +77,7 @@ void comSerie_PrintMesures() {
     Serial.println(capteurs.limite_basse ? "B" : "N");
 }
 
-void comSerie_sendMesures() {
+void ComSerie::sendMesures() {
     Serial.print("M;");
     Serial.print(capteurs.time_mesures);
     Serial.print(";");
@@ -95,29 +98,29 @@ void comSerie_sendMesures() {
     Serial.println(capteurs.limite_basse);  
 }
 
-void comSerie_SendEtat(StateMachine::ETAT etat){
+void ComSerie::sendEtat(StateMachine::ETAT etat){
     Serial.print("S");
     Serial.println((int)etat);
 }
 
-void comSerie_GetCommandes() {
+void ComSerie::getCommandes() {
     if (Serial.available() > 0) {
         String command = Serial.readStringUntil('\n');
         command.trim(); // Supprime les espaces et les retours à la ligne
 
         if (command.startsWith("SET")) {
-            comSerie_SET(command.substring(3));
+            _SET(command.substring(3));
         } else if (command.startsWith("GET")) {
-            comSerie_GET(command.substring(3));
+            _GET(command.substring(3));
         } else if (command.startsWith("DO")) {
-            comSerie_DO(command.substring(2));
+            _DO(command.substring(2));
         } else {
             Serial.println("E;Commande inconnue {SET,GET,DO}.");
         }
     }
 }
 
-void comSerie_SET(String commande) {
+void ComSerie::_SET(String commande) {
     commande.trim(); // Supprime les espaces et les retours à la ligne
     commande.toUpperCase(); // Convertit la commande
     if (commande == "PILOTAGE") {
@@ -127,12 +130,12 @@ void comSerie_SET(String commande) {
         Serial.println("E;Commande SET inconnue");
 }
 
-void comSerie_GET(String commande) {
+void ComSerie::_GET(String commande) {
     commande.trim(); // Supprime les espaces et les retours à la ligne
     commande.toUpperCase(); // Convertit la commande
 }
 
-void comSerie_DO(String commande) {
+void ComSerie::_DO(String commande) {
     commande.trim(); // Supprime les espaces et les retours à la ligne
     commande.toUpperCase(); // Convertit la commande
     // if (commande == "OUVRIR")

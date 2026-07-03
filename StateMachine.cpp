@@ -3,13 +3,8 @@
 #include "ComSerie.h"
 #include "Pilotage.h"
 
-Motor moteur;
-Sensors capteurs;
-
-StateMachine::StateMachine(Motor m, Sensors c) {
+StateMachine::StateMachine(Motor& m, Sensors& c) : moteur(m), capteurs(c) {
     etat = StateMachine::ETAT::INIT;
-    moteur = m;
-    capteurs = c;
     time_etat = millis();
 }
 

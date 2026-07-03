@@ -24,14 +24,14 @@ class StateMachine {
         ETAT etat;
         uint32_t time_etat;
 
-        StateMachine(Motor m, Sensors c);
+        StateMachine(Motor& m, Sensors& c);
         void init();
         void changerEtat(StateMachine::ETAT etat_demande);
         void exec();
     
     private:
-        Motor moteur;
-        Sensors capteurs;
+        Motor& moteur;
+        Sensors& capteurs;
     
 };
 
