@@ -6,11 +6,12 @@
 #include "Motor.h"
 
 extern Moteur moteur;
+extern Capteurs capteurs;
 //Serial portserie;
 
 void setup() {
     moteur.init(); // Initialisation du moteur et du driver
-    capteurs_Init(); // Initialisation des capteurs
+    capteurs.init(); // Initialisation des capteurs
     boutons_Init(); // Initialisation des boutons de contrôle
     
     pinMode(LED_BUILTIN, OUTPUT);
@@ -22,7 +23,7 @@ void setup() {
 }
 
 void loop() {
-    ordonnanceur();
+    ordonnanceur(capteurs);
     machineEtat();
     comSerie_Task();
 }
@@ -30,16 +31,16 @@ void loop() {
 uint32_t tVerif = 0;
 uint32_t tAcq = 0;
 
-void ordonnanceur() {
+void ordonnanceur(Capteurs capteurs) {
     // Tâches périodiques
     uint32_t maintenant = millis();
     if (maintenant - tAcq >= 100) {
         tAcq += 100;
-        mesures_Update();
+        capteurs.mesures();
         tVerif = maintenant; // on saute volontairement le cycle 10 ms
     } else if (maintenant - tVerif >= 10) {
         tVerif += 10;   
-        if (check_Securites()) {
+        if (capteurs.checkSecurites()) {
             // Vérification des limites angulaires et courant
         }
         // Vérification des boutons de commande
@@ -52,7 +53,7 @@ void ordonnanceur() {
 
         if (get_BoutonSansFil()) {
             if (etat == EtatMachine::REPOS) {
-                if (mesures.angle_porte < -100) {
+                if (capteurs.angle_porte < -100) {
                     changerEtat(EtatMachine::OUVERTURE);
                 }
                 else {

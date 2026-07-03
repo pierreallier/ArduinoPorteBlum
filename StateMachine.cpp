@@ -5,6 +5,7 @@
 
 EtatMachine etat;
 Moteur moteur;
+Capteurs capteurs;
 
 uint32_t time_etat;
 
@@ -31,7 +32,7 @@ void changerEtat(EtatMachine etat_demande) {
         moteur.disable();
     }
     if (etat == EtatMachine::DEBRAYAGE) 
-        moteur.debrayage();
+        moteur.debrayage(capteurs);
 }
 
 void machineEtat() {
@@ -46,8 +47,8 @@ void machineEtat() {
 
         case EtatMachine::OUVERTURE:
             moteur.setDirection(MotorDir::OUVERTURE);
-            moteur.setSpeed(abs(mesures.potentiometre));
-            if (mesures.limite_haute || detection_Butee()) {
+            moteur.setSpeed(abs(capteurs.potentiometre));
+            if (capteurs.limite_haute || capteurs.detectionButees()) {
                 moteur.stop();
                 changerEtat(EtatMachine::DEBRAYAGE);
             }
@@ -55,15 +56,15 @@ void machineEtat() {
 
         case EtatMachine::FERMETURE:
             moteur.setDirection(MotorDir::FERMETURE);
-            moteur.setSpeed(abs(mesures.potentiometre));
-            if (mesures.limite_basse || detection_Butee()) {
+            moteur.setSpeed(abs(capteurs.potentiometre));
+            if (capteurs.limite_basse || capteurs.detectionButees()) {
                 moteur.stop();
                 changerEtat(EtatMachine::DEBRAYAGE);
             }
             break;
 
         case EtatMachine::PILOTE:
-            if (!detection_Butee()) {
+            if (!capteurs.detectionButees()) {
                 pilotage_Update();
             } else {
                 moteur.stop();
@@ -79,8 +80,8 @@ void machineEtat() {
 
         case EtatMachine::DEBRAYAGE: // ou Arrêt
             
-            int32_t delta_angle = abs(mesures.angle_moteur - moteur.codeur_avant_debrayage);
-            float delta_courant = abs(mesures.courant_moyen - moteur.courant_avant_debrayage)/mesures.courant_moyen;
+            int32_t delta_angle = abs(capteurs.angle_moteur - moteur.codeur_avant_debrayage);
+            float delta_courant = abs(1 - moteur.courant_avant_debrayage/capteurs.courant_moyen);
 
             if (millis() - time_etat >= 100 || delta_angle > 100 || delta_courant > 0.5) {
                 Serial.println(F("Debrayage terminé"));
@@ -97,5 +98,5 @@ void machineEtat() {
             moteur.stop();
             break;
     }
-    moteur.update();
+    moteur.update(capteurs);
 }
