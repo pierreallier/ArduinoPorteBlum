@@ -1,106 +1,95 @@
 #include "Motor.h"
 #include "Sensors.h"
 
-Motor moteur;
+Moteur::Moteur() {
+    pwm = 0;
+    codeur_avant_debrayage = 0;
+    courant_avant_debrayage = 0.0;
+    enabled = false;
+    direction = MotorDir::OUVERTURE;
+}
 
-void moteur_Init() {
+void Moteur::init() {
     TCCR4B = (TCCR4B & 0b11111000) | 0x01;
     // Initialisation du moteur et du driver
     pinMode(PWM_REV_PIN, OUTPUT);
     pinMode(PWM_FOR_PIN, OUTPUT);
     pinMode(STBY_PIN, OUTPUT);
     pinMode(LED_BUILTIN, OUTPUT);
-    moteur_Disable();
-    moteur.enabled = false;
-    moteur.pwm = 0;
-    moteur.direction = MotorDir::OUVERTURE;
+    disable();
+    enabled = false;
+    pwm = 0;
+    direction = MotorDir::OUVERTURE;
 }
 
-void moteur_SetDirection(MotorDir dir) {
+void Moteur::setDirection(MotorDir dir) {
     // Définit la direction du moteur
-    moteur.direction = dir;
+    direction = dir;
 }
 
-void moteur_Start() {
+void Moteur::start() {
     // Démarre le moteur
-    moteur_Enable();
+    enable();
 }
 
-void moteur_SetSpeed(int speed) {
+void Moteur::setSpeed(int speed) {
     // Définit la vitesse du moteur (0 - 255)
     speed = constrain(speed, 0, 255);
-    //if (moteur.direction == MotorDir::FERMETURE) {
-        //analogWrite(PWM_REV_PIN, speed);
-        //analogWrite(PWM_FOR_PIN, 0);
-    //} else if (moteur.direction == MotorDir::OUVERTURE) {
-        //analogWrite(PWM_FOR_PIN, speed);
-        //analogWrite(PWM_REV_PIN, 0);
-    //}
-    moteur.pwm = speed;
+    pwm = speed;
 }
 
-void moteur_SetSpeedDir(int speed) {
+void Moteur::setSpeedDir(int speed) {
     speed = constrain(speed, -255, 255);
     if (speed < 0) {
-        moteur_SetDirection(MotorDir::FERMETURE);
-        //analogWrite(PWM_REV_PIN, -speed);
-        //analogWrite(PWM_FOR_PIN, 0);
-        moteur.pwm = -speed;
+        setDirection(MotorDir::FERMETURE);
+        pwm = -speed;
     } else {
-        moteur_SetDirection(MotorDir::OUVERTURE);
-        //analogWrite(PWM_FOR_PIN, speed);
-        //analogWrite(PWM_REV_PIN, 0);
-        moteur.pwm = speed;
+        setDirection(MotorDir::OUVERTURE);
+        pwm = speed;
     }
 }
 
-void moteur_Enable() {
+void Moteur::enable() {
     // Active le moteur
-    //digitalWrite(STBY_PIN, HIGH); // Enable the motor driver
-    //digitalWrite(LED_BUILTIN, HIGH); // Turn on the built-in LED to indicate that the motor is enabled
-    moteur.enabled = true;
+    enabled = true;
 }
 
-void moteur_Disable() {
+void Moteur::disable() {
     // Désactive le moteur
-    //digitalWrite(STBY_PIN, LOW); // Disable the motor driver
-    //digitalWrite(PWM_REV_PIN, LOW);
-    //digitalWrite(PWM_FOR_PIN, LOW);
-    //digitalWrite(LED_BUILTIN, LOW); // Turn off the built-in LED to indicate that the motor is disabled
-    moteur.enabled = false;
+    enabled = false;
 }
 
-void moteur_Debrayage() {
-    // Arrête le moteur
-    moteur.codeur_avant_debrayage = mesures.angle_moteur;
-    moteur.courant_avant_debrayage = mesures.courant_moyen;
-    if (moteur.direction == MotorDir::OUVERTURE) {
-        moteur_SetSpeedDir(-150); // Apply a small reverse speed to stop the motor
-    } else if (moteur.direction == MotorDir::FERMETURE) {
-        moteur_SetSpeedDir(150); // Apply a small forward speed to stop the motor
+void Moteur::debrayage() {
+    // Arrête le moteur en enregistrant quelques mesures
+    codeur_avant_debrayage = mesures.angle_moteur;
+    courant_avant_debrayage = mesures.courant_moyen;
+    if (direction == MotorDir::OUVERTURE) {
+       setSpeedDir(-150); // Apply a small reverse speed to stop the motor
+    } else if (direction == MotorDir::FERMETURE) {
+        setSpeedDir(150); // Apply a small forward speed to stop the motor
     }
 }
 
-void moteur_Stop(){
+void Moteur::stop(){
     // Arrête le moteur
-    moteur_SetSpeed(0);
-    moteur_Disable();
+    setSpeed(0);
+    disable();
 }
 
-void moteur_Task() {
+void Moteur::update() {
     // Met à jour l'état du moteur en fonction de la consigne et des capteurs
-    if (moteur.enabled == true) {
+    if (enabled == true) {
         digitalWrite(STBY_PIN, HIGH); // Ensure the motor driver is enabled
-        digitalWrite(LED_BUILTIN, HIGH); // Turn on the built-in LED to indicate that the motor is enabled
+        digitalWrite(LED_BUILTIN, HIGH); // Indicate motor enabled
     } else {
         digitalWrite(STBY_PIN, LOW); // Ensure the motor driver is disabled
-        digitalWrite(LED_BUILTIN, LOW); // Turn off the built-in LED to indicate that the motor is disabled
+        digitalWrite(LED_BUILTIN, LOW); // Indicate motor disabled
     }
-    if (moteur.direction == MotorDir::OUVERTURE && !mesures.limite_haute) {
-        analogWrite(PWM_FOR_PIN, moteur.pwm);
+    if (direction == MotorDir::OUVERTURE && !mesures.limite_haute) {
+        analogWrite(PWM_FOR_PIN, pwm);
         analogWrite(PWM_REV_PIN, 0);
-    } else if (moteur.direction == MotorDir::FERMETURE && !mesures.limite_basse) {
-        analogWrite(PWM_REV_PIN, moteur.pwm);
+    } else if (direction == MotorDir::FERMETURE && !mesures.limite_basse) {
+        analogWrite(PWM_REV_PIN, pwm);
         analogWrite(PWM_FOR_PIN, 0);
     } else {
         analogWrite(PWM_FOR_PIN, 0);

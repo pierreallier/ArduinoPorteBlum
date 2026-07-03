@@ -19,8 +19,8 @@ void comSerie_PrintMesures() {
     Serial.print(mesures.time_mesures);
     Serial.print(" , U (V):");
     Serial.print(mesures.tension);
-    Serial.print(" , PWM:");
-    Serial.print(moteur.pwm);
+    //Serial.print(" , PWM:");
+    //Serial.print(moteur.pwm);
     Serial.print(" , I (A):");
     Serial.print(mesures.courant_moyen);
     Serial.print(" , Am (deg):");
@@ -58,17 +58,17 @@ void comSerie_PrintMesures() {
             Serial.print("ERREUR");
             break;
     }
-    Serial.print(" , M:");
-    Serial.print(moteur.enabled ? "ON" : "OFF");
+    //Serial.print(" , M:");
+    //Serial.print(moteur.enabled ? "ON" : "OFF");
     Serial.print(" , D:");
-    switch(moteur.direction) {
-        case MotorDir::OUVERTURE:
-            Serial.print("OUVERTURE");
-            break;
-        case MotorDir::FERMETURE:
-            Serial.print("FERMETURE");
-            break;
-    }
+    // switch(moteur.direction) {
+    //     case MotorDir::OUVERTURE:
+    //         Serial.print("OUVERTURE");
+    //         break;
+    //     case MotorDir::FERMETURE:
+    //         Serial.print("FERMETURE");
+    //         break;
+    // }
     Serial.print(" , L:");
     Serial.print(mesures.limite_haute ? "H" : "N");
     Serial.println(mesures.limite_basse ? "B" : "N");
@@ -80,8 +80,8 @@ void comSerie_sendMesures() {
     Serial.print(";");
     Serial.print(mesures.tension);
     Serial.print(";");
-    Serial.print(moteur.pwm);
-    Serial.print(";");
+    //Serial.print(moteur.pwm);
+    //Serial.print(";");
     Serial.print(mesures.courant_moyen);
     Serial.print(";");
     Serial.print(mesures.angle_moteur);

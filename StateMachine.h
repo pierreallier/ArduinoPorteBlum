@@ -2,6 +2,7 @@
 #define STATEMACHINE_H
 
 #include <Arduino.h>
+#include "Motor.h"
 
 enum class EtatMachine : byte {
     INIT=0,
@@ -14,17 +15,9 @@ enum class EtatMachine : byte {
     ERREUR=7
 };
 
-enum class ModePilotage {
-    PWM,
-    POSITION,
-    VITESSE
-};
-
-extern ModePilotage modePilotage;
-
 extern EtatMachine etat;
 
-void machineEtat_Init();
+void machineEtat_Init(Moteur m);
 void changerEtat(EtatMachine etat_demande);
 void machineEtat();
 

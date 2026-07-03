@@ -5,18 +5,20 @@
 #include "ComSerie.h"
 #include "Motor.h"
 
+extern Moteur moteur;
+//Serial portserie;
 
 void setup() {
+    moteur.init(); // Initialisation du moteur et du driver
     capteurs_Init(); // Initialisation des capteurs
     boutons_Init(); // Initialisation des boutons de contrôle
-    moteur_Init(); // Initialisation du moteur et du driver
     
     pinMode(LED_BUILTIN, OUTPUT);
 
     comSerie_Init(); // Initialisation du port série
     
     // Initialisation de la machine à états
-    machineEtat_Init();
+    machineEtat_Init(moteur);
 }
 
 void loop() {

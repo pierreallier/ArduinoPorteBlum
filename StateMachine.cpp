@@ -1,17 +1,16 @@
 #include "StateMachine.h"
 #include "Sensors.h"
-#include "Motor.h"
 #include "ComSerie.h"
 #include "Pilotage.h"
 
 EtatMachine etat;
-ModePilotage pilotage;
+Moteur moteur;
 
 uint32_t time_etat;
 
-void machineEtat_Init() {
+void machineEtat_Init(Moteur m) {
     etat = EtatMachine::INIT;
-    pilotage = ModePilotage::PWM;
+    moteur = m;
     time_etat = millis();
 }
 
@@ -27,12 +26,12 @@ void changerEtat(EtatMachine etat_demande) {
         etat == EtatMachine::CALIBRATION || 
         etat == EtatMachine::DEBRAYAGE) 
     {
-        moteur_Enable();
+        moteur.enable();
     } else {
-        moteur_Disable();
+        moteur.disable();
     }
     if (etat == EtatMachine::DEBRAYAGE) 
-        moteur_Debrayage();
+        moteur.debrayage();
 }
 
 void machineEtat() {
@@ -46,19 +45,19 @@ void machineEtat() {
             break;
 
         case EtatMachine::OUVERTURE:
-            moteur_SetDirection(MotorDir::OUVERTURE);
-            moteur_SetSpeed(abs(mesures.potentiometre));
+            moteur.setDirection(MotorDir::OUVERTURE);
+            moteur.setSpeed(abs(mesures.potentiometre));
             if (mesures.limite_haute || detection_Butee()) {
-                moteur_Stop();
+                moteur.stop();
                 changerEtat(EtatMachine::DEBRAYAGE);
             }
             break;
 
         case EtatMachine::FERMETURE:
-            moteur_SetDirection(MotorDir::FERMETURE);
-            moteur_SetSpeed(abs(mesures.potentiometre));
+            moteur.setDirection(MotorDir::FERMETURE);
+            moteur.setSpeed(abs(mesures.potentiometre));
             if (mesures.limite_basse || detection_Butee()) {
-                moteur_Stop();
+                moteur.stop();
                 changerEtat(EtatMachine::DEBRAYAGE);
             }
             break;
@@ -67,7 +66,7 @@ void machineEtat() {
             if (!detection_Butee()) {
                 pilotage_Update();
             } else {
-                moteur_Stop();
+                moteur.stop();
                 changerEtat(EtatMachine::DEBRAYAGE);
             }
             break;
@@ -85,7 +84,7 @@ void machineEtat() {
 
             if (millis() - time_etat >= 100 || delta_angle > 100 || delta_courant > 0.5) {
                 Serial.println(F("Debrayage terminé"));
-                moteur_Stop();
+                moteur.stop();
                 changerEtat(EtatMachine::REPOS);
             }
             break;
@@ -95,8 +94,8 @@ void machineEtat() {
             break;
 
         default:
-            moteur_Stop();
+            moteur.stop();
             break;
     }
-    moteur_Task();
+    moteur.update();
 }
