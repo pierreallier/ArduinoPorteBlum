@@ -5,7 +5,7 @@
 #include "ComSerie.h"
 #include "Motor.h"
 
-extern Moteur moteur;
+extern Motor moteur;
 extern Capteurs capteurs;
 extern StateMachine machine(moteur,capteurs);
 //Serial portserie;
@@ -46,23 +46,23 @@ void ordonnanceur(Capteurs capteurs) {
         }
         // Vérification des boutons de commande
         if (get_BoutonTest()) {
-            if (machine.etat == EtatMachine::REPOS)
-                machine.changerEtat(EtatMachine::PILOTE);
+            if (machine.etat == StateMachine::ETAT::REPOS)
+                machine.changerEtat(StateMachine::ETAT::PILOTE);
             else
-                machine.changerEtat(EtatMachine::DEBRAYAGE);
+                machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
         }
 
         if (get_BoutonSansFil()) {
-            if (machine.etat == EtatMachine::REPOS) {
+            if (machine.etat == StateMachine::ETAT::REPOS) {
                 if (capteurs.angle_porte < -100) {
-                    machine.changerEtat(EtatMachine::OUVERTURE);
+                    machine.changerEtat(StateMachine::ETAT::OUVERTURE);
                 }
                 else {
-                    machine.changerEtat(EtatMachine::FERMETURE);
+                    machine.changerEtat(StateMachine::ETAT::FERMETURE);
                 }
             }
             else {
-                machine.changerEtat(EtatMachine::DEBRAYAGE);
+                machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
             }
         }
     }

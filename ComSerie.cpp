@@ -62,10 +62,10 @@ void comSerie_PrintMesures() {
     Serial.print(moteur.isEnabled() ? "ON" : "OFF");
     Serial.print(" , D:");
     switch(moteur.getDirection()) {
-        case MotorDir::OUVERTURE:
+        case Motor::DIR::OUVERTURE:
             Serial.print("OUVERTURE");
             break;
-        case MotorDir::FERMETURE:
+        case Motor::DIR::FERMETURE:
             Serial.print("FERMETURE");
             break;
     }
@@ -95,7 +95,7 @@ void comSerie_sendMesures() {
     Serial.println(capteurs.limite_basse);  
 }
 
-void comSerie_SendEtat(EtatMachine etat){
+void comSerie_SendEtat(StateMachine::ETAT etat){
     Serial.print("S");
     Serial.println((int)etat);
 }
