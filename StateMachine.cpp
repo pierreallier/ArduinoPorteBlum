@@ -7,18 +7,23 @@ EtatMachine etat;
 Moteur moteur;
 Capteurs capteurs;
 
-uint32_t time_etat;
 
-void machineEtat_Init(Moteur m) {
+StateMachine::StateMachine(Moteur m, Capteurs c) {
     etat = EtatMachine::INIT;
     moteur = m;
+    capteurs = c;
     time_etat = millis();
 }
 
-void changerEtat(EtatMachine etat_demande) {
+void StateMachine::init() {
+    etat = EtatMachine::INIT;
+    time_etat = millis();
+}
+
+void StateMachine::changerEtat(EtatMachine etat_demande) {
     if (etat != etat_demande) {
         time_etat = millis();
-        comSerie_SendEtat(etat_demande);
+        //comSerie_SendEtat(etat_demande);
     }
     etat = etat_demande;
     if (etat == EtatMachine::PILOTE || 
@@ -35,7 +40,7 @@ void changerEtat(EtatMachine etat_demande) {
         moteur.debrayage(capteurs);
 }
 
-void machineEtat() {
+void StateMachine::exec() {
     switch(etat) {
         case EtatMachine::INIT:
             Serial.println(F("Pilotage Porte Blum"));

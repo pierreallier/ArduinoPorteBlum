@@ -7,6 +7,7 @@
 
 extern Moteur moteur;
 extern Capteurs capteurs;
+extern StateMachine machine(moteur,capteurs);
 //Serial portserie;
 
 void setup() {
@@ -19,12 +20,12 @@ void setup() {
     comSerie_Init(); // Initialisation du port série
     
     // Initialisation de la machine à états
-    machineEtat_Init(moteur);
+    machine.init();
 }
 
 void loop() {
     ordonnanceur(capteurs);
-    machineEtat();
+    machine.exec();
     comSerie_Task();
 }
 
@@ -45,23 +46,23 @@ void ordonnanceur(Capteurs capteurs) {
         }
         // Vérification des boutons de commande
         if (get_BoutonTest()) {
-            if (etat == EtatMachine::REPOS)
-                changerEtat(EtatMachine::PILOTE);
+            if (machine.etat == EtatMachine::REPOS)
+                machine.changerEtat(EtatMachine::PILOTE);
             else
-                changerEtat(EtatMachine::DEBRAYAGE);
+                machine.changerEtat(EtatMachine::DEBRAYAGE);
         }
 
         if (get_BoutonSansFil()) {
-            if (etat == EtatMachine::REPOS) {
+            if (machine.etat == EtatMachine::REPOS) {
                 if (capteurs.angle_porte < -100) {
-                    changerEtat(EtatMachine::OUVERTURE);
+                    machine.changerEtat(EtatMachine::OUVERTURE);
                 }
                 else {
-                    changerEtat(EtatMachine::FERMETURE);
+                    machine.changerEtat(EtatMachine::FERMETURE);
                 }
             }
             else {
-                changerEtat(EtatMachine::DEBRAYAGE);
+                machine.changerEtat(EtatMachine::DEBRAYAGE);
             }
         }
     }

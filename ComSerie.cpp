@@ -31,33 +31,33 @@ void comSerie_PrintMesures() {
     Serial.print(capteurs.angle_porte);
     Serial.print(" , P:");
     Serial.print(capteurs.potentiometre);
-    Serial.print(" , E:");
-    switch(etat) {
-        case EtatMachine::INIT:
-            Serial.print("INIT");
-            break;
-        case EtatMachine::REPOS:
-            Serial.print("REPOS");
-            break;
-        case EtatMachine::OUVERTURE:
-            Serial.print("OUVERTURE");
-            break;
-        case EtatMachine::FERMETURE:
-            Serial.print("FERMETURE");
-            break;
-        case EtatMachine::PILOTE:
-            Serial.print("PILOTE");
-            break;
-        case EtatMachine::CALIBRATION:
-            Serial.print("CALIBRATION");
-            break;
-        case EtatMachine::DEBRAYAGE:
-            Serial.print("DEBRAYAGE");
-            break;
-        case EtatMachine::ERREUR:
-            Serial.print("ERREUR");
-            break;
-    }
+    // Serial.print(" , E:");
+    // switch(etat) {
+    //     case EtatMachine::INIT:
+    //         Serial.print("INIT");
+    //         break;
+    //     case EtatMachine::REPOS:
+    //         Serial.print("REPOS");
+    //         break;
+    //     case EtatMachine::OUVERTURE:
+    //         Serial.print("OUVERTURE");
+    //         break;
+    //     case EtatMachine::FERMETURE:
+    //         Serial.print("FERMETURE");
+    //         break;
+    //     case EtatMachine::PILOTE:
+    //         Serial.print("PILOTE");
+    //         break;
+    //     case EtatMachine::CALIBRATION:
+    //         Serial.print("CALIBRATION");
+    //         break;
+    //     case EtatMachine::DEBRAYAGE:
+    //         Serial.print("DEBRAYAGE");
+    //         break;
+    //     case EtatMachine::ERREUR:
+    //         Serial.print("ERREUR");
+    //         break;
+    // }
     Serial.print(" , M:");
     Serial.print(moteur.isEnabled() ? "ON" : "OFF");
     Serial.print(" , D:");
@@ -135,16 +135,16 @@ void comSerie_GET(String commande) {
 void comSerie_DO(String commande) {
     commande.trim(); // Supprime les espaces et les retours à la ligne
     commande.toUpperCase(); // Convertit la commande
-    if (commande == "OUVRIR")
-        changerEtat(EtatMachine::OUVERTURE);
-    else if (commande == "FERMER")
-        changerEtat(EtatMachine::FERMETURE);
-    else if (commande == "PILOTER")
-        changerEtat(EtatMachine::PILOTE);
-    else if (commande == "DEBRAYER")
-        changerEtat(EtatMachine::DEBRAYAGE);
-    else if (commande == "STOP")
-        changerEtat(EtatMachine::DEBRAYAGE);
-    else 
-        Serial.println("E;Commande DO inconnue {OUVRIR,FERMER,PILOTER,DEBRAYER,STOP}.");
+    // if (commande == "OUVRIR")
+    //     changerEtat(EtatMachine::OUVERTURE);
+    // else if (commande == "FERMER")
+    //     changerEtat(EtatMachine::FERMETURE);
+    // else if (commande == "PILOTER")
+    //     changerEtat(EtatMachine::PILOTE);
+    // else if (commande == "DEBRAYER")
+    //     changerEtat(EtatMachine::DEBRAYAGE);
+    // else if (commande == "STOP")
+    //     changerEtat(EtatMachine::DEBRAYAGE);
+    // else 
+    //     Serial.println("E;Commande DO inconnue {OUVRIR,FERMER,PILOTER,DEBRAYER,STOP}.");
 }

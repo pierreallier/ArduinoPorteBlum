@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "Motor.h"
+#include "Sensors.h"
 
 enum class EtatMachine : byte {
     INIT=0,
@@ -15,10 +16,20 @@ enum class EtatMachine : byte {
     ERREUR=7
 };
 
-extern EtatMachine etat;
+class StateMachine {
+    public:
+        EtatMachine etat;
+        uint32_t time_etat;
 
-void machineEtat_Init(Moteur m);
-void changerEtat(EtatMachine etat_demande);
-void machineEtat();
+        StateMachine(Moteur m, Capteurs c);
+        void init();
+        void changerEtat(EtatMachine etat_demande);
+        void exec();
+    
+    private:
+        Moteur moteur;
+        Capteurs capteurs;
+    
+};
 
 #endif
