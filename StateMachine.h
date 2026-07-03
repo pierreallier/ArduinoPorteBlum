@@ -14,6 +14,14 @@ enum class EtatMachine : byte {
     ERREUR=7
 };
 
+enum class ModePilotage {
+    PWM,
+    POSITION,
+    VITESSE
+};
+
+extern ModePilotage modePilotage;
+
 extern EtatMachine etat;
 
 void machineEtat_Init();

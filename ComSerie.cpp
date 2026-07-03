@@ -120,6 +120,11 @@ void comSerie_GetCommandes() {
 void comSerie_SET(String commande) {
     commande.trim(); // Supprime les espaces et les retours à la ligne
     commande.toUpperCase(); // Convertit la commande
+    if (commande == "PILOTAGE") {
+
+    }
+    else 
+        Serial.println("E;Commande SET inconnue");
 }
 
 void comSerie_GET(String commande) {

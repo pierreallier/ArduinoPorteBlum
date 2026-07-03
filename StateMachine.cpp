@@ -2,13 +2,16 @@
 #include "Sensors.h"
 #include "Motor.h"
 #include "ComSerie.h"
+#include "Pilotage.h"
 
 EtatMachine etat;
+ModePilotage pilotage;
 
 uint32_t time_etat;
 
 void machineEtat_Init() {
     etat = EtatMachine::INIT;
+    pilotage = ModePilotage::PWM;
     time_etat = millis();
 }
 
@@ -62,7 +65,7 @@ void machineEtat() {
 
         case EtatMachine::PILOTE:
             if (!detection_Butee()) {
-                moteur_SetSpeedDir(mesures.potentiometre);
+                pilotage_Update();
             } else {
                 moteur_Stop();
                 changerEtat(EtatMachine::DEBRAYAGE);
