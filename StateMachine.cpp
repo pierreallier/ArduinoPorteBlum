@@ -4,9 +4,9 @@
 #include "Pilotage.h"
 
 Motor moteur;
-Capteurs capteurs;
+Sensors capteurs;
 
-StateMachine::StateMachine(Motor m, Capteurs c) {
+StateMachine::StateMachine(Motor m, Sensors c) {
     etat = StateMachine::ETAT::INIT;
     moteur = m;
     capteurs = c;

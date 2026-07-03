@@ -6,7 +6,7 @@
 #include "Motor.h"
 
 extern Motor moteur;
-extern Capteurs capteurs;
+extern Sensors capteurs;
 extern StateMachine machine(moteur,capteurs);
 //Serial portserie;
 
@@ -32,7 +32,7 @@ void loop() {
 uint32_t tVerif = 0;
 uint32_t tAcq = 0;
 
-void ordonnanceur(Capteurs capteurs) {
+void ordonnanceur(Sensors capteurs) {
     // Tâches périodiques
     uint32_t maintenant = millis();
     if (maintenant - tAcq >= 100) {

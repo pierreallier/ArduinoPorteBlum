@@ -23,7 +23,7 @@ const float COURANT_BUTEE = 0.5;      // A
 const float VITESSE_BUTEE = 5;        // impulsions/10 ms
 const uint16_t TEMPS_BUTEE = 50;      // ms
 
-class Capteurs {
+class Sensors {
     public:
         float time_mesures;
         float tension;
@@ -40,7 +40,7 @@ class Capteurs {
         bool limite_basse = false ;
         bool limite_courant_atteinte = false;
 
-        Capteurs();
+        Sensors();
         void init();
         void mesures();
         bool checkSecurites();

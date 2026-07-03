@@ -6,7 +6,7 @@
 #include "StateMachine.h"
 #include "Motor.h"
 
-extern Capteurs capteurs;
+extern Sensors capteurs;
 extern Motor moteur;
 
 void comSerie_Init();

@@ -3,14 +3,14 @@
 volatile int32_t ticks_codeur=0;
 void isr_Codeur();
 
-Capteurs::Capteurs() {
+Sensors::Sensors() {
     // Initialisation du tableau du courant
     for (int i=0; i < NB_MOY_COURANT; i++) {
         courant_tab[i] = 0;
     }
 }
 
-void Capteurs::init() {
+void Sensors::init() {
     pinMode(CODEUR_PORTE, INPUT);
     pinMode(DETECTEUR_MEUBLE, INPUT);
     pinMode(MOTOR_VOLTAGE, INPUT);
@@ -32,7 +32,7 @@ void Capteurs::init() {
     time_mesures = millis();
 }
 
-bool Capteurs::checkSecurites() {
+bool Sensors::checkSecurites() {
     // Vérifie les conditions de sécurité pour le fonctionnement du système : 
     //  - Limites extrémales de la porte
     //  - Limite de courant du moteur
@@ -49,7 +49,7 @@ bool Capteurs::checkSecurites() {
     return limite_haute || limite_basse || limite_courant_atteinte;
 }
 
-void Capteurs::mesures() {
+void Sensors::mesures() {
     checkSecurites();
     getCodeurMoteur();
     getTension();
@@ -57,7 +57,7 @@ void Capteurs::mesures() {
     getPotentiometre();
 }
 
-float Capteurs::addCourant(float current) {
+float Sensors::addCourant(float current) {
   // Fonction qui calcule une moyenne glissante
   courant_moyen -= courant_tab[courant_idx];
   courant_moyen += current;
@@ -66,7 +66,7 @@ float Capteurs::addCourant(float current) {
   return (float) courant_moyen / NB_MOY_COURANT;
 }
 
-void Capteurs::getCodeurPorte() {
+void Sensors::getCodeurPorte() {
     // Lecture du codeur
     // TODO (Détecter ces valeurs par une méthode d'étalonnage du codeur)
     int codeurValue = map(analogRead(CODEUR_PORTE),0,655,0,360.0)-12;
@@ -75,20 +75,20 @@ void Capteurs::getCodeurPorte() {
     angle_porte = codeurValue;
 }
 
-void Capteurs::getTension() {
+void Sensors::getTension() {
     tension = analogRead(MOTOR_VOLTAGE)*(25/1023.); // en V
 }
 
-void Capteurs::getCourant() {
+void Sensors::getCourant() {
     float current = (analogRead(MOTOR_CURRENT) - courant_offset)*0.02641938126; // en A
     courant_moyen = addCourant(current);
 }
 
-void Capteurs::getMeuble() {
+void Sensors::getMeuble() {
     sur_meuble = (analogRead(DETECTEUR_MEUBLE) > 512) ? true : false;
 }
 
-void Capteurs::getCodeurMoteur() {
+void Sensors::getCodeurMoteur() {
     float codeur_Delta_Pos = encoderGetTicks();
     encoderResetTicks();
 
@@ -97,7 +97,7 @@ void Capteurs::getCodeurMoteur() {
     angle_moteur += codeur_Delta_Pos*0.3515625;
 }
 
-int32_t Capteurs::encoderGetTicks() {
+int32_t Sensors::encoderGetTicks() {
     noInterrupts();
     int32_t ticks = ticks_codeur;
     interrupts();
@@ -105,7 +105,7 @@ int32_t Capteurs::encoderGetTicks() {
     return ticks;
 }
 
-void Capteurs::encoderResetTicks() {
+void Sensors::encoderResetTicks() {
     noInterrupts();
     ticks_codeur = 0;
     interrupts();
@@ -116,7 +116,7 @@ void isr_Codeur() {
     ticks_codeur += (PIND & _BV(PD2)) ? -1 : +1;
 }
 
-bool Capteurs::detectionButees() {
+bool Sensors::detectionButees() {
     // Détection des butées par la vitesse et le courant
     if (vitesse_moteur > VITESSE_BUTEE && courant_moyen > COURANT_BUTEE) {
         if (time_detection_butee == 0) {
@@ -132,10 +132,10 @@ bool Capteurs::detectionButees() {
     return false;
 }
 
-void Capteurs::getPotentiometre() {
+void Sensors::getPotentiometre() {
     potentiometre = (analogRead(POTENTIOMETRE)-500)*0.5;
 }
 
-void Capteurs::setConsigne(int consigne) {
+void Sensors::setConsigne(int consigne) {
     consigne = constrain(consigne, -255, 255);
 }
