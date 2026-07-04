@@ -32,9 +32,9 @@ void setup() {
 }
 
 void loop() {
-    ordonnanceur();
-    machine.exec();
     portserie.task();
+    machine.exec();
+    ordonnanceur();
 }
 
 uint32_t tVerif = 0;
@@ -74,9 +74,9 @@ void ordonnanceur() {
         }
     }
 
-    // Mesures des grandeurs (toutes les 100 ms)
-    if (maintenant - tMesure >= 100) {
-        tMesure += 100;
+    // Mesures des grandeurs (toutes les 50 ms)
+    if (maintenant - tMesure >= 50) {
+        tMesure += 50;
         capteurs.mesures(moteur.getPWM());
     } 
 }

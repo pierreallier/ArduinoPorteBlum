@@ -10,9 +10,10 @@ void ComSerie::init() {
 }
 
 void ComSerie::task() {
-    if (millis() - time_precedent >= 200) {
-        time_precedent += 200;
-        printMesures();
+    if (millis() - time_precedent >= 50) {
+        time_precedent += 50;
+        //printMesures();
+        sendMesures();
         sendMessages();
         readSerial();
     }
@@ -20,23 +21,23 @@ void ComSerie::task() {
 
 void ComSerie::printMesures() {
     Serial.print(capteurs.time_mesures);
-    Serial.print(" , U (V):");
+    Serial.print(" , Tension:"); // Tension en Volt
     Serial.print(capteurs.tension);
     Serial.print(" , PWM:");
     Serial.print(moteur.getPWM());
-    Serial.print(" , I (A):");
+    Serial.print(" , Intensité:"); // Courant moteur en Ampère
     Serial.print(capteurs.courant_moyen);
-    Serial.print(" , Am (deg):");
+    Serial.print(" , AngleMoteur:"); // Angle moteur en degré
     Serial.print(capteurs.angle_moteur);
-    Serial.print(" , Wm (imp/10ms):");
+    Serial.print(" , VitesseMoteur:"); // Vitesse rotation moteur en rad/s
     Serial.print(capteurs.vitesse_moteur);
-    Serial.print(" , Ap (deg):");
+    Serial.print(" , AnglePorte:"); // Angle porte en degré
     Serial.print(capteurs.angle_porte);
-    Serial.print(" , P:");
+    Serial.print(" , Potentiomètre:"); // Consigne du potentiomètre en -255/255
     Serial.print(capteurs.potentiometre);
-    Serial.print(" , M:");
+    Serial.print(" , Moteur:");
     Serial.print(moteur.isEnabled() ? "ON" : "OFF");
-    Serial.print(" , D:");
+    Serial.print(" , Direction:");
     switch(moteur.getDirection()) {
         case Motor::DIR::OUVERTURE:
             Serial.print("OUVERTURE");
@@ -45,7 +46,7 @@ void ComSerie::printMesures() {
             Serial.print("FERMETURE");
             break;
     }
-    Serial.print(" , L:");
+    Serial.print(" , Limites:");
     if (capteurs.blocage_detecte) {
         Serial.println("BB");
     } else {
@@ -73,9 +74,9 @@ void ComSerie::sendMesures() {
     Serial.print(";");
     Serial.print(capteurs.limite_haute);
     Serial.print(";");
-    Serial.println(capteurs.limite_basse); 
+    Serial.print(capteurs.limite_basse); 
     Serial.print(";");
-    Serial.print(capteurs.blocage_detecte);
+    Serial.println(capteurs.blocage_detecte);
 }
 
 void ComSerie::sendMessages() {
