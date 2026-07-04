@@ -7,15 +7,15 @@ Pilotage::Pilotage() {
 }
 
 void Pilotage::setMode(Pilotage::MODE mode) {
-
+    mode = mode;
 }
 
 void Pilotage::setConsignePosition(float angle) {
-
+    consignePosition = angle;
 }
 
 void Pilotage::setConsigneVitesse(float vitesse) {
-
+    consigneVitesse = vitesse;
 }
 
 void Pilotage::setPWM(int16_t pwm) {

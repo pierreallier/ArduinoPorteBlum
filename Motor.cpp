@@ -1,10 +1,6 @@
 #include "Motor.h"
 
 Motor::Motor(Sensors& c) : capteurs(c) {
-    pwm = 0;
-    codeur_avant_debrayage = 0;
-    courant_avant_debrayage = 0.0;
-    enabled = false;
     direction = Motor::DIR::OUVERTURE;
 }
 
@@ -53,6 +49,7 @@ void Motor::enable() {
 void Motor::disable() {
     // Désactive le moteur
     enabled = false;
+    pwm = 0;
 }
 
 void Motor::debrayage() {
@@ -69,7 +66,6 @@ void Motor::debrayage() {
 void Motor::stop(){
     // Arrête le moteur
     setSpeed(0);
-    disable();
 }
 
 void Motor::update() {

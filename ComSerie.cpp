@@ -74,8 +74,13 @@ void ComSerie::printMesures() {
             break;
     }
     Serial.print(" , L:");
-    Serial.print(capteurs.limite_haute ? "H" : "N");
-    Serial.println(capteurs.limite_basse ? "B" : "N");
+    if (capteurs.blocage_detecte) {
+        Serial.println("BB");
+    } else {
+        Serial.print(capteurs.limite_haute ? "H" : "N");
+        Serial.println(capteurs.limite_basse ? "B" : "N");
+    }
+    
 }
 
 void ComSerie::sendMesures() {
@@ -97,6 +102,8 @@ void ComSerie::sendMesures() {
     Serial.print(capteurs.limite_haute);
     Serial.print(";");
     Serial.println(capteurs.limite_basse); 
+    Serial.print(";");
+    Serial.print(capteurs.blocage_detecte);
 }
 
 void ComSerie::sendEtat(StateMachine::ETAT etat){

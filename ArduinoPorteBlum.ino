@@ -2,15 +2,14 @@
 #include <Bounce2.h>
 #include "StateMachine.h"
 #include "Sensors.h"
-#include "Boutons.h"
 #include "ComSerie.h"
 #include "Motor.h"
 
 #define TEST_BT 2 // Bouton de mise en fonctionnement / arrêt
 #define WIRELESS_BT 3 // Bouton sans fil 
 
-Bounce2::Button btTest = Bounce2::Button();
-Bounce2::Button btWireless = Bounce2::Button();
+Bounce2::Button btTest;
+Bounce2::Button btWireless;
 
 Sensors capteurs;
 Motor moteur(capteurs);
@@ -39,20 +38,18 @@ void loop() {
 
 uint32_t tVerif = 0;
 uint32_t tAcq = 0;
+uint32_t tMesure = 0;
 
 void ordonnanceur() {
     // Tâches périodiques
     uint32_t maintenant = millis();
-    if (maintenant - tAcq >= 100) {
-        tAcq += 100;
-        capteurs.mesures();
-        tVerif = maintenant; // on saute volontairement le cycle 10 ms
-    } else if (maintenant - tVerif >= 5) {
-        tVerif += 5;   
-        if (capteurs.checkSecurites()) {
-            // Vérification des limites angulaires et courant
-        }
 
+    // Sécurités (toutes les 5 ms)
+    if (maintenant - tVerif >= 5) {
+        tVerif += 5;   
+        // Vérifications des sécurités
+        capteurs.checkSecurites(moteur.getPWM());
+    
         // Vérification des boutons de commande
         btTest.update();
         btWireless.update();
@@ -77,4 +74,10 @@ void ordonnanceur() {
             }
         }
     }
+
+    // Mesures des grandeurs (toutes les 100 ms)
+    if (maintenant - tMesure >= 100) {
+        tMesure += 100;
+        capteurs.mesures(moteur.getPWM());
+    } 
 }

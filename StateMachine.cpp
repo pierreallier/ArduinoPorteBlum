@@ -19,8 +19,7 @@ void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
         etat == StateMachine::ETAT::OUVERTURE || 
         etat == StateMachine::ETAT::FERMETURE || 
         etat == StateMachine::ETAT::CALIBRATION || 
-        etat == StateMachine::ETAT::DEBRAYAGE) 
-    {
+        etat == StateMachine::ETAT::DEBRAYAGE) {
         moteur.enable();
     } else {
         moteur.disable();
@@ -42,7 +41,7 @@ void StateMachine::exec() {
         case StateMachine::ETAT::OUVERTURE:
             moteur.setDirection(Motor::DIR::OUVERTURE);
             moteur.setSpeed(abs(capteurs.potentiometre));
-            if (capteurs.limite_haute || capteurs.detectionButees()) {
+            if (capteurs.limite_haute || capteurs.isBlocage(true)) {
                 moteur.stop();
                 changerEtat(StateMachine::ETAT::DEBRAYAGE);
             }
@@ -51,14 +50,14 @@ void StateMachine::exec() {
         case StateMachine::ETAT::FERMETURE:
             moteur.setDirection(Motor::DIR::FERMETURE);
             moteur.setSpeed(abs(capteurs.potentiometre));
-            if (capteurs.limite_basse || capteurs.detectionButees()) {
+            if (capteurs.limite_basse || capteurs.isBlocage(true)) {
                 moteur.stop();
                 changerEtat(StateMachine::ETAT::DEBRAYAGE);
             }
             break;
 
         case StateMachine::ETAT::PILOTE:
-            if (!capteurs.detectionButees()) {
+            if (!capteurs.isBlocage(true)) {
                 pilote.setPWM(capteurs.potentiometre);
                 pilote.setConsigneVitesse(capteurs.vitesse_moteur);
                 pilote.setConsignePosition(capteurs.angle_porte);

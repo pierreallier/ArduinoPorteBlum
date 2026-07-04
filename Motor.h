@@ -8,8 +8,6 @@
 #define PWM_FOR_PIN  7 // Pin de commande PWM pour la rotation avant du moteur
 #define STBY_PIN 8  // Driver du moteur : Standby input
 
-
-
 class Motor {
     public:
         enum class DIR :bool {
@@ -40,7 +38,7 @@ class Motor {
     private:
         int pwm = 0; // valeur PWM pour la vitesse du moteur (0-255)
         bool enabled = false; // état du moteur (activé ou désactivé)
-        DIR direction = Motor::DIR::OUVERTURE; // direction du moteur (OUVERTURE ou FERMETURE)
+        DIR direction ; // direction du moteur (OUVERTURE ou FERMETURE)
         Sensors& capteurs;
 };
 

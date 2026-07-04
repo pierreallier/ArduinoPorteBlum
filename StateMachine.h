@@ -21,9 +21,8 @@ class StateMachine {
             ERREUR=7
         };
 
-
         ETAT etat;
-        uint32_t time_etat;
+        uint32_t time_etat = 0;
 
         StateMachine(Motor& m, Sensors& c);
         void init();

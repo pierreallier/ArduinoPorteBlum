@@ -19,32 +19,36 @@ const float LIMITE_COURANT = 2;
 const unsigned int NB_MOY_COURANT = 5;
 
 // Détections butées
-const float COURANT_BUTEE = 0.5;      // A
-const float VITESSE_BUTEE = 5;        // impulsions/10 ms
-const uint16_t TEMPS_BUTEE = 50;      // ms
+const int PWM_MIN = 30;
+const int TICKS_MIN = 5;
+const float I_BLOCAGE = 1.8f;
+const uint8_t NB_CYCLES_BLOCAGE = 20;   // 10 x 5 ms = 50 ms
+const float ANGLE_MAX = 180.0f;
+const float ANGLE_MIN = -140.0f;
 
 class Sensors {
     public:
-        float time_mesures;
-        float tension;
-        float courant_moyen;
-        float angle_moteur;
-        float vitesse_moteur;
-        float angle_porte;
-        float potentiometre;
-        bool sur_meuble;
+        float time_mesures = 0.0f;
+        float tension = 0.0f;
+        float courant_moyen = 0.0f;
+        float angle_moteur = 0.0f;
+        float vitesse_moteur = 0.0f;
+        float angle_porte = 0.0f;
+        float potentiometre = 0.0f;
+        bool sur_meuble = false;
 
-        int consigne;
+        float consigne = 0.0f;
 
-        bool limite_haute = false ;
-        bool limite_basse = false ;
+        bool limite_haute = false;
+        bool limite_basse = false;
+        bool blocage_detecte = false;
         bool limite_courant_atteinte = false;
 
         Sensors();
         void init();
-        void mesures();
-        bool checkSecurites();
-        bool detectionButees();
+        void mesures(int pwm);
+        void checkSecurites(int pwm);
+        bool isBlocage(bool reset = false);
         
         void getTension();
         void getCourant();
@@ -59,7 +63,9 @@ class Sensors {
         int courant_offset = 0;
         unsigned int courant_idx = 0;
         float courant_tab[NB_MOY_COURANT];
-        unsigned long time_detection_butee = 0;
+
+        uint8_t compteur_blocage = 0;
+        int32_t codeur_Delta_Pos = 0;
 
         int32_t encoderGetTicks();
         void encoderResetTicks();

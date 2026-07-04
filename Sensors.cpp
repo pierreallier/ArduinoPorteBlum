@@ -35,29 +35,41 @@ void Sensors::init() {
     time_mesures = millis();
 }
 
-bool Sensors::checkSecurites() {
+void Sensors::checkSecurites(int pwm) {
     // Vérifie les conditions de sécurité pour le fonctionnement du système : 
     //  - Limites extrémales de la porte
     //  - Limite de courant du moteur
+    //  - Vérifie les blocages
 
     // Détection des limites extrémales de la porte
     getCodeurPorte();
-    limite_haute = (angle_porte >= 180) ? true : false;
-    limite_basse = (angle_porte <= -135) ? true : false;
+    limite_haute = (angle_porte >= ANGLE_MAX);
+    limite_basse = (angle_porte <= ANGLE_MIN);
 
     // Limite de courant
     getCourant();
-    limite_courant_atteinte = (courant_moyen >= LIMITE_COURANT) ? true : false;
+    limite_courant_atteinte = (courant_moyen >= LIMITE_COURANT);
 
-    return limite_haute || limite_basse || limite_courant_atteinte;
+    if (!(limite_haute || limite_basse || limite_courant_atteinte)) {
+        // Détection blocage
+        if (abs(pwm) > PWM_MIN && abs(codeur_Delta_Pos) <= TICKS_MIN || courant_moyen >= I_BLOCAGE)
+            compteur_blocage++;
+        else 
+            compteur_blocage=0;
+        blocage_detecte = (compteur_blocage >= NB_CYCLES_BLOCAGE);
+        if (blocage_detecte) {
+            Serial.print("BLOCAGE : PWM=");
+            Serial.println(pwm);
+        }
+    }
 }
 
-void Sensors::mesures() {
-    checkSecurites();
+void Sensors::mesures(int pwm) {
     getCodeurMoteur();
     getTension();
     getMeuble();
     getPotentiometre();
+    consigne = pwm;
 }
 
 float Sensors::addCourant(float current) {
@@ -92,7 +104,7 @@ void Sensors::getMeuble() {
 }
 
 void Sensors::getCodeurMoteur() {
-    float codeur_Delta_Pos = encoderGetTicks();
+    codeur_Delta_Pos = encoderGetTicks();
     encoderResetTicks();
 
     vitesse_moteur = ((3.141592*codeur_Delta_Pos)/512.)/(millis()-time_mesures)*1000.0; // en rad/s
@@ -114,20 +126,13 @@ void Sensors::encoderResetTicks() {
     interrupts();
 }
 
-bool Sensors::detectionButees() {
-    // Détection des butées par la vitesse et le courant
-    if (vitesse_moteur > VITESSE_BUTEE && courant_moyen > COURANT_BUTEE) {
-        if (time_detection_butee == 0) {
-            time_detection_butee = millis();
-        } else if (millis() - time_detection_butee >= TEMPS_BUTEE) {
-            time_detection_butee = 0;
-            return true;
-        }
+bool Sensors::isBlocage(bool reset=false) {
+    if (blocage_detecte && reset) {
+        blocage_detecte = false;
+        return true;
+    } else {
+        return blocage_detecte;
     }
-    else {
-        time_detection_butee = 0;
-    }
-    return false;
 }
 
 void Sensors::getPotentiometre() {
