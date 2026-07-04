@@ -2,43 +2,47 @@
 
 Pilotage pilotage;
 
-void pilotage_INIT() {
-    pilotage.mode = ModePilotage::PWM;
+Pilotage::Pilotage() {
+    mode = Pilotage::MODE::PWM;
 }
 
-void pilotage_SetMode(ModePilotage mode) {
-
-}
-
-void pilotage_SetConsignePosition(float angle) {
+void Pilotage::setMode(Pilotage::MODE mode) {
 
 }
 
-void pilotage_SetConsigneVitesse(float vitesse) {
+void Pilotage::setConsignePosition(float angle) {
 
 }
 
-void pilotage_SetPWM(int16_t pwm) {
+void Pilotage::setConsigneVitesse(float vitesse) {
 
 }
 
-void pilotage_Update() {
-    switch(pilotage.mode)
+void Pilotage::setPWM(int16_t pwm) {
+    consignePWM = pwm;
+}
+
+void Pilotage::update(Motor& moteur) {
+    switch(mode)
     {
-        case ModePilotage::PWM:
-            //moteur_SetSpeedDir(mesures.potentiometre);
+        case Pilotage::MODE::PWM:
+            moteur.setSpeedDir(consignePWM);
             break;
 
-        case ModePilotage::POSITION:
+        case Pilotage::MODE::POSITION:
 
             break;
 
-        case ModePilotage::VITESSE:
+        case Pilotage::MODE::VITESSE:
+
+            break;
+        
+        case Pilotage::MODE::DOUBLE:
 
             break;
     }
 }
 
-void pilotage_Reset() {
+void Pilotage::reset() {
 
 }

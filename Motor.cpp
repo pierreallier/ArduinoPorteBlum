@@ -1,7 +1,6 @@
 #include "Motor.h"
-#include "Sensors.h"
 
-Motor::Motor() {
+Motor::Motor(Sensors& c) : capteurs(c) {
     pwm = 0;
     codeur_avant_debrayage = 0;
     courant_avant_debrayage = 0.0;
@@ -56,7 +55,7 @@ void Motor::disable() {
     enabled = false;
 }
 
-void Motor::debrayage(Sensors& capteurs) {
+void Motor::debrayage() {
     // Arrête le moteur en enregistrant quelques mesures
     codeur_avant_debrayage = capteurs.angle_moteur;
     courant_avant_debrayage = capteurs.courant_moyen;
@@ -73,7 +72,7 @@ void Motor::stop(){
     disable();
 }
 
-void Motor::update(Sensors& capteurs) {
+void Motor::update() {
     // Met à jour l'état du moteur en fonction de la consigne et des capteurs
     if (enabled == true) {
         digitalWrite(STBY_PIN, HIGH); // Ensure the motor driver is enabled

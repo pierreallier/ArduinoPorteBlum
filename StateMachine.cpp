@@ -1,9 +1,6 @@
 #include "StateMachine.h"
-#include "Sensors.h"
-#include "ComSerie.h"
-#include "Pilotage.h"
 
-StateMachine::StateMachine(Motor& m, Sensors& c) : moteur(m), capteurs(c) {
+StateMachine::StateMachine(Motor& m, Sensors& c) : moteur(m), capteurs(c), pilote() {
     etat = StateMachine::ETAT::INIT;
     time_etat = millis();
 }
@@ -16,7 +13,6 @@ void StateMachine::init() {
 void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
     if (etat != etat_demande) {
         time_etat = millis();
-        //comSerie_SendEtat(etat_demande);
     }
     etat = etat_demande;
     if (etat == StateMachine::ETAT::PILOTE || 
@@ -30,7 +26,7 @@ void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
         moteur.disable();
     }
     if (etat == StateMachine::ETAT::DEBRAYAGE) 
-        moteur.debrayage(capteurs);
+        moteur.debrayage();
 }
 
 void StateMachine::exec() {
@@ -63,7 +59,10 @@ void StateMachine::exec() {
 
         case StateMachine::ETAT::PILOTE:
             if (!capteurs.detectionButees()) {
-                pilotage_Update();
+                pilote.setPWM(capteurs.potentiometre);
+                pilote.setConsigneVitesse(capteurs.vitesse_moteur);
+                pilote.setConsignePosition(capteurs.angle_porte);
+                pilote.update(moteur);
             } else {
                 moteur.stop();
                 changerEtat(StateMachine::ETAT::DEBRAYAGE);
@@ -96,5 +95,5 @@ void StateMachine::exec() {
             moteur.stop();
             break;
     }
-    moteur.update(capteurs);
+    moteur.update();
 }

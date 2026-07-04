@@ -13,7 +13,8 @@ void ComSerie::task() {
     if (millis() - time_precedent >= 200) {
         time_precedent += 200;
         printMesures();
-        sendMesures();
+        //sendMesures();
+        //sendEtat(machine.etat);
         getCommandes();
     }
 }
@@ -34,33 +35,33 @@ void ComSerie::printMesures() {
     Serial.print(capteurs.angle_porte);
     Serial.print(" , P:");
     Serial.print(capteurs.potentiometre);
-    // Serial.print(" , E:");
-    // switch(etat) {
-    //     case EtatMachine::INIT:
-    //         Serial.print("INIT");
-    //         break;
-    //     case EtatMachine::REPOS:
-    //         Serial.print("REPOS");
-    //         break;
-    //     case EtatMachine::OUVERTURE:
-    //         Serial.print("OUVERTURE");
-    //         break;
-    //     case EtatMachine::FERMETURE:
-    //         Serial.print("FERMETURE");
-    //         break;
-    //     case EtatMachine::PILOTE:
-    //         Serial.print("PILOTE");
-    //         break;
-    //     case EtatMachine::CALIBRATION:
-    //         Serial.print("CALIBRATION");
-    //         break;
-    //     case EtatMachine::DEBRAYAGE:
-    //         Serial.print("DEBRAYAGE");
-    //         break;
-    //     case EtatMachine::ERREUR:
-    //         Serial.print("ERREUR");
-    //         break;
-    // }
+    Serial.print(" , E:");
+    switch(machine.etat) {
+        case StateMachine::ETAT::INIT:
+            Serial.print("INIT");
+            break;
+        case StateMachine::ETAT::REPOS:
+            Serial.print("REPOS");
+            break;
+        case StateMachine::ETAT::OUVERTURE:
+            Serial.print("OUVERTURE");
+            break;
+        case StateMachine::ETAT::FERMETURE:
+            Serial.print("FERMETURE");
+            break;
+        case StateMachine::ETAT::PILOTE:
+            Serial.print("PILOTE");
+            break;
+        case StateMachine::ETAT::CALIBRATION:
+            Serial.print("CALIBRATION");
+            break;
+        case StateMachine::ETAT::DEBRAYAGE:
+            Serial.print("DEBRAYAGE");
+            break;
+        case StateMachine::ETAT::ERREUR:
+            Serial.print("ERREUR");
+            break;
+    }
     Serial.print(" , M:");
     Serial.print(moteur.isEnabled() ? "ON" : "OFF");
     Serial.print(" , D:");
@@ -95,11 +96,11 @@ void ComSerie::sendMesures() {
     Serial.print(";");
     Serial.print(capteurs.limite_haute);
     Serial.print(";");
-    Serial.println(capteurs.limite_basse);  
+    Serial.println(capteurs.limite_basse); 
 }
 
 void ComSerie::sendEtat(StateMachine::ETAT etat){
-    Serial.print("S");
+    Serial.print("S;");
     Serial.println((int)etat);
 }
 

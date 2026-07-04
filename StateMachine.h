@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include "Motor.h"
 #include "Sensors.h"
+#include "Pilotage.h"
 
 
 
@@ -32,6 +33,7 @@ class StateMachine {
     private:
         Motor& moteur;
         Sensors& capteurs;
+        Pilotage pilote;
     
 };
 

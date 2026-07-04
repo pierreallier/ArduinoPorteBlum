@@ -5,8 +5,8 @@
 #include "ComSerie.h"
 #include "Motor.h"
 
-Motor moteur;
 Sensors capteurs;
+Motor moteur(capteurs);
 StateMachine machine(moteur, capteurs);
 ComSerie portserie(machine, moteur, capteurs);
 
