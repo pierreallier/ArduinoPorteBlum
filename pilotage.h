@@ -1,18 +1,20 @@
 #ifndef PILOTAGE_H
 #define PILOTAGE_H
 
-#include "pid.h"
-#include "motor.h"
+#include "PID.h"
+#include "Motor.h"
 
-enum class ModePilotage {
-    PWM,
-    POSITION,
-    VITESSE,
-    DOUBLE // Asservissement en vitesse et position
-};
+class Pilotage {
+    public:
 
-struct Pilotage {
-    ModePilotage mode;
+        enum class MODE : byte {
+            PWM,
+            POSITION,
+            VITESSE,
+            DOUBLE // Asservissement en vitesse et position
+        };
+
+    MODE mode;
 
     float consignePosition;
     float consigneVitesse;
@@ -20,14 +22,15 @@ struct Pilotage {
 
     PID pidPosition;
     PID pidVitesse;
-};
 
-void pilotage_INIT();
-void pilotage_SetMode(ModePilotage mode);
-void pilotage_SetConsignePosition(float angle);
-void pilotage_SetConsigneVitesse(float vitesse);
-void pilotage_SetPWM(int16_t pwm);
-void pilotage_Update(float dt);
-void pilotage_Reset();
+    Pilotage();
+    void setMode(Pilotage::MODE mode);
+    void setConsignePosition(float angle);
+    void setConsigneVitesse(float vitesse);
+    void setPWM(int16_t pwm);
+    void update(Motor& moteur);
+    void reset();
+
+};
 
 #endif

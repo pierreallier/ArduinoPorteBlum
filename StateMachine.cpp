@@ -1,102 +1,99 @@
 #include "StateMachine.h"
-#include "Sensors.h"
-#include "Motor.h"
-#include "ComSerie.h"
-#include "Pilotage.h"
 
-EtatMachine etat;
-ModePilotage pilotage;
-
-uint32_t time_etat;
-
-void machineEtat_Init() {
-    etat = EtatMachine::INIT;
-    pilotage = ModePilotage::PWM;
+StateMachine::StateMachine(Motor& m, Sensors& c) : moteur(m), capteurs(c), pilote() {
+    etat = StateMachine::ETAT::INIT;
     time_etat = millis();
 }
 
-void changerEtat(EtatMachine etat_demande) {
-    if (etat != etat_demande) {
-        time_etat = millis();
-        comSerie_SendEtat(etat_demande);
-    }
-    etat = etat_demande;
-    if (etat == EtatMachine::PILOTE || 
-        etat == EtatMachine::OUVERTURE || 
-        etat == EtatMachine::FERMETURE || 
-        etat == EtatMachine::CALIBRATION || 
-        etat == EtatMachine::DEBRAYAGE) 
-    {
-        moteur_Enable();
-    } else {
-        moteur_Disable();
-    }
-    if (etat == EtatMachine::DEBRAYAGE) 
-        moteur_Debrayage();
+void StateMachine::init() {
+    etat = StateMachine::ETAT::INIT;
+    time_etat = millis();
 }
 
-void machineEtat() {
+void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
+    if (etat != etat_demande) {
+        time_etat = millis();
+    }
+    etat = etat_demande;
+    if (etat == StateMachine::ETAT::PILOTE || 
+        etat == StateMachine::ETAT::OUVERTURE || 
+        etat == StateMachine::ETAT::FERMETURE || 
+        etat == StateMachine::ETAT::CALIBRATION || 
+        etat == StateMachine::ETAT::DEBRAYAGE) 
+    {
+        moteur.enable();
+    } else {
+        moteur.disable();
+    }
+    if (etat == StateMachine::ETAT::DEBRAYAGE) 
+        moteur.debrayage();
+}
+
+void StateMachine::exec() {
     switch(etat) {
-        case EtatMachine::INIT:
+        case StateMachine::ETAT::INIT:
             Serial.println(F("Pilotage Porte Blum"));
-            changerEtat(EtatMachine::REPOS);
+            changerEtat(StateMachine::ETAT::REPOS);
             break;
 
-        case EtatMachine::REPOS:
+        case StateMachine::ETAT::REPOS:
             break;
 
-        case EtatMachine::OUVERTURE:
-            moteur_SetDirection(MotorDir::OUVERTURE);
-            moteur_SetSpeed(abs(mesures.potentiometre));
-            if (mesures.limite_haute || detection_Butee()) {
-                moteur_Stop();
-                changerEtat(EtatMachine::DEBRAYAGE);
+        case StateMachine::ETAT::OUVERTURE:
+            moteur.setDirection(Motor::DIR::OUVERTURE);
+            moteur.setSpeed(abs(capteurs.potentiometre));
+            if (capteurs.limite_haute || capteurs.detectionButees()) {
+                moteur.stop();
+                changerEtat(StateMachine::ETAT::DEBRAYAGE);
             }
             break;
 
-        case EtatMachine::FERMETURE:
-            moteur_SetDirection(MotorDir::FERMETURE);
-            moteur_SetSpeed(abs(mesures.potentiometre));
-            if (mesures.limite_basse || detection_Butee()) {
-                moteur_Stop();
-                changerEtat(EtatMachine::DEBRAYAGE);
+        case StateMachine::ETAT::FERMETURE:
+            moteur.setDirection(Motor::DIR::FERMETURE);
+            moteur.setSpeed(abs(capteurs.potentiometre));
+            if (capteurs.limite_basse || capteurs.detectionButees()) {
+                moteur.stop();
+                changerEtat(StateMachine::ETAT::DEBRAYAGE);
             }
             break;
 
-        case EtatMachine::PILOTE:
-            if (!detection_Butee()) {
-                pilotage_Update();
+        case StateMachine::ETAT::PILOTE:
+            if (!capteurs.detectionButees()) {
+                pilote.setPWM(capteurs.potentiometre);
+                pilote.setConsigneVitesse(capteurs.vitesse_moteur);
+                pilote.setConsignePosition(capteurs.angle_porte);
+                pilote.update(moteur);
             } else {
-                moteur_Stop();
-                changerEtat(EtatMachine::DEBRAYAGE);
+                moteur.stop();
+                changerEtat(StateMachine::ETAT::DEBRAYAGE);
             }
             break;
 
-        case EtatMachine::CALIBRATION:
+        case StateMachine::ETAT::CALIBRATION:
 
             // Calibration_Run();
 
             break;
 
-        case EtatMachine::DEBRAYAGE: // ou Arrêt
+        case StateMachine::ETAT::DEBRAYAGE: // ou Arrêt
             
-            int32_t delta_angle = abs(mesures.angle_moteur - moteur.codeur_avant_debrayage);
-            float delta_courant = abs(mesures.courant_moyen - moteur.courant_avant_debrayage)/mesures.courant_moyen;
+            int32_t delta_angle = abs(capteurs.angle_moteur - moteur.codeur_avant_debrayage);
+            float delta_courant = abs(1 - moteur.courant_avant_debrayage/capteurs.courant_moyen);
 
             if (millis() - time_etat >= 100 || delta_angle > 100 || delta_courant > 0.5) {
                 Serial.println(F("Debrayage terminé"));
-                moteur_Stop();
-                changerEtat(EtatMachine::REPOS);
+                moteur.stop();
+                changerEtat(StateMachine::ETAT::REPOS);
             }
             break;
 
-        case EtatMachine::ERREUR:
-            changerEtat(EtatMachine::DEBRAYAGE);
+        case StateMachine::ETAT::ERREUR:
+            changerEtat(StateMachine::ETAT::DEBRAYAGE);
             break;
 
         default:
-            moteur_Stop();
+            moteur.stop();
             break;
     }
-    moteur_Task();
+    moteur.update();
 }

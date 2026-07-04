@@ -1,28 +1,40 @@
 #include <Arduino.h>
+#include <Bounce2.h>
 #include "StateMachine.h"
 #include "Sensors.h"
 #include "Boutons.h"
 #include "ComSerie.h"
 #include "Motor.h"
 
+#define TEST_BT 2 // Bouton de mise en fonctionnement / arrêt
+#define WIRELESS_BT 3 // Bouton sans fil 
+
+Bounce2::Button btTest = Bounce2::Button();
+Bounce2::Button btWireless = Bounce2::Button();
+
+Sensors capteurs;
+Motor moteur(capteurs);
+StateMachine machine(moteur, capteurs);
+ComSerie portserie(machine, moteur, capteurs);
 
 void setup() {
-    capteurs_Init(); // Initialisation des capteurs
-    boutons_Init(); // Initialisation des boutons de contrôle
-    moteur_Init(); // Initialisation du moteur et du driver
-    
     pinMode(LED_BUILTIN, OUTPUT);
 
-    comSerie_Init(); // Initialisation du port série
-    
-    // Initialisation de la machine à états
-    machineEtat_Init();
+    btTest.attach(TEST_BT,INPUT_PULLUP);
+    btTest.setPressedState(LOW); 
+    btWireless.attach(WIRELESS_BT,INPUT_PULLUP);
+    btWireless.setPressedState(LOW);
+
+    moteur.init(); // Initialisation du moteur et du driver
+    capteurs.init(); // Initialisation des capteurs
+    portserie.init(); // Initialisation du port série
+    machine.init(); // Initialisation de la machine à états
 }
 
 void loop() {
     ordonnanceur();
-    machineEtat();
-    comSerie_Task();
+    machine.exec();
+    portserie.task();
 }
 
 uint32_t tVerif = 0;
@@ -33,32 +45,35 @@ void ordonnanceur() {
     uint32_t maintenant = millis();
     if (maintenant - tAcq >= 100) {
         tAcq += 100;
-        mesures_Update();
+        capteurs.mesures();
         tVerif = maintenant; // on saute volontairement le cycle 10 ms
-    } else if (maintenant - tVerif >= 10) {
-        tVerif += 10;   
-        if (check_Securites()) {
+    } else if (maintenant - tVerif >= 5) {
+        tVerif += 5;   
+        if (capteurs.checkSecurites()) {
             // Vérification des limites angulaires et courant
         }
-        // Vérification des boutons de commande
-        if (get_BoutonTest()) {
-            if (etat == EtatMachine::REPOS)
-                changerEtat(EtatMachine::PILOTE);
-            else
-                changerEtat(EtatMachine::DEBRAYAGE);
-        }
 
-        if (get_BoutonSansFil()) {
-            if (etat == EtatMachine::REPOS) {
-                if (mesures.angle_porte < -100) {
-                    changerEtat(EtatMachine::OUVERTURE);
+        // Vérification des boutons de commande
+        btTest.update();
+        btWireless.update();
+        if (btTest.pressed()) {
+            if (machine.etat == StateMachine::ETAT::REPOS)
+                machine.changerEtat(StateMachine::ETAT::PILOTE);
+            else
+                machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
+        }
+        if (btWireless.pressed()) {
+            if (machine.etat == StateMachine::ETAT::REPOS) {
+                // TODO : la suite doit être géré par la machine à état !
+                if (capteurs.angle_porte < -100) {
+                    machine.changerEtat(StateMachine::ETAT::OUVERTURE);
                 }
                 else {
-                    changerEtat(EtatMachine::FERMETURE);
+                    machine.changerEtat(StateMachine::ETAT::FERMETURE);
                 }
             }
             else {
-                changerEtat(EtatMachine::DEBRAYAGE);
+                machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
             }
         }
     }

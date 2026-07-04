@@ -6,18 +6,26 @@
 #include "StateMachine.h"
 #include "Motor.h"
 
-extern Mesures mesures;
+class ComSerie {
+    public:
+        ComSerie(StateMachine& s, Motor& m, Sensors& c);
+        void init();
+        void task();
+        void printMesures();
+        void getCommandes();
+        void sendMesures();
+        void sendEtat(StateMachine::ETAT etat);
+    
+    private:
+        uint32_t time_precedent = 0;
+        StateMachine& machine;
+        Motor& moteur;
+        Sensors& capteurs;
 
-void comSerie_Init();
-void comSerie_Task();
-void comSerie_PrintMesures();
-void comSerie_GetCommandes();
-void comSerie_sendMesures();
-void comSerie_SendEtat(EtatMachine etat);
+        void _SET(String commande);
+        void _GET(String commande);
+        void _DO(String commande);
+};
 
-// interne
-void comSerie_SET(String commande);
-void comSerie_GET(String commande);
-void comSerie_DO(String commande);
 
 #endif

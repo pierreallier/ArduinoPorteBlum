@@ -23,43 +23,47 @@ const float COURANT_BUTEE = 0.5;      // A
 const float VITESSE_BUTEE = 5;        // impulsions/10 ms
 const uint16_t TEMPS_BUTEE = 50;      // ms
 
-struct Mesures {
-    float time_mesures;
-    float tension;
-    float courant_moyen;
-    float angle_moteur;
-    float vitesse_moteur;
-    float angle_porte;
-    float potentiometre;
-    bool sur_meuble;
+class Sensors {
+    public:
+        float time_mesures;
+        float tension;
+        float courant_moyen;
+        float angle_moteur;
+        float vitesse_moteur;
+        float angle_porte;
+        float potentiometre;
+        bool sur_meuble;
 
-    int consigne;
+        int consigne;
 
-    bool limite_haute = false ;
-    bool limite_basse = false ;
-    bool limite_courant_atteinte = false;
+        bool limite_haute = false ;
+        bool limite_basse = false ;
+        bool limite_courant_atteinte = false;
+
+        Sensors();
+        void init();
+        void mesures();
+        bool checkSecurites();
+        bool detectionButees();
+        
+        void getTension();
+        void getCourant();
+        void getMeuble();
+        void getCodeurPorte();
+        void getCodeurMoteur();
+        void getPotentiometre();
+
+        void setConsigne(int consigne);
+
+    private:
+        int courant_offset = 0;
+        unsigned int courant_idx = 0;
+        float courant_tab[NB_MOY_COURANT];
+        unsigned long time_detection_butee = 0;
+
+        int32_t encoderGetTicks();
+        void encoderResetTicks();
+        float addCourant(float current);
 };
-extern Mesures mesures;
-
-void capteurs_Init();
-void mesures_Update();
-
-bool check_Securites();
-bool detection_Butee();
-
-void get_Tension();
-void get_Courant();
-void get_Meuble();
-void get_Codeur_Porte();
-void get_Codeur_Moteur();
-void get_Potentiometre();
-
-void set_Consigne();
-
-// Fonctions internes
-void isr_Codeur();
-int32_t encoder_GetTicks();
-void encoder_ResetTicks();
-float add_Courant(float current);
 
 #endif
