@@ -5,7 +5,7 @@
 #include "Motor.h"
 #include "Sensors.h"
 #include "Pilotage.h"
-
+#include "ComSerie.h"
 
 
 class StateMachine {
@@ -24,7 +24,7 @@ class StateMachine {
         ETAT etat;
         uint32_t time_etat = 0;
 
-        StateMachine(Motor& m, Sensors& c);
+        StateMachine(Motor& m, Sensors& c, ComSerie& s);
         void init();
         void changerEtat(StateMachine::ETAT etat_demande);
         void exec();
@@ -32,7 +32,9 @@ class StateMachine {
     private:
         Motor& moteur;
         Sensors& capteurs;
+        ComSerie& serial;
         Pilotage pilote;
+
     
 };
 

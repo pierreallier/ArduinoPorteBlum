@@ -1,6 +1,6 @@
 #include "StateMachine.h"
 
-StateMachine::StateMachine(Motor& m, Sensors& c) : moteur(m), capteurs(c), pilote() {
+StateMachine::StateMachine(Motor& m, Sensors& c, ComSerie& s) : moteur(m), capteurs(c), serial(s), pilote() {
     etat = StateMachine::ETAT::INIT;
     time_etat = millis();
 }
@@ -15,6 +15,7 @@ void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
         time_etat = millis();
     }
     etat = etat_demande;
+    serial.sendEtat((int)etat);
     if (etat == StateMachine::ETAT::PILOTE || 
         etat == StateMachine::ETAT::OUVERTURE || 
         etat == StateMachine::ETAT::FERMETURE || 
@@ -31,7 +32,9 @@ void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
 void StateMachine::exec() {
     switch(etat) {
         case StateMachine::ETAT::INIT:
-            Serial.println(F("Pilotage Porte Blum"));
+            Serial.println("");
+            Serial.println(F("==== Pilotage Porte Blum ===="));
+            Serial.println("");
             changerEtat(StateMachine::ETAT::REPOS);
             break;
 
@@ -64,6 +67,7 @@ void StateMachine::exec() {
                 pilote.update(moteur);
             } else {
                 moteur.stop();
+                serial.sendError("Blocage detecté");
                 changerEtat(StateMachine::ETAT::DEBRAYAGE);
             }
             break;
@@ -80,18 +84,13 @@ void StateMachine::exec() {
             float delta_courant = abs(1 - moteur.courant_avant_debrayage/capteurs.courant_moyen);
 
             if (millis() - time_etat >= 100 || delta_angle > 100 || delta_courant > 0.5) {
-                Serial.println(F("Debrayage terminé"));
                 moteur.stop();
                 changerEtat(StateMachine::ETAT::REPOS);
             }
             break;
 
-        case StateMachine::ETAT::ERREUR:
-            changerEtat(StateMachine::ETAT::DEBRAYAGE);
-            break;
-
         default:
-            moteur.stop();
+            changerEtat(StateMachine::ETAT::DEBRAYAGE);
             break;
     }
     moteur.update();

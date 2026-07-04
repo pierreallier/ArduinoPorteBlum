@@ -1,6 +1,6 @@
 #include "ComSerie.h"
 
-ComSerie::ComSerie(StateMachine& s, Motor& m, Sensors& c) : machine(s),moteur(m),capteurs(c) {
+ComSerie::ComSerie(Motor& m, Sensors& c) : moteur(m),capteurs(c) {
 
 }
 
@@ -13,8 +13,6 @@ void ComSerie::task() {
     if (millis() - time_precedent >= 200) {
         time_precedent += 200;
         printMesures();
-        //sendMesures();
-        //sendEtat(machine.etat);
         getCommandes();
     }
 }
@@ -35,33 +33,6 @@ void ComSerie::printMesures() {
     Serial.print(capteurs.angle_porte);
     Serial.print(" , P:");
     Serial.print(capteurs.potentiometre);
-    Serial.print(" , E:");
-    switch(machine.etat) {
-        case StateMachine::ETAT::INIT:
-            Serial.print("INIT");
-            break;
-        case StateMachine::ETAT::REPOS:
-            Serial.print("REPOS");
-            break;
-        case StateMachine::ETAT::OUVERTURE:
-            Serial.print("OUVERTURE");
-            break;
-        case StateMachine::ETAT::FERMETURE:
-            Serial.print("FERMETURE");
-            break;
-        case StateMachine::ETAT::PILOTE:
-            Serial.print("PILOTE");
-            break;
-        case StateMachine::ETAT::CALIBRATION:
-            Serial.print("CALIBRATION");
-            break;
-        case StateMachine::ETAT::DEBRAYAGE:
-            Serial.print("DEBRAYAGE");
-            break;
-        case StateMachine::ETAT::ERREUR:
-            Serial.print("ERREUR");
-            break;
-    }
     Serial.print(" , M:");
     Serial.print(moteur.isEnabled() ? "ON" : "OFF");
     Serial.print(" , D:");
@@ -106,9 +77,40 @@ void ComSerie::sendMesures() {
     Serial.print(capteurs.blocage_detecte);
 }
 
-void ComSerie::sendEtat(StateMachine::ETAT etat){
+void ComSerie::sendEtat(int etat){
     Serial.print("S;");
-    Serial.println((int)etat);
+    Serial.print(etat);
+    switch(etat) {
+        case 0:
+            Serial.println(";INIT");
+            break;
+        case 1:
+            Serial.println(";REPOS");
+            break;
+        case 2:
+            Serial.println(";OUVERTURE");
+            break;
+        case 3:
+            Serial.println(";FERMETURE");
+            break;
+        case 4:
+            Serial.println(";PILOTE");
+            break;
+        case 5:
+            Serial.println(";CALIBRATION");
+            break;
+        case 6:
+            Serial.println(";DEBRAYAGE");
+            break;
+        case 7:
+            Serial.println(";ERREUR");
+            break;
+    }
+}
+
+void ComSerie::sendError(String message) {
+    Serial.print("E;");
+    Serial.println(message);
 }
 
 void ComSerie::getCommandes() {

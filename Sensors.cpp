@@ -57,10 +57,6 @@ void Sensors::checkSecurites(int pwm) {
         else 
             compteur_blocage=0;
         blocage_detecte = (compteur_blocage >= NB_CYCLES_BLOCAGE);
-        if (blocage_detecte) {
-            Serial.print("BLOCAGE : PWM=");
-            Serial.println(pwm);
-        }
     }
 }
 

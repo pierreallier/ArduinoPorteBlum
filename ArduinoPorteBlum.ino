@@ -13,8 +13,8 @@ Bounce2::Button btWireless;
 
 Sensors capteurs;
 Motor moteur(capteurs);
-StateMachine machine(moteur, capteurs);
-ComSerie portserie(machine, moteur, capteurs);
+ComSerie portserie(moteur, capteurs);
+StateMachine machine(moteur, capteurs, portserie);
 
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
