@@ -1,7 +1,10 @@
 #include "Sensors.h"
 
 volatile int32_t ticks_codeur=0;
-void isr_Codeur();
+void isr_Codeur() {
+    // Gestion interruption du codeur
+    ticks_codeur += (PIND & _BV(PD2)) ? -1 : +1;
+}
 
 Sensors::Sensors() {
     // Initialisation du tableau du courant
@@ -109,11 +112,6 @@ void Sensors::encoderResetTicks() {
     noInterrupts();
     ticks_codeur = 0;
     interrupts();
-}
-
-void isr_Codeur() {
-    // Gestion interruption du codeur
-    ticks_codeur += (PIND & _BV(PD2)) ? -1 : +1;
 }
 
 bool Sensors::detectionButees() {
