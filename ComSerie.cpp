@@ -1,6 +1,6 @@
 #include "ComSerie.h"
 
-ComSerie::ComSerie(Motor& m, Sensors& c) : moteur(m),capteurs(c) {
+ComSerie::ComSerie(Motor& m, Sensors& c, StateMachine& s) : moteur(m),capteurs(c),machine(s) {
 
 }
 
@@ -13,7 +13,8 @@ void ComSerie::task() {
     if (millis() - time_precedent >= 200) {
         time_precedent += 200;
         printMesures();
-        getCommandes();
+        sendMessages();
+        readSerial();
     }
 }
 
@@ -77,34 +78,51 @@ void ComSerie::sendMesures() {
     Serial.print(capteurs.blocage_detecte);
 }
 
-void ComSerie::sendEtat(int etat){
-    Serial.print("S;");
-    Serial.print(etat);
-    switch(etat) {
-        case 0:
+void ComSerie::sendMessages() {
+    while (machine.hasMessage()) {
+        Message msg = machine.getMessage();
+
+        switch (msg.type) {
+            case Message::Type::ETAT:
+                sendEtat(msg.valeur);
+                break;
+
+            case Message::Type::INFO:
+                Serial.print("I;");
+                Serial.println(msg.valeur);
+                break;
+
+            case Message::Type::ERREUR:
+                sendError(msg.valeur);
+                break;
+        }
+    }
+}
+
+void ComSerie::sendEtat(String etat){
+    if (etat != "") {
+        Serial.print("S;");
+        Serial.print(etat);
+        if (etat == '0')
             Serial.println(";INIT");
-            break;
-        case 1:
+        else if (etat.startsWith("1"))
             Serial.println(";REPOS");
-            break;
-        case 2:
+        else if (etat.startsWith("2"))
+            Serial.println(";FONCTIONNEMENT");
+        else if (etat.startsWith("3"))
             Serial.println(";OUVERTURE");
-            break;
-        case 3:
+        else if (etat.startsWith("4"))
             Serial.println(";FERMETURE");
-            break;
-        case 4:
+        else if (etat.startsWith("5"))
             Serial.println(";PILOTE");
-            break;
-        case 5:
+        else if (etat.startsWith("6"))
             Serial.println(";CALIBRATION");
-            break;
-        case 6:
+        else if (etat.startsWith("7"))
             Serial.println(";DEBRAYAGE");
-            break;
-        case 7:
+        else if (etat.startsWith("8"))
             Serial.println(";ERREUR");
-            break;
+        else
+            Serial.println(";ETAT INCONNU");
     }
 }
 
@@ -113,7 +131,8 @@ void ComSerie::sendError(String message) {
     Serial.println(message);
 }
 
-void ComSerie::getCommandes() {
+
+void ComSerie::readSerial() {
     if (Serial.available() > 0) {
         String command = Serial.readStringUntil('\n');
         command.trim(); // Supprime les espaces et les retours à la ligne
@@ -148,16 +167,16 @@ void ComSerie::_GET(String commande) {
 void ComSerie::_DO(String commande) {
     commande.trim(); // Supprime les espaces et les retours à la ligne
     commande.toUpperCase(); // Convertit la commande
-    // if (commande == "OUVRIR")
-    //     changerEtat(EtatMachine::OUVERTURE);
-    // else if (commande == "FERMER")
-    //     changerEtat(EtatMachine::FERMETURE);
-    // else if (commande == "PILOTER")
-    //     changerEtat(EtatMachine::PILOTE);
-    // else if (commande == "DEBRAYER")
-    //     changerEtat(EtatMachine::DEBRAYAGE);
-    // else if (commande == "STOP")
-    //     changerEtat(EtatMachine::DEBRAYAGE);
-    // else 
-    //     Serial.println("E;Commande DO inconnue {OUVRIR,FERMER,PILOTER,DEBRAYER,STOP}.");
+    if (commande.startsWith("INIT"))
+        machine.changerEtat(StateMachine::ETAT::INIT);
+    else if (commande.startsWith("OUVRIR"))
+        machine.changerEtat(StateMachine::ETAT::OUVERTURE);
+    else if (commande.startsWith("FERMER"))
+        machine.changerEtat(StateMachine::ETAT::FERMETURE);
+    else if (commande.startsWith("STOP"))
+        machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
+    else if (commande.startsWith("PILOTER"))
+        machine.changerEtat(StateMachine::ETAT::PILOTAGE);
+    else 
+        Serial.println("E;Commande DO inconnue {INIT,OUVRIR,FERMER,STOP,PILOTER}.");
 }

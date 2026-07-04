@@ -13,8 +13,9 @@ Bounce2::Button btWireless;
 
 Sensors capteurs;
 Motor moteur(capteurs);
-ComSerie portserie(moteur, capteurs);
-StateMachine machine(moteur, capteurs, portserie);
+StateMachine machine(moteur, capteurs);
+ComSerie portserie(moteur, capteurs, machine);
+
 
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
@@ -49,29 +50,27 @@ void ordonnanceur() {
         tVerif += 5;   
         // Vérifications des sécurités
         capteurs.checkSecurites(moteur.getPWM());
+        if (capteurs.limite_courant_atteinte) {
+            portserie.sendError("Limite de courant atteinte");
+        }
+    }
     
+    if (maintenant - tAcq >= 10) {
+        tAcq += 10;
         // Vérification des boutons de commande
         btTest.update();
         btWireless.update();
         if (btTest.pressed()) {
             if (machine.etat == StateMachine::ETAT::REPOS)
-                machine.changerEtat(StateMachine::ETAT::PILOTE);
+                machine.changerEtat(StateMachine::ETAT::PILOTAGE);
             else
                 machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
         }
         if (btWireless.pressed()) {
-            if (machine.etat == StateMachine::ETAT::REPOS) {
-                // TODO : la suite doit être géré par la machine à état !
-                if (capteurs.angle_porte < -100) {
-                    machine.changerEtat(StateMachine::ETAT::OUVERTURE);
-                }
-                else {
-                    machine.changerEtat(StateMachine::ETAT::FERMETURE);
-                }
-            }
-            else {
+            if (machine.etat == StateMachine::ETAT::REPOS)
+                machine.changerEtat(StateMachine::ETAT::FONCTIONNEMENT);
+            else
                 machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
-            }
         }
     }
 

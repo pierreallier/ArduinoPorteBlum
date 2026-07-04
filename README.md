@@ -2,7 +2,7 @@
 
 Programme Arduino pour piloter et controler un servomoteur BLUM qui permet de motoriser un mécanisme d'ouverture de meubles haut de cuisine.
 
-Basé sur un graphe d'état
+Basé sur un graphe d'état, avec détection des obstacles.
 
 Grandeurs mesurées :
 - Tension d'alimentation
@@ -15,3 +15,6 @@ Commandé à partir de deux boutons :
 - un bouton sans fil = fonctionnement normal du système
 - bouton physique = étallonnage de la porte / pilotage via un ordinateur
 
+TODO:
+- Etallonnage de la porte avec le mécanisme de détection des obstacles pour étalonner le capteur angulaire.
+- Ajout des asservissements.

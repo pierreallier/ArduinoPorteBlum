@@ -21,6 +21,11 @@ void Sensors::init() {
     pinMode(DRIVER_CURRENT, INPUT);
     pinMode(POTENTIOMETRE, INPUT);
 
+    // Initialisation du tableau du courant
+    for (int i=0; i < NB_MOY_COURANT; i++) {
+        courant_tab[i] = 0;
+    }
+
     // Calcul offset courant
     for (int i = 0; i < 500; i++) {
         courant_offset += analogRead(MOTOR_CURRENT);

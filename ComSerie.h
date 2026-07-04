@@ -4,22 +4,25 @@
 #include <Arduino.h>
 #include "Sensors.h"
 #include "Motor.h"
+#include "StateMachine.h"
 
 class ComSerie {
     public:
-        ComSerie(Motor& m, Sensors& c);
+        ComSerie(Motor& m, Sensors& c, StateMachine& s);
         void init();
         void task();
         void printMesures();
-        void getCommandes();
+        void readSerial();
         void sendMesures();
-        void sendEtat(int etat);
+        void sendEtat(String etat);
         void sendError(String message);
+        void sendMessages();
     
     private:
         uint32_t time_precedent = 0;
         Motor& moteur;
         Sensors& capteurs;
+        StateMachine& machine;
 
         void _SET(String commande);
         void _GET(String commande);
