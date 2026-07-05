@@ -33,11 +33,13 @@ void Sensors::init() {
     }
 
     // Calcul offset courant
-    courant_offset = 0;
+    uint32_t somme = 0;
     for (int i = 0; i < 500; i++) {
-        courant_offset += analogRead(MOTOR_CURRENT);
+        somme += analogRead(MOTOR_CURRENT);
     }
-    courant_offset /= 500;
+    courant_offset = somme / 500;
+
+    Serial.println(courant_offset);
 
     // Initialisation du codeur du moteur
     pinMode(CODEUR_A_PIN, INPUT_PULLUP);
@@ -105,7 +107,10 @@ void Sensors::getTension() {
 }
 
 void Sensors::getCourant() {
-    float current = (analogRead(MOTOR_CURRENT) - courant_offset)*0.02641938126; // en A
+    int adc = analogRead(MOTOR_CURRENT);
+    int diff = adc - courant_offset;
+    float current = diff * 0.02640625f;
+
     courant_moyen = addCourant(current);
 }
 
