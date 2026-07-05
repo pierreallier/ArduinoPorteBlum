@@ -1,12 +1,12 @@
 #include "ComSerie.h"
 
 ComSerie::ComSerie(Motor& m, Sensors& c, StateMachine& s) : moteur(m),capteurs(c),machine(s) {
-
 }
 
 void ComSerie::init() {
     Serial.begin(115200);
     Serial.flush();
+    buzzer.init();
 }
 
 void ComSerie::task() {
@@ -16,7 +16,17 @@ void ComSerie::task() {
         sendMesures();
         sendMessages();
         readSerial();
+        buzzer.task();
     }
+}
+
+void ComSerie::printFinInit() {
+    Serial.println("");
+    Serial.println(F("==== Pilotage Porte Blum ===="));
+    Serial.println("");
+    Serial.println("Initialisation terminée");
+    Serial.println("");
+    buzzer.sequenceInit();
 }
 
 void ComSerie::printMesures() {
@@ -130,6 +140,7 @@ void ComSerie::sendEtat(String etat){
 void ComSerie::sendError(String message) {
     Serial.print("E;");
     Serial.println(message);
+    buzzer.sequenceErreur();
 }
 
 

@@ -29,6 +29,8 @@ void setup() {
     capteurs.init(); // Initialisation des capteurs
     portserie.init(); // Initialisation du port série
     machine.init(); // Initialisation de la machine à états
+
+    portserie.printFinInit();
 }
 
 void loop() {

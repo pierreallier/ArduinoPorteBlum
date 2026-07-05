@@ -5,12 +5,14 @@
 #include "Sensors.h"
 #include "Motor.h"
 #include "StateMachine.h"
+#include "Buzzer.h"
 
 class ComSerie {
     public:
         ComSerie(Motor& m, Sensors& c, StateMachine& s);
         void init();
         void task();
+        void printFinInit();
         void printMesures();
         void readSerial();
         void sendMesures();
@@ -23,6 +25,7 @@ class ComSerie {
         Motor& moteur;
         Sensors& capteurs;
         StateMachine& machine;
+        Buzzer buzzer;
 
         void _SET(String commande);
         void _GET(String commande);

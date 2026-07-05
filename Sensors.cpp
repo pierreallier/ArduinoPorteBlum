@@ -8,6 +8,9 @@ void isr_Codeur() {
 
 Sensors::Sensors() {
     // Initialisation du tableau du courant
+    courant_moyen = 0.0f;
+    courant_idx = 0;
+    courantSomme = 0.0f;
     for (int i=0; i < NB_MOY_COURANT; i++) {
         courant_tab[i] = 0;
     }
@@ -22,11 +25,15 @@ void Sensors::init() {
     pinMode(POTENTIOMETRE, INPUT);
 
     // Initialisation du tableau du courant
+    courant_moyen = 0.0f;
+    courant_idx = 0;
+    courantSomme = 0.0f;
     for (int i=0; i < NB_MOY_COURANT; i++) {
         courant_tab[i] = 0;
     }
 
     // Calcul offset courant
+    courant_offset = 0;
     for (int i = 0; i < 500; i++) {
         courant_offset += analogRead(MOTOR_CURRENT);
     }
@@ -74,12 +81,14 @@ void Sensors::mesures(int pwm) {
 }
 
 float Sensors::addCourant(float current) {
-  // Fonction qui calcule une moyenne glissante
-  courant_moyen -= courant_tab[courant_idx];
-  courant_moyen += current;
-  courant_tab[courant_idx] = current;
-  courant_idx = (courant_idx+1) % NB_MOY_COURANT;
-  return (float) courant_moyen / NB_MOY_COURANT;
+    // Fonction qui calcule la moyenne glissante du courant
+    courantSomme -= courant_tab[courant_idx];
+    courantSomme += current;
+
+    courant_tab[courant_idx] = current;
+    courant_idx = (courant_idx + 1) % NB_MOY_COURANT;
+
+    return courantSomme / NB_MOY_COURANT;
 }
 
 void Sensors::getCodeurPorte() {
@@ -140,6 +149,6 @@ void Sensors::getPotentiometre() {
     potentiometre = (analogRead(POTENTIOMETRE)-500)*0.5;
 }
 
-void Sensors::setConsigne(int consigne) {
-    consigne = constrain(consigne, -255, 255);
+void Sensors::setConsigne(int c) {
+    consigne = constrain(c, -255, 255);
 }
