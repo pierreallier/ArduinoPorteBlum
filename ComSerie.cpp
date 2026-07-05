@@ -1,5 +1,14 @@
 #include "ComSerie.h"
 
+#include <avr/wdt.h>
+
+void resetArduino() {
+    wdt_enable(WDTO_15MS); // Redémarrage dans ~15 ms
+    while (true) {
+        // Attendre le reset
+    }
+}
+
 ComSerie::ComSerie(Motor& m, Sensors& c, StateMachine& s) : moteur(m),capteurs(c),machine(s) {
 }
 
@@ -179,6 +188,8 @@ void ComSerie::_GET(String commande) {
 void ComSerie::_DO(String commande) {
     commande.trim(); // Supprime les espaces et les retours à la ligne
     commande.toUpperCase(); // Convertit la commande
+    if (commande.startsWith("RESET"))
+        resetArduino();
     if (commande.startsWith("INIT"))
         machine.changerEtat(StateMachine::ETAT::INIT);
     else if (commande.startsWith("OUVRIR"))
@@ -190,5 +201,5 @@ void ComSerie::_DO(String commande) {
     else if (commande.startsWith("PILOTER"))
         machine.changerEtat(StateMachine::ETAT::PILOTAGE);
     else 
-        Serial.println("E;Commande DO inconnue {INIT,OUVRIR,FERMER,STOP,PILOTER}.");
+        Serial.println("E;Commande DO inconnue {RESET,INIT,OUVRIR,FERMER,STOP,PILOTER}.");
 }
