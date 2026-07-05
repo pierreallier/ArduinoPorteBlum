@@ -7,6 +7,9 @@
 #include "StateMachine.h"
 #include "Buzzer.h"
 
+constexpr float RADS_TO_RPM = 60.0f / (2.0f * PI);
+constexpr float RAD_TO_TURN = 1.0f / (2.0f * PI);
+
 class ComSerie {
     public:
         ComSerie(Motor& m, Sensors& c, StateMachine& s);

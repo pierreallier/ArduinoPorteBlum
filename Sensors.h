@@ -14,6 +14,13 @@
 #define CODEUR_A_PIN 18
 #define CODEUR_B_PIN 19
 
+// Constantes des capteurs
+constexpr float RAD_PER_TICK = 2.0f * PI / 128.0f;
+constexpr float K_VITESSE = 2.0f * PI / 128.0f / 0.1f;
+constexpr float CURRENT_COEF = 5.0f / 1024.0f / 0.185f;
+constexpr float VOLTAGE_COEF = 25.0f / 1023.0f;
+
+
 // Variables pour le calcul de la moyenne glissante du courant
 const float LIMITE_COURANT = 2.5f;
 const unsigned int NB_MOY_COURANT = 5;
@@ -44,7 +51,6 @@ class Sensors {
         bool blocage_detecte = false;
         bool limite_courant_atteinte = false;
 
-        Sensors();
         void init();
         void mesures(int pwm);
         void checkSecurites(int pwm);

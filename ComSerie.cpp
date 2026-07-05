@@ -47,9 +47,9 @@ void ComSerie::printMesures() {
     Serial.print(" , Intensité:"); // Courant moteur en Ampère
     Serial.print(capteurs.courant_moyen);
     Serial.print(" , AngleMoteur:"); // Angle moteur en degré
-    Serial.print(capteurs.angle_moteur);
+    Serial.print(capteurs.angle_moteur * RAD_TO_TURN);
     Serial.print(" , VitesseMoteur:"); // Vitesse rotation moteur en rad/s
-    Serial.print(capteurs.vitesse_moteur);
+    Serial.print(capteurs.vitesse_moteur * RADS_TO_RPM);
     Serial.print(" , AnglePorte:"); // Angle porte en degré
     Serial.print(capteurs.angle_porte);
     Serial.print(" , Potentiomètre:"); // Consigne du potentiomètre en -255/255

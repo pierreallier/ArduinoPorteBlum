@@ -16,5 +16,8 @@ Commandé à partir de deux boutons :
 - bouton physique = étallonnage de la porte / pilotage via un ordinateur
 
 TODO:
+- Détection besoin étalonnage si moteur tourne et pas la porte dans la vérification des blocages.
 - Etallonnage de la porte avec le mécanisme de détection des obstacles pour étalonner le capteur angulaire.
 - Ajout des asservissements.
+- Envoyer la consignes (différent du PWM) dans les mesures.
+- Réfléchir à un format de consignes type echelon, trapèze, sinus ...

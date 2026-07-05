@@ -6,16 +6,6 @@ void isr_Codeur() {
     ticks_codeur += (PIND & _BV(PD2)) ? -1 : +1;
 }
 
-Sensors::Sensors() {
-    // Initialisation du tableau du courant
-    courant_moyen = 0.0f;
-    courant_idx = 0;
-    courantSomme = 0.0f;
-    for (int i=0; i < NB_MOY_COURANT; i++) {
-        courant_tab[i] = 0;
-    }
-}
-
 void Sensors::init() {
     pinMode(CODEUR_PORTE, INPUT);
     pinMode(DETECTEUR_MEUBLE, INPUT);
@@ -103,13 +93,13 @@ void Sensors::getCodeurPorte() {
 }
 
 void Sensors::getTension() {
-    tension = analogRead(MOTOR_VOLTAGE)*(25/1023.); // en V
+    tension = analogRead(MOTOR_VOLTAGE)*VOLTAGE_COEF; // en V
 }
 
 void Sensors::getCourant() {
     int adc = analogRead(MOTOR_CURRENT);
     int diff = adc - courant_offset;
-    float current = diff * 0.02640625f;
+    float current = diff * CURRENT_COEF;
 
     courant_moyen = addCourant(current);
 }
@@ -122,9 +112,10 @@ void Sensors::getCodeurMoteur() {
     codeur_Delta_Pos = encoderGetTicks();
     encoderResetTicks();
 
-    vitesse_moteur = ((3.141592*codeur_Delta_Pos)/512.)/(millis()-time_mesures)*1000.0; // en rad/s
-    time_mesures = millis();
-    angle_moteur += codeur_Delta_Pos*0.3515625;
+    float current_time = millis();
+    vitesse_moteur = K_VITESSE * codeur_Delta_Pos / (millis() - time_mesures);   // rad/s en 128
+    angle_moteur += RAD_PER_TICK * codeur_Delta_Pos; // en rad
+    time_mesures = current_time;
 }
 
 int32_t Sensors::encoderGetTicks() {
