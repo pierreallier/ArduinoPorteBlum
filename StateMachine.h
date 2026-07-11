@@ -82,6 +82,7 @@ class StateMachine {
             RECHERCHE_BUTEE_BASSE,
             DEBRAYAGE_BAS,
             RECHERCHE_BUTEE_HAUTE,
+            DEBRAYAGE_FINAL,
             NONE,
         };
         ETAPE_CALIBRATION etape_calibration;
@@ -89,8 +90,8 @@ class StateMachine {
         float angle_butee_haute;
         bool is_calibre;
         
-        bool etatOuverture();
-        bool etatFermeture();
+        bool etatOuverture(uint16_t speed);
+        bool etatFermeture(uint16_t speed);
         bool etatDebrayage();
         bool etatPilote();
         bool etatCalibration();

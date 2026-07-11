@@ -23,7 +23,7 @@ void ComSerie::task() {
     if (millis() - time_precedent >= 100) {
         time_precedent += 100;
         //printMesures();
-        //sendMesures();
+        sendMesures();
         sendMessages();
         readSerial();
         buzzer.task();

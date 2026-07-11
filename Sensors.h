@@ -22,7 +22,7 @@ constexpr float VOLTAGE_COEF = 25.0f / 1023.0f;
 
 
 // Variables pour le calcul de la moyenne glissante du courant
-const float LIMITE_COURANT = 2f;
+const float LIMITE_COURANT = 2.0f;
 const unsigned int NB_MOY_COURANT = 5;
 
 // Détections butées

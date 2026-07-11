@@ -21,8 +21,8 @@ void StateMachine::init() {
 void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
     if (etat == etat_demande)
         return;
-    if ((etat == StateMachine::ETAT::PILOTAGE) && (etat_demande!=StateMachine::ETAT::DEBRAYAGE)) {
-        pushMessage(Message::TYPE::ERREUR,"Changement depuis piloté vers un état impossible");
+    if ((etat == StateMachine::ETAT::CALIBRATION) && !is_calibre) {
+        pushMessage(Message::TYPE::ERREUR,"Calibration échouée");
         return;
     }
     if (!is_calibre && etat_demande == StateMachine::ETAT::PILOTAGE) {
@@ -112,13 +112,13 @@ void StateMachine::exec() {
             break;
         }
         case StateMachine::ETAT::OUVERTURE: {
-            if (etatOuverture()) {
+            if (etatOuverture(255)) {
                 changerEtat(StateMachine::ETAT::DEBRAYAGE);
             }
             break;
         }
         case StateMachine::ETAT::FERMETURE: {
-            if (etatFermeture()) {
+            if (etatFermeture(255)) {
                 changerEtat(StateMachine::ETAT::DEBRAYAGE);
             }
             break;
@@ -149,10 +149,10 @@ void StateMachine::exec() {
     moteur.update();
 }
 
-bool StateMachine::etatOuverture() {
+bool StateMachine::etatOuverture(uint16_t speed) {
     /* Gestion de l'ouverture de la porte en BO, retourne false si en cours, true si fini */
     moteur.setDirection(Motor::DIR::OUVERTURE);
-    moteur.setSpeed(abs(capteurs.potentiometre));
+    moteur.setSpeed(speed);
     if (capteurs.limite_haute) {
         moteur.stop();
         return true;
@@ -160,10 +160,10 @@ bool StateMachine::etatOuverture() {
     return false;
 }
 
-bool StateMachine::etatFermeture() {
+bool StateMachine::etatFermeture(uint16_t speed) {
     /* Gestion de la fermeture de la porte en BO, retourne false si en cours, true si fini */
     moteur.setDirection(Motor::DIR::FERMETURE);
-    moteur.setSpeed(abs(capteurs.potentiometre));
+    moteur.setSpeed(speed);
     if (capteurs.limite_basse) {
         moteur.stop();
         return true;
@@ -214,7 +214,6 @@ bool StateMachine::etatPilote() {
             break;
         }
     }
-    Serial.println(pwm);
     moteur.setSpeedDir(pwm);
     return false;
 }
@@ -223,9 +222,10 @@ bool StateMachine::etatCalibration() {
     /* Gestion de l'état calibration */
     switch (etape_calibration) {
         case StateMachine::ETAPE_CALIBRATION::OUVERTURE_INITIALE:
-            if (etatOuverture() || capteurs.isBlocage(true)) {
-                etape_calibration = StateMachine::ETAPE_CALIBRATION::DEBRAYAGE_HAUT;
+            if (etatOuverture(200) || capteurs.isBlocage(true)) {
                 delay(1000);
+                etape_calibration = StateMachine::ETAPE_CALIBRATION::DEBRAYAGE_HAUT;
+                moteur.debrayage();
             }
             break;
         case StateMachine::ETAPE_CALIBRATION::DEBRAYAGE_HAUT: {
@@ -235,10 +235,11 @@ bool StateMachine::etatCalibration() {
             break;
         }
         case StateMachine::ETAPE_CALIBRATION::RECHERCHE_BUTEE_BASSE: {
-            if (etatFermeture() || capteurs.isBlocage(true)) {
+            if (etatFermeture(200) || capteurs.isBlocage(true)) {
                 angle_butee_basse = capteurs.angle_porte;
-                etape_calibration = StateMachine::ETAPE_CALIBRATION::DEBRAYAGE_BAS;
                 delay(1000);
+                moteur.debrayage();
+                etape_calibration = StateMachine::ETAPE_CALIBRATION::DEBRAYAGE_BAS;
             }
             break;
         }
@@ -248,15 +249,24 @@ bool StateMachine::etatCalibration() {
             }
             break;
         case StateMachine::ETAPE_CALIBRATION::RECHERCHE_BUTEE_HAUTE: {
-            if (etatOuverture() || capteurs.isBlocage(true)) {
+            if (etatOuverture(200) || capteurs.isBlocage(true)) {
                 angle_butee_haute = capteurs.angle_porte;
                 is_calibre = true;
-                pushMessage(Message::TYPE::INFO, "Fin de calibration : limite haute=" + String(angle_butee_haute) + "° ; limite basse=" + String(angle_butee_basse) + "°");
-                etape_calibration = StateMachine::ETAPE_CALIBRATION::NONE;
-                changerEtat(StateMachine::ETAT::DEBRAYAGE);
+                etape_calibration = StateMachine::ETAPE_CALIBRATION::DEBRAYAGE_FINAL;
+                moteur.debrayage();
             }
             break;
         }
+        case StateMachine::ETAPE_CALIBRATION::DEBRAYAGE_FINAL:
+            if (etatDebrayage()) {
+                butee_desactivated = false;
+                pushMessage(Message::TYPE::INFO, "Fin de calibration : limite haute=" + String(angle_butee_haute) + "° ; limite basse=" + String(angle_butee_basse) + "°");
+                etape_calibration = StateMachine::ETAPE_CALIBRATION::NONE;
+                delay(500);
+                capteurs.setLimits(angle_butee_basse,angle_butee_haute);
+                changerEtat(StateMachine::ETAT::REPOS);
+            }
+            break;
         case StateMachine::ETAPE_CALIBRATION::NONE:
             return true;
         default:

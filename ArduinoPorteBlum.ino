@@ -64,10 +64,10 @@ void ordonnanceur() {
             machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
             portserie.sendError("Limite de courant atteinte",true);
         }
-        if (capteurs.limite_haute || capteurs.limite_basse && !erreurLimitePorte) {
+        if ((capteurs.limite_haute || capteurs.limite_basse) && !erreurLimitePorte) {
             erreurLimitePorte = true;
             machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
-            portserie.sendError("Limite de la porte atteintes",true);
+            portserie.sendError("Limite de la porte atteinte",true);
         }
         if (capteurs.isBlocage(false) && !erreurBlocage && not(machine.butee_desactivated)){
             erreurBlocage = true;
