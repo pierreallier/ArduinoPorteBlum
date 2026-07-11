@@ -1,3 +1,4 @@
+#include "HardwareSerial.h"
 #include "ComSerie.h"
 
 #include <avr/wdt.h>
@@ -21,7 +22,7 @@ void ComSerie::init() {
 void ComSerie::task() {
     if (millis() - time_precedent >= 50) {
         time_precedent += 50;
-        printMesures();
+        //printMesures();
         //sendMesures();
         sendMessages();
         readSerial();
@@ -35,7 +36,9 @@ void ComSerie::printFinInit() {
     Serial.println("");
     Serial.println("Initialisation terminée");
     Serial.println("");
+    Serial.flush();
     buzzer.sequenceInit();
+    delay(1000);
 }
 
 void ComSerie::printMesures() {
@@ -77,25 +80,21 @@ void ComSerie::printMesures() {
 
 void ComSerie::sendMesures() {
     Serial.print("M;");
-    Serial.print(capteurs.time_mesures);
+    Serial.print(capteurs.time_mesures,0);
     Serial.print(";");
-    Serial.print(capteurs.tension);
+    Serial.print(capteurs.tension,2);
     Serial.print(";");
     Serial.print(moteur.getPWM());
     Serial.print(";");
-    Serial.print(capteurs.courant_moyen);
+    Serial.print(capteurs.courant_moyen,2);
     Serial.print(";");
-    Serial.print(capteurs.angle_moteur);
+    Serial.print(capteurs.angle_moteur,2);
     Serial.print(";");
-    Serial.print(capteurs.vitesse_moteur);
+    Serial.print(capteurs.vitesse_moteur,2);
     Serial.print(";");
-    Serial.print(capteurs.angle_porte);
+    Serial.print(capteurs.angle_porte,2);
     Serial.print(";");
-    Serial.print(capteurs.limite_haute);
-    Serial.print(";");
-    Serial.print(capteurs.limite_basse); 
-    Serial.print(";");
-    Serial.println(capteurs.blocage_detecte);
+    Serial.println(capteurs.consigne,2);
 }
 
 void ComSerie::sendMessages() {
@@ -146,10 +145,12 @@ void ComSerie::sendEtat(String etat){
     }
 }
 
-void ComSerie::sendError(String message) {
+void ComSerie::sendError(String message, bool buz = false ) {
     Serial.print("E;");
     Serial.println(message);
-    buzzer.sequenceErreur();
+    if (buz) {
+        buzzer.sequenceErreur();
+    }
 }
 
 
@@ -165,7 +166,7 @@ void ComSerie::readSerial() {
         } else if (command.startsWith("DO")) {
             _DO(command.substring(2));
         } else {
-            Serial.println("E;Commande inconnue {SET,GET,DO}.");
+            Serial.println("I;Commande inconnue {SET,GET,DO}.");
         }
     }
 }
@@ -177,7 +178,7 @@ void ComSerie::_SET(String commande) {
 
     }
     else 
-        Serial.println("E;Commande SET inconnue");
+        Serial.println("I;Commande SET inconnue");
 }
 
 void ComSerie::_GET(String commande) {
@@ -201,5 +202,5 @@ void ComSerie::_DO(String commande) {
     else if (commande.startsWith("PILOTER"))
         machine.changerEtat(StateMachine::ETAT::PILOTAGE);
     else 
-        Serial.println("E;Commande DO inconnue {RESET,INIT,OUVRIR,FERMER,STOP,PILOTER}.");
+        Serial.println("I;Commande DO inconnue {RESET,INIT,OUVRIR,FERMER,STOP,PILOTER}.");
 }

@@ -20,7 +20,7 @@ class ComSerie {
         void readSerial();
         void sendMesures();
         void sendEtat(String etat);
-        void sendError(String message);
+        void sendError(String message, bool buz = false);
         void sendMessages();
     
     private:

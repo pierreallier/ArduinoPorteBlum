@@ -16,9 +16,12 @@ Motor moteur(capteurs);
 StateMachine machine(moteur, capteurs);
 ComSerie portserie(moteur, capteurs, machine);
 
+bool erreurBlocage = false;
+bool erreurCourant = false;
 
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
+    portserie.init(); // Initialisation du port série
 
     btTest.attach(TEST_BT,INPUT_PULLUP);
     btTest.setPressedState(LOW); 
@@ -27,7 +30,6 @@ void setup() {
 
     moteur.init(); // Initialisation du moteur et du driver
     capteurs.init(); // Initialisation des capteurs
-    portserie.init(); // Initialisation du port série
     machine.init(); // Initialisation de la machine à états
 
     portserie.printFinInit();
@@ -52,8 +54,13 @@ void ordonnanceur() {
         tVerif += 5;   
         // Vérifications des sécurités
         capteurs.checkSecurites(moteur.getPWM());
-        if (capteurs.limite_courant_atteinte) {
-            portserie.sendError("Limite de courant atteinte");
+        if (capteurs.limite_courant_atteinte && !erreurCourant) {
+            erreurCourant = true;
+            portserie.sendError("Limite de courant atteinte",true);
+        }
+        if (capteurs.isBlocage(false) && !erreurBlocage){
+            erreurBlocage = true;
+            portserie.sendError("Blocage détecté");
         }
     }
     
@@ -74,11 +81,17 @@ void ordonnanceur() {
             else
                 machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
         }
+        // Vérification des sécurités
+        if(machine.etat == StateMachine::ETAT::REPOS) {
+            erreurBlocage = false;
+            erreurCourant = false;
+        }
     }
 
     // Mesures des grandeurs (toutes les 50 ms)
-    if (maintenant - tMesure >= 50) {
-        tMesure += 50;
+    if (maintenant - tMesure >= 25) {
+        tMesure += 25;
         capteurs.mesures(moteur.getPWM());
+        portserie.sendMesures();
     } 
 }

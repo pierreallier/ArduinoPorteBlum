@@ -32,11 +32,6 @@ void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
 void StateMachine::exec() {
     switch(etat) {
         case StateMachine::ETAT::INIT:
-            Serial.println("");
-            Serial.println(F("==== Pilotage Porte Blum ===="));
-            Serial.println("");
-            Serial.println("Initialisation terminée");
-            Serial.println("");
             changerEtat(StateMachine::ETAT::REPOS);
             break;
 
@@ -55,7 +50,6 @@ void StateMachine::exec() {
             moteur.setSpeed(abs(capteurs.potentiometre));
             if (capteurs.limite_haute || capteurs.isBlocage(true)) {
                 moteur.stop();
-                pushMessage({Message::ERREUR,"Blocage detecté"});
                 changerEtat(StateMachine::ETAT::DEBRAYAGE);
             }
             break;
@@ -65,7 +59,6 @@ void StateMachine::exec() {
             moteur.setSpeed(abs(capteurs.potentiometre));
             if (capteurs.limite_basse || capteurs.isBlocage(true)) {
                 moteur.stop();
-                pushMessage({Message::ERREUR,"Blocage detecté"});
                 changerEtat(StateMachine::ETAT::DEBRAYAGE);
             }
             break;
