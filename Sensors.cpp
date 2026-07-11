@@ -105,9 +105,9 @@ float Sensors::addCourant(float current) {
 void Sensors::getCodeurPorte() {
     // Lecture du codeur
     // TODO (Détecter ces valeurs par une méthode d'étalonnage du codeur)
-    int codeurValue = map(analogRead(CODEUR_PORTE),0,655,0,360.0)-12;
-    if (codeurValue > 210)
-        codeurValue -= 360;
+    float codeurValue = analogRead(CODEUR_PORTE) * (360.0f / 655.0f) - 12.0f;
+    if (codeurValue > 210.0f)
+        codeurValue -= 360.0f;
     angle_porte = codeurValue;
 }
 
@@ -170,7 +170,7 @@ void Sensors::setConsigne(int c) {
 
 void Sensors::setLimits(float limite_basse, float limite_haute) {
     if (limite_basse < ANGLE_MIN){
-        angle_bas_max = limite_basse;
+        angle_bas_max = limite_basse + 6;
     }
     if (limite_haute < ANGLE_MAX) {
         angle_haut_max = limite_haute;

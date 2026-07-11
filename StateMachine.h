@@ -78,17 +78,22 @@ class StateMachine {
 
         enum class ETAPE_CALIBRATION : uint8_t {
             OUVERTURE_INITIALE,
+            ATTENTE_HAUT,
             DEBRAYAGE_HAUT,
             RECHERCHE_BUTEE_BASSE,
+            ATTENTE_BAS,
             DEBRAYAGE_BAS,
             RECHERCHE_BUTEE_HAUTE,
+            ATTENTE_ENREGISTREMENT,
             DEBRAYAGE_FINAL,
             NONE,
         };
+        unsigned long time_etape_calibration = 0;
         ETAPE_CALIBRATION etape_calibration;
         float angle_butee_basse;
         float angle_butee_haute;
         bool is_calibre;
+        void changerEtapeCalibration(StateMachine::ETAPE_CALIBRATION nouvelle_etape);
         
         bool etatOuverture(uint16_t speed);
         bool etatFermeture(uint16_t speed);
