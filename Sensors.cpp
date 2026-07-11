@@ -14,6 +14,10 @@ void Sensors::init() {
     pinMode(DRIVER_CURRENT, INPUT);
     pinMode(POTENTIOMETRE, INPUT);
 
+    // Initialisation des limites
+    angle_haut_max = ANGLE_MAX;
+    angle_bas_max = ANGLE_MIN; 
+
     // Initialisation du tableau du courant
     courant_moyen = 0.0f;
     courant_idx = 0;
@@ -47,8 +51,8 @@ void Sensors::checkSecurites(int pwm) {
 
     // Détection des limites extrémales de la porte
     getCodeurPorte();
-    limite_haute = (angle_porte >= ANGLE_MAX);
-    limite_basse = (angle_porte <= ANGLE_MIN);
+    limite_haute = (angle_porte >= angle_haut_max);
+    limite_basse = (angle_porte <= angle_bas_max);
 
     // Limite de courant
     getCourant();
@@ -76,6 +80,7 @@ void Sensors::checkSecurites(int pwm) {
     compteur_blocage++;
     uint8_t seuil = (pwm_abs >= PWM_RAPIDE) ? NB_CYCLES_BLOCAGE_RAPIDE : NB_CYCLES_BLOCAGE_LENT;
     blocage_detecte = (compteur_blocage >= seuil);
+
 }
 
 void Sensors::mesures(int pwm) {
@@ -161,4 +166,18 @@ void Sensors::getPotentiometre() {
 
 void Sensors::setConsigne(int c) {
     consigne = constrain(c, -255, 255);
+}
+
+void Sensors::setLimits(float limite_basse, float limite_haute) {
+    if (limite_basse < ANGLE_MIN){
+        angle_bas_max = limite_basse;
+    }
+    if (limite_haute < ANGLE_MAX) {
+        angle_haut_max = limite_haute;
+    }
+}
+
+void Sensors::resetLimits() {
+    angle_bas_max = ANGLE_MIN;
+    angle_haut_max = ANGLE_MAX;
 }

@@ -18,6 +18,7 @@ ComSerie portserie(moteur, capteurs, machine);
 
 bool erreurBlocage = false;
 bool erreurCourant = false;
+bool erreurLimitePorte = false;
 
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
@@ -27,6 +28,10 @@ void setup() {
     btTest.setPressedState(LOW); 
     btWireless.attach(WIRELESS_BT,INPUT_PULLUP);
     btWireless.setPressedState(LOW);
+
+    erreurBlocage = false;
+    erreurCourant = false;
+    erreurLimitePorte = false;
 
     moteur.init(); // Initialisation du moteur et du driver
     capteurs.init(); // Initialisation des capteurs
@@ -59,10 +64,15 @@ void ordonnanceur() {
             machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
             portserie.sendError("Limite de courant atteinte",true);
         }
-        if (capteurs.isBlocage(false) && !erreurBlocage){
+        if (capteurs.limite_haute || capteurs.limite_basse && !erreurLimitePorte) {
+            erreurLimitePorte = true;
+            machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
+            portserie.sendError("Limite de la porte atteintes",true);
+        }
+        if (capteurs.isBlocage(false) && !erreurBlocage && not(machine.butee_desactivated)){
             erreurBlocage = true;
             machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
-            portserie.sendError("Blocage détecté - ordonnanceur");
+            portserie.sendError("Blocage détecté");
         }
     }
     
@@ -91,6 +101,7 @@ void ordonnanceur() {
         if(machine.etat == StateMachine::ETAT::REPOS) {
             erreurBlocage = false;
             erreurCourant = false;
+            erreurLimitePorte = false;
         }
     }
 

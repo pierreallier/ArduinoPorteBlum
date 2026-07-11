@@ -201,6 +201,8 @@ void ComSerie::_DO(String commande) {
         machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
     else if (commande.startsWith("PILOTER"))
         machine.changerEtat(StateMachine::ETAT::PILOTAGE);
+    else if (commande.startsWith("CALIBRATION"))
+        machine.changerEtat(StateMachine::ETAT::CALIBRATION);
     else 
         Serial.println("I;Commande DO inconnue {RESET,INIT,OUVRIR,FERMER,STOP,PILOTER}.");
 }

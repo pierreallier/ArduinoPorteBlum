@@ -3,13 +3,19 @@
 StateMachine::StateMachine(Motor& m, Sensors& c) : moteur(m), capteurs(c), consignePotentiometre(), consigne(&consignePotentiometre) {
     etat = StateMachine::ETAT::INIT;
     modePilotage = StateMachine::MODE_PILOTAGE::PWM;
+    etape_calibration = StateMachine::ETAPE_CALIBRATION::NONE;
     time_etat = millis();
+    butee_desactivated = false;
+    is_calibre = false;
 }
 
 void StateMachine::init() {
     etat = StateMachine::ETAT::INIT;
     modePilotage = StateMachine::MODE_PILOTAGE::PWM;
+    etape_calibration = StateMachine::ETAPE_CALIBRATION::NONE;
     time_etat = millis();
+    butee_desactivated = false;
+    is_calibre = false;
 }
 
 void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
@@ -19,24 +25,49 @@ void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
         pushMessage(Message::TYPE::ERREUR,"Changement depuis piloté vers un état impossible");
         return;
     }
+    if (!is_calibre && etat_demande == StateMachine::ETAT::PILOTAGE) {
+        pushMessage(Message::TYPE::ERREUR,"Calibration requise");
+        return;
+    }
     etat = etat_demande;
     time_etat = millis();
     pushMessage(Message::TYPE::ETAT,(String)((int)etat));
-    if (etat == StateMachine::ETAT::DEBRAYAGE) {
-        moteur.enable();
-        moteur.debrayage();
-    } else if (etat == StateMachine::ETAT::OUVERTURE || 
-               etat == StateMachine::ETAT::FERMETURE || 
-               etat == StateMachine::ETAT::CALIBRATION) {
-        moteur.enable();
-    } else if (etat == StateMachine::ETAT::PILOTAGE) {
-        pidPosition.reset();
-        pidVitesse.reset();
-        consigne->init(time_etat);
-        moteur.enable();
-    } else {
-        moteur.disable();
-    }       
+
+    // Initiliations des états
+    switch (etat) {
+        case StateMachine::ETAT::DEBRAYAGE: {
+            butee_desactivated = false;
+            moteur.enable();
+            moteur.debrayage();
+            break;
+        }
+        case StateMachine::ETAT::OUVERTURE:
+        case StateMachine::ETAT::FERMETURE:
+            moteur.enable();
+            break;
+
+        case StateMachine::ETAT::PILOTAGE: {
+            pidPosition.reset();
+            pidVitesse.reset();
+            consigne->init(time_etat);
+            moteur.enable();
+            butee_desactivated = true;
+            break;
+        }
+        case StateMachine::ETAT::CALIBRATION: {
+            is_calibre = false;
+            capteurs.resetLimits();
+            butee_desactivated = true;
+            etape_calibration = ETAPE_CALIBRATION::OUVERTURE_INITIALE;
+            moteur.enable();
+            pushMessage(Message::TYPE::INFO, "Debut de calibration");
+            break;
+        }
+        default: {
+            moteur.disable();
+            break;
+        } 
+    }   
 }
 
 void StateMachine::setMode(StateMachine::MODE_PILOTAGE mode) {
@@ -65,17 +96,14 @@ void StateMachine::setConsigne(Consigne& c) {
 }
 
 void StateMachine::exec() {
-    unsigned long time = millis();
     switch(etat) {
         case StateMachine::ETAT::INIT: {
             changerEtat(StateMachine::ETAT::REPOS);
             break;
         }
-
         case StateMachine::ETAT::REPOS: {
             break;
         }
-
         case StateMachine::ETAT::FONCTIONNEMENT: {
              if (capteurs.angle_porte < -100)
                 changerEtat(StateMachine::ETAT::OUVERTURE);
@@ -83,58 +111,36 @@ void StateMachine::exec() {
                 changerEtat(StateMachine::ETAT::FERMETURE);
             break;
         }
-
         case StateMachine::ETAT::OUVERTURE: {
-            moteur.setDirection(Motor::DIR::OUVERTURE);
-            moteur.setSpeed(abs(capteurs.potentiometre));
-            if (capteurs.limite_haute) {
-                moteur.stop();
+            if (etatOuverture()) {
                 changerEtat(StateMachine::ETAT::DEBRAYAGE);
             }
             break;
         }
-
         case StateMachine::ETAT::FERMETURE: {
-            moteur.setDirection(Motor::DIR::FERMETURE);
-            moteur.setSpeed(abs(capteurs.potentiometre));
-            if (capteurs.limite_basse) {
-                moteur.stop();
+            if (etatFermeture()) {
                 changerEtat(StateMachine::ETAT::DEBRAYAGE);
             }
             break;
         }
-
         case StateMachine::ETAT::PILOTAGE: {
-            if (consigne == nullptr) {
-                moteur.stop();
-                pushMessage(Message::TYPE::ERREUR, "Consigne nulle en mode PILOTAGE");
+            if (etatPilote()) {
                 changerEtat(StateMachine::ETAT::DEBRAYAGE);
-            }
-            bool consigne_terminee = consigne->ended(time);
-            if (consigne_terminee) {
-                moteur.stop();
-                changerEtat(StateMachine::ETAT::DEBRAYAGE);
-            } else {
-                etatPilote(consigne->get(time), time);
             }
             break;
         }
-
-        case StateMachine::ETAT::CALIBRATION: {
-            // Calibration_Run();
-            break;
-        }
-
         case StateMachine::ETAT::DEBRAYAGE: { // ou Arrêt
-            int32_t delta_angle = abs(capteurs.angle_moteur - moteur.codeur_avant_debrayage);
-            float delta_courant = abs(1 - moteur.courant_avant_debrayage/capteurs.courant_moyen);
-            if (time - time_etat >= 100 || delta_angle > 100 || delta_courant > 0.5) {
-                moteur.stop();
+            if (etatDebrayage()) {
                 changerEtat(StateMachine::ETAT::REPOS);
             }
             break;
         }
-
+        case StateMachine::ETAT::CALIBRATION: {
+            if (etatCalibration()) {
+                changerEtat(StateMachine::ETAT::DEBRAYAGE);
+            }
+            break;
+        }
         default: {
             changerEtat(StateMachine::ETAT::DEBRAYAGE);
             break;
@@ -143,29 +149,120 @@ void StateMachine::exec() {
     moteur.update();
 }
 
-void StateMachine::etatPilote(float consigne, unsigned long time) {
+bool StateMachine::etatOuverture() {
+    /* Gestion de l'ouverture de la porte en BO, retourne false si en cours, true si fini */
+    moteur.setDirection(Motor::DIR::OUVERTURE);
+    moteur.setSpeed(abs(capteurs.potentiometre));
+    if (capteurs.limite_haute) {
+        moteur.stop();
+        return true;
+    }
+    return false;
+}
+
+bool StateMachine::etatFermeture() {
+    /* Gestion de la fermeture de la porte en BO, retourne false si en cours, true si fini */
+    moteur.setDirection(Motor::DIR::FERMETURE);
+    moteur.setSpeed(abs(capteurs.potentiometre));
+    if (capteurs.limite_basse) {
+        moteur.stop();
+        return true;
+    }
+    return false;
+}
+
+bool StateMachine::etatDebrayage() {
+    /* Gestion du debrayage du moteur */
+    int32_t delta_angle = abs(capteurs.angle_moteur - moteur.codeur_avant_debrayage);
+    float delta_courant = abs(1 - moteur.courant_avant_debrayage/capteurs.courant_moyen);
+    if (millis() - time_etat >= 100 || delta_angle > 100 || delta_courant > 0.5) {
+        moteur.stop();
+        return true;
+    }
+    return false;
+}
+
+bool StateMachine::etatPilote() {
+    /* Gestion du pilotage de la porte via consigne */
+    if (consigne == nullptr) {
+        moteur.stop();
+        pushMessage(Message::TYPE::ERREUR, "Consigne nulle en mode PILOTAGE");
+        return true;
+    }
+    unsigned long time = millis();
+    if (consigne->ended(time)) {
+        moteur.stop();
+        return true;
+    }
+    float consigne_value = consigne->get(time);
     float pwm = 0.0f;
     switch (modePilotage) {
         case StateMachine::MODE_PILOTAGE::PWM:
-            pwm = constrain(consigne,-255,255);
-            
+            pwm = constrain(consigne_value,-255,255);
             break;
         case StateMachine::MODE_PILOTAGE::VITESSE:
-            pwm = pidVitesse.compute(consigne,capteurs.vitesse_moteur,time);
+            pwm = pidVitesse.compute(consigne_value,capteurs.vitesse_moteur,time);
             break;
         case StateMachine::MODE_PILOTAGE::POSITION:
-            consigne = constrain(consigne,-120,180);
-            pwm = pidPosition.compute(consigne,capteurs.angle_porte,time);
+            consigne_value = constrain(consigne_value,-120,180);
+            pwm = pidPosition.compute(consigne_value,capteurs.angle_porte,time);
             break;
         case StateMachine::MODE_PILOTAGE::POSITION_VITESSE: {
-            consigne = constrain(consigne,-120,180);
-            float consigneVitesse = pidPosition.compute(consigne,capteurs.angle_porte,time);
+            consigne_value = constrain(consigne_value,-120,180);
+            float consigneVitesse = pidPosition.compute(consigne_value,capteurs.angle_porte,time);
             pwm = pidVitesse.compute(consigneVitesse,capteurs.vitesse_moteur, time);
             break;
         }
     }
     Serial.println(pwm);
     moteur.setSpeedDir(pwm);
+    return false;
+}
+
+bool StateMachine::etatCalibration() {
+    /* Gestion de l'état calibration */
+    switch (etape_calibration) {
+        case StateMachine::ETAPE_CALIBRATION::OUVERTURE_INITIALE:
+            if (etatOuverture() || capteurs.isBlocage(true)) {
+                etape_calibration = StateMachine::ETAPE_CALIBRATION::DEBRAYAGE_HAUT;
+                delay(1000);
+            }
+            break;
+        case StateMachine::ETAPE_CALIBRATION::DEBRAYAGE_HAUT: {
+            if (etatDebrayage()) {
+                etape_calibration = StateMachine::ETAPE_CALIBRATION::RECHERCHE_BUTEE_BASSE;
+            }
+            break;
+        }
+        case StateMachine::ETAPE_CALIBRATION::RECHERCHE_BUTEE_BASSE: {
+            if (etatFermeture() || capteurs.isBlocage(true)) {
+                angle_butee_basse = capteurs.angle_porte;
+                etape_calibration = StateMachine::ETAPE_CALIBRATION::DEBRAYAGE_BAS;
+                delay(1000);
+            }
+            break;
+        }
+        case StateMachine::ETAPE_CALIBRATION::DEBRAYAGE_BAS:
+            if (etatDebrayage()) {
+                etape_calibration = StateMachine::ETAPE_CALIBRATION::RECHERCHE_BUTEE_HAUTE;
+            }
+            break;
+        case StateMachine::ETAPE_CALIBRATION::RECHERCHE_BUTEE_HAUTE: {
+            if (etatOuverture() || capteurs.isBlocage(true)) {
+                angle_butee_haute = capteurs.angle_porte;
+                is_calibre = true;
+                pushMessage(Message::TYPE::INFO, "Fin de calibration : limite haute=" + String(angle_butee_haute) + "° ; limite basse=" + String(angle_butee_basse) + "°");
+                etape_calibration = StateMachine::ETAPE_CALIBRATION::NONE;
+                changerEtat(StateMachine::ETAT::DEBRAYAGE);
+            }
+            break;
+        }
+        case StateMachine::ETAPE_CALIBRATION::NONE:
+            return true;
+        default:
+            break;
+    }
+    return false;
 }
 
 

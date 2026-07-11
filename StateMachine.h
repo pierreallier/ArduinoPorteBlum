@@ -21,6 +21,8 @@ struct Message {
     String valeur;
 };
 
+const uint16_t PWM_CALIBRATION = 150; 
+
 class StateMachine {
     public:
         enum class ETAT : byte {
@@ -47,6 +49,8 @@ class StateMachine {
         MODE_PILOTAGE modePilotage;
         uint32_t time_etat = 0;
 
+        bool butee_desactivated = false; // Variable qui spécifie si on doit désactiver la détection des butées
+
         PID pidPosition;
         PID pidVitesse;
 
@@ -72,7 +76,24 @@ class StateMachine {
         ConsignePotentiometre consignePotentiometre;
         Consigne* consigne = nullptr;
 
-        void etatPilote(float consigne, unsigned long time); 
+        enum class ETAPE_CALIBRATION : uint8_t {
+            OUVERTURE_INITIALE,
+            DEBRAYAGE_HAUT,
+            RECHERCHE_BUTEE_BASSE,
+            DEBRAYAGE_BAS,
+            RECHERCHE_BUTEE_HAUTE,
+            NONE,
+        };
+        ETAPE_CALIBRATION etape_calibration;
+        float angle_butee_basse;
+        float angle_butee_haute;
+        bool is_calibre;
+        
+        bool etatOuverture();
+        bool etatFermeture();
+        bool etatDebrayage();
+        bool etatPilote();
+        bool etatCalibration();
         
         static constexpr uint8_t TAILLE_FIFO = 10;
         Message messages[TAILLE_FIFO];
@@ -83,7 +104,7 @@ class StateMachine {
         bool pushMessage(Message::TYPE t, String message);
         bool popMessage(Message &cmd);
 
-           
+        
 };
 
 #endif

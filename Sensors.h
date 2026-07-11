@@ -22,7 +22,7 @@ constexpr float VOLTAGE_COEF = 25.0f / 1023.0f;
 
 
 // Variables pour le calcul de la moyenne glissante du courant
-const float LIMITE_COURANT = 2.5f;
+const float LIMITE_COURANT = 2f;
 const unsigned int NB_MOY_COURANT = 5;
 
 // Détections butées
@@ -66,6 +66,8 @@ class Sensors {
         void getPotentiometre();
 
         void setConsigne(int consigne);
+        void setLimits(float limite_basse, float limite_haute);
+        void resetLimits();
 
     private:
         int courant_offset = 0;
@@ -79,6 +81,9 @@ class Sensors {
         int32_t encoderGetTicks();
         void encoderResetTicks();
         float addCourant(float current);
+
+        float angle_bas_max = ANGLE_MIN;
+        float angle_haut_max = ANGLE_MAX;
 };
 
 #endif
