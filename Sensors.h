@@ -26,10 +26,12 @@ const float LIMITE_COURANT = 2.5f;
 const unsigned int NB_MOY_COURANT = 5;
 
 // Détections butées
-const int PWM_MIN = 30;
-const int TICKS_MIN = 5;
+const int PWM_MIN = 50;
+constexpr int PWM_RAPIDE = 150;
+constexpr int NB_CYCLES_BLOCAGE_RAPIDE = 20; // 10 x 5 ms = 50 ms
+constexpr int NB_CYCLES_BLOCAGE_LENT = 50;
+const int TICKS_MIN = 2;
 const float I_BLOCAGE = 1.5f;
-const uint8_t NB_CYCLES_BLOCAGE = 20;   // 10 x 5 ms = 50 ms
 const float ANGLE_MAX = 180.0f;
 const float ANGLE_MIN = -140.0f;
 

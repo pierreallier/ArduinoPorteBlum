@@ -20,8 +20,8 @@ void ComSerie::init() {
 }
 
 void ComSerie::task() {
-    if (millis() - time_precedent >= 50) {
-        time_precedent += 50;
+    if (millis() - time_precedent >= 100) {
+        time_precedent += 100;
         //printMesures();
         //sendMesures();
         sendMessages();
@@ -102,16 +102,16 @@ void ComSerie::sendMessages() {
         Message msg = machine.getMessage();
 
         switch (msg.type) {
-            case Message::Type::ETAT:
+            case Message::TYPE::ETAT:
                 sendEtat(msg.valeur);
                 break;
 
-            case Message::Type::INFO:
+            case Message::TYPE::INFO:
                 Serial.print("I;");
                 Serial.println(msg.valeur);
                 break;
 
-            case Message::Type::ERREUR:
+            case Message::TYPE::ERREUR:
                 sendError(msg.valeur);
                 break;
         }

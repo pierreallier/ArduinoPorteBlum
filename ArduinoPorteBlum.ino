@@ -56,11 +56,13 @@ void ordonnanceur() {
         capteurs.checkSecurites(moteur.getPWM());
         if (capteurs.limite_courant_atteinte && !erreurCourant) {
             erreurCourant = true;
+            machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
             portserie.sendError("Limite de courant atteinte",true);
         }
         if (capteurs.isBlocage(false) && !erreurBlocage){
             erreurBlocage = true;
-            portserie.sendError("Blocage détecté");
+            machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
+            portserie.sendError("Blocage détecté - ordonnanceur");
         }
     }
     
@@ -70,12 +72,16 @@ void ordonnanceur() {
         btTest.update();
         btWireless.update();
         if (btTest.pressed()) {
-            if (machine.etat == StateMachine::ETAT::REPOS)
+            Serial.println("I;Bouton Pilotage pressé");
+            if (machine.etat == StateMachine::ETAT::REPOS) {
+                Serial.println("Changement d'état Pilote demandé");
                 machine.changerEtat(StateMachine::ETAT::PILOTAGE);
+            }
             else
                 machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
         }
         if (btWireless.pressed()) {
+            //Serial.println("I;Bouton Radio pressé");
             if (machine.etat == StateMachine::ETAT::REPOS)
                 machine.changerEtat(StateMachine::ETAT::FONCTIONNEMENT);
             else
@@ -89,9 +95,9 @@ void ordonnanceur() {
     }
 
     // Mesures des grandeurs (toutes les 50 ms)
-    if (maintenant - tMesure >= 25) {
-        tMesure += 25;
+    if (maintenant - tMesure >= 50) {
+        tMesure += 50;
         capteurs.mesures(moteur.getPWM());
-        portserie.sendMesures();
+        //portserie.sendMesures();
     } 
 }

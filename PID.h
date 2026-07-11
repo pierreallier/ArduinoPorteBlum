@@ -10,7 +10,7 @@ class PID {
         void setOutputLimits(float min, float max);
         void setIntegraleLimit(float limite);
         void reset();
-        float compute(float consigne, float mesure, float dt);
+        float compute(float consigne, float mesure, unsigned long time);
 
     private:
         float kp, ki, kd;
@@ -21,6 +21,8 @@ class PID {
         float min = -255.0f;
         float max = 255.0f;
         float integraleMax = 100.0f;
+        unsigned long tempsPrecedent = 0;
+        bool premierCalcul = true;
 };
 
 #endif

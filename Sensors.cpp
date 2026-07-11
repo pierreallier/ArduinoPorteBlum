@@ -54,14 +54,28 @@ void Sensors::checkSecurites(int pwm) {
     getCourant();
     limite_courant_atteinte = (courant_moyen >= LIMITE_COURANT);
 
-    if (!(limite_haute || limite_basse || limite_courant_atteinte)) {
-        // Détection blocage
-        if (abs(pwm) > PWM_MIN && abs(codeur_Delta_Pos) <= TICKS_MIN || courant_moyen >= I_BLOCAGE)
-            compteur_blocage++;
-        else 
-            compteur_blocage=0;
-        blocage_detecte = (compteur_blocage >= NB_CYCLES_BLOCAGE);
+    // Limites
+    if (limite_haute || limite_basse || limite_courant_atteinte) {
+        compteur_blocage = 0;
+        blocage_detecte = false;
+        return;
     }
+
+    // Détection blocage
+    uint8_t pwm_abs = abs(pwm);
+    if (pwm_abs < PWM_MIN) { // PWM trop faible pour détecter un blocage mécanique
+        compteur_blocage = 0;
+        blocage_detecte = false;
+        return;
+    }
+    if (abs(codeur_Delta_Pos) > TICKS_MIN && courant_moyen < I_BLOCAGE) { // Le moteur tourne suffisamment
+        compteur_blocage = 0;
+        blocage_detecte = false;
+        return;
+    }
+    compteur_blocage++;
+    uint8_t seuil = (pwm_abs >= PWM_RAPIDE) ? NB_CYCLES_BLOCAGE_RAPIDE : NB_CYCLES_BLOCAGE_LENT;
+    blocage_detecte = (compteur_blocage >= seuil);
 }
 
 void Sensors::mesures(int pwm) {
