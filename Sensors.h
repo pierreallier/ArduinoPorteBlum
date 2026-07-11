@@ -69,6 +69,13 @@ class Sensors {
         void setLimits(float limite_basse, float limite_haute);
         void resetLimits();
 
+        float Sensors::getLimiteBasse() const {
+            return angle_bas_max;
+        }
+        float Sensors::getLimiteHaute() const {
+            return angle_haut_max;
+        }
+
     private:
         int courant_offset = 0;
         unsigned int courant_idx = 0;

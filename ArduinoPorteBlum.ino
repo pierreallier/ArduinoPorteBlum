@@ -105,10 +105,11 @@ void ordonnanceur() {
         }
     }
 
-    // Mesures des grandeurs (toutes les 50 ms)
-    if (maintenant - tMesure >= 50) {
-        tMesure += 50;
+    // Mesures des grandeurs
+    int periode = portserie.mesureEnable();
+    if (periode != 0 && maintenant - tMesure >= periode) {
+        tMesure += periode;
         capteurs.mesures(moteur.getPWM());
-        //portserie.sendMesures();
+        portserie.sendMesures();
     } 
 }

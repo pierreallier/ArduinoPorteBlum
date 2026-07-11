@@ -2,7 +2,7 @@
 
 const float alpha = 0.15f; 
 
-PID::PID(float kp = 0.0f, float ki = 0.0f, float kd = 0.0f) : kp(kp), ki(ki), kd(kd) {}
+PID::PID(float kp = 1.0f, float ki = 0.0f, float kd = 0.0f) : kp(kp), ki(ki), kd(kd) {}
 
 void PID::setGains(float kp, float ki, float kd) {
     this->kp = kp;

@@ -50,6 +50,7 @@ class StateMachine {
         uint32_t time_etat = 0;
 
         bool butee_desactivated = false; // Variable qui spécifie si on doit désactiver la détection des butées
+        bool is_calibre;
 
         PID pidPosition;
         PID pidVitesse;
@@ -66,7 +67,9 @@ class StateMachine {
         void setPIDVitesse(float kp, float ki, float kd) {
             pidVitesse.setGains(kp, ki, kd);
         };
-
+        void setModePilotage(StateMachine::MODE_PILOTAGE mode) {
+            modePilotage = mode;
+        }
         bool hasMessage() const;
         Message getMessage();
     
@@ -92,7 +95,7 @@ class StateMachine {
         ETAPE_CALIBRATION etape_calibration;
         float angle_butee_basse;
         float angle_butee_haute;
-        bool is_calibre;
+        
         void changerEtapeCalibration(StateMachine::ETAPE_CALIBRATION nouvelle_etape);
         
         bool etatOuverture(uint16_t speed);

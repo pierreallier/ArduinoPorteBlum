@@ -169,8 +169,8 @@ void Sensors::setConsigne(int c) {
 }
 
 void Sensors::setLimits(float limite_basse, float limite_haute) {
-    if (limite_basse < ANGLE_MIN){
-        angle_bas_max = limite_basse + 6;
+    if (limite_basse > ANGLE_MIN){
+        angle_bas_max = limite_basse;
     }
     if (limite_haute < ANGLE_MAX) {
         angle_haut_max = limite_haute;
