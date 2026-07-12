@@ -66,15 +66,13 @@ class Sensors {
         void getPotentiometre();
 
         void setConsigne(int consigne);
+        float getLimitCourant() const { return limite_courant;}
+        bool setLimitCourant(int limite);
+        
+        float Sensors::getLimiteBasse() const { return angle_bas_max;}
+        float Sensors::getLimiteHaute() const { return angle_haut_max;}
         void setLimits(float limite_basse, float limite_haute);
         void resetLimits();
-
-        float Sensors::getLimiteBasse() const {
-            return angle_bas_max;
-        }
-        float Sensors::getLimiteHaute() const {
-            return angle_haut_max;
-        }
 
     private:
         int courant_offset = 0;
@@ -91,6 +89,7 @@ class Sensors {
 
         float angle_bas_max = ANGLE_MIN;
         float angle_haut_max = ANGLE_MAX;
+        float limite_courant;
 };
 
 #endif

@@ -186,7 +186,7 @@ void ComSerie::_SET(String commande) {
     commande.trim(); // Supprime les espaces et les retours à la ligne
     commande.toUpperCase(); // Convertit la commande
 
-    if (commande.startsWith("LIMITES") && machine.etat != StateMachine::ETAT::REPOS) {
+    if (commande.startsWith("LIMITES") && machine.etat == StateMachine::ETAT::REPOS) {
         String valeurs = commande.substring(7);
         valeurs.trim();
         int separateur = valeurs.indexOf(' ');
@@ -199,6 +199,15 @@ void ComSerie::_SET(String commande) {
         capteurs.setLimits(limite_basse, limite_haute);
         sendInfo("Limites modifiees : basse=" +String(limite_basse, 2) +" ; haute=" +String(limite_haute, 2));
         return;
+    }
+    if (commande.startsWith("COURANT") && machine.etat == StateMachine::ETAT::REPOS) {
+        String valeurs = commande.substring(8);
+        valeurs.trim();
+        float limite = valeurs.substring(0).toFloat();
+        if (capteurs.setLimitCourant(limite))
+            sendInfo("Limite de courant modifiée à la valeur " + String(capteurs.getLimitCourant(), 2));
+        else
+            sendWarning("Limite de courant incompatible (entre 0 et 2.0). Valeur non modifiée");
     }
     // Configuration du mode de pilotage
     else if (commande.startsWith("MODE") && machine.etat != StateMachine::ETAT::PILOTAGE) {
@@ -216,7 +225,7 @@ void ComSerie::_SET(String commande) {
             sendWarning("Mode de pilotage inconnu : " + valeur);
             return;
         }
-        // C'est le stateMachine qui renvoie le message de la bonne execution du changement.
+        // C'est le stateMachine qui renvoie le message de la bonne execution du changement
     }
     // Configuration des Consignes
     else if (commande.startsWith("CONSIGNE")) {
@@ -283,7 +292,7 @@ void ComSerie::_SET(String commande) {
         }
     }
     else {
-        sendWarning("Commande SET inconnue {LIMITES,MODE,CONSIGNE,PID,MESURES}");
+        sendWarning("Commande SET inconnue {LIMITES,COURANT,MODE,CONSIGNE,PID,MESURES}");
         return;
     }
 

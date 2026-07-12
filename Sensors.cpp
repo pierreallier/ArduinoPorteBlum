@@ -17,6 +17,7 @@ void Sensors::init() {
     // Initialisation des limites
     angle_haut_max = ANGLE_MAX;
     angle_bas_max = ANGLE_MIN; 
+    limite_courant = LIMITE_COURANT;
 
     // Initialisation du tableau du courant
     courant_moyen = 0.0f;
@@ -56,7 +57,7 @@ void Sensors::checkSecurites(int pwm) {
 
     // Limite de courant
     getCourant();
-    limite_courant_atteinte = (courant_moyen >= LIMITE_COURANT);
+    limite_courant_atteinte = (courant_moyen >= limite_courant);
 
     // Limites
     if (limite_haute || limite_basse || limite_courant_atteinte) {
@@ -180,4 +181,12 @@ void Sensors::setLimits(float limite_basse, float limite_haute) {
 void Sensors::resetLimits() {
     angle_bas_max = ANGLE_MIN;
     angle_haut_max = ANGLE_MAX;
+}
+
+bool Sensors::setLimitCourant(int limite) {
+    if (limite > 0.0f && limite < 2.0f) {
+        limite_courant = limite;
+        return true;
+    }
+    return false;
 }
