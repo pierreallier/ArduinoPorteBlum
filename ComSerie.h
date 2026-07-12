@@ -22,6 +22,7 @@ class ComSerie {
         void sendEtat(String etat);
         void sendInfo(String message);
         void sendError(String message, bool buz = false);
+        void sendWarning(String message);
         void sendMessages();
         int mesureEnable();
     
@@ -36,6 +37,7 @@ class ComSerie {
         void _SET(String commande);
         void _GET(String commande);
         void _DO(String commande);
+        int splitCommande(const String& commande, String items[], int maxItems);
 };
 
 

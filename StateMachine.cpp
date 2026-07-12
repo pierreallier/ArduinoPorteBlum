@@ -1,6 +1,6 @@
 #include "StateMachine.h"
 
-StateMachine::StateMachine(Motor& m, Sensors& c) : moteur(m), capteurs(c), consignePotentiometre(), consigne(&consignePotentiometre) {
+StateMachine::StateMachine(Motor& m, Sensors& c) : moteur(m), capteurs(c), consigne() {
     etat = StateMachine::ETAT::INIT;
     modePilotage = StateMachine::MODE_PILOTAGE::PWM;
     etape_calibration = StateMachine::ETAPE_CALIBRATION::NONE;
@@ -26,7 +26,7 @@ void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
         return;
     }
     if (!is_calibre && etat_demande == StateMachine::ETAT::PILOTAGE) {
-        pushMessage(Message::TYPE::ERREUR,"Calibration requise");
+        pushMessage(Message::TYPE::WARNING,"Calibration requise");
         return;
     }
     etat = etat_demande;
@@ -49,7 +49,7 @@ void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
         case StateMachine::ETAT::PILOTAGE: {
             pidPosition.reset();
             pidVitesse.reset();
-            consigne->init(time_etat);
+            consigne.init(time_etat);
             moteur.enable();
             butee_desactivated = true;
             break;
@@ -88,11 +88,6 @@ void StateMachine::setMode(StateMachine::MODE_PILOTAGE mode) {
             break;
     }
     pushMessage(Message::TYPE::INFO,message);
-}
-
-void StateMachine::setConsigne(Consigne& c) {
-    consigne = &c;
-    pushMessage(Message::TYPE::INFO, "consigne " + c.getName());
 }
 
 void StateMachine::exec() {
@@ -184,17 +179,12 @@ bool StateMachine::etatDebrayage() {
 
 bool StateMachine::etatPilote() {
     /* Gestion du pilotage de la porte via consigne */
-    if (consigne == nullptr) {
-        moteur.stop();
-        pushMessage(Message::TYPE::ERREUR, "Consigne nulle en mode PILOTAGE");
-        return true;
-    }
     unsigned long time = millis();
-    if (consigne->ended(time)) {
+    if (consigne.ended(time)) {
         moteur.stop();
         return true;
     }
-    float consigne_value = consigne->get(time);
+    float consigne_value = consigne.get(time);
     float pwm = 0.0f;
     switch (modePilotage) {
         case StateMachine::MODE_PILOTAGE::PWM: {
@@ -341,4 +331,12 @@ Message StateMachine::getMessage() {
     if (!popMessage(cmd))
         return {Message::TYPE::AUCUN,""}; 
     return cmd;
+}
+
+bool StateMachine::setConsigne(const String& type, const String* params, int nbParams) {
+    if (etat == StateMachine::ETAT::PILOTAGE) {
+        pushMessage(Message::TYPE::WARNING,"Impossible de changer de consigne pendant l'état pilotage. Le système doit être au repos.");
+        return false;
+    }
+    return consigne.setConsigne(type, params, nbParams);
 }

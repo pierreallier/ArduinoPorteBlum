@@ -17,14 +17,14 @@ Commandé à partir de deux boutons :
 
 TODO:
 - Tester tous les asservissements.
-- Réfléchir à un format de consignes type echelon, trapèze, sinus ...
+- Tester toues les types de consignes type echelon, trapèze, sinus ...
+- Ajouter modification limite en courant 
 - Etat arret
 - Implémenter code butées à vide à l'aide du courant et stockage en dur ?
 - Buzzer avec la fonction bip native
 - Réorganiser le code et commenter
-    - MessageBuffer général unique que tous classe peut accéderet qui est lu par ComSerie
+    - MessageBuffer général unique que toutes les classes peut accéder et qui est lu par ComSerie
     - Fichier de configuration (les constantes générales du programme)
     - Fichier avec tous les enums (types)
     - Harmoniser les noms de variables et de fonctions et privatiser ce qui doit être privé et ajouter des get/set
 - Ajotuer accéléromètre et autres boutons
-- Ajouter modification limite en courant 

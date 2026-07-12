@@ -108,6 +108,10 @@ void ComSerie::sendMessages() {
                 sendInfo(msg.valeur);
                 break;
 
+            case Message::TYPE::WARNING:
+                sendWarning(msg.valeur);
+                break;
+
             case Message::TYPE::ERREUR:
                 sendError(msg.valeur);
                 break;
@@ -155,6 +159,11 @@ void ComSerie::sendInfo(String message) {
     Serial.println(message);
 }
 
+void ComSerie::sendWarning(String message) {
+    Serial.print("W;");
+    Serial.println(message);
+}
+
 
 void ComSerie::readSerial() {
     if (Serial.available() > 0) {
@@ -168,7 +177,7 @@ void ComSerie::readSerial() {
         } else if (command.startsWith("DO")) {
             _DO(command.substring(2));
         } else {
-            sendInfo("Commande inconnue {SET,GET,DO}.");
+            sendWarning("Commande inconnue {SET,GET,DO}.");
         }
     }
 }
@@ -177,12 +186,12 @@ void ComSerie::_SET(String commande) {
     commande.trim(); // Supprime les espaces et les retours à la ligne
     commande.toUpperCase(); // Convertit la commande
 
-    if (commande.startsWith("LIMITES")) {
+    if (commande.startsWith("LIMITES") && machine.etat != StateMachine::ETAT::REPOS) {
         String valeurs = commande.substring(7);
         valeurs.trim();
         int separateur = valeurs.indexOf(' ');
         if (separateur == -1) {
-            sendInfo("SET LIMITES : deux valeurs attendues");
+            sendWarning("SET LIMITES : deux valeurs attendues");
             return;
         }
         float limite_basse = valeurs.substring(0, separateur).toFloat();
@@ -192,7 +201,7 @@ void ComSerie::_SET(String commande) {
         return;
     }
     // Configuration du mode de pilotage
-    else if (commande.startsWith("MODE")) {
+    else if (commande.startsWith("MODE") && machine.etat != StateMachine::ETAT::PILOTAGE) {
         String valeur = commande.substring(5);
         valeur.trim();
         if (valeur == "PWM")
@@ -203,15 +212,26 @@ void ComSerie::_SET(String commande) {
             machine.setModePilotage(StateMachine::MODE_PILOTAGE::POSITION);
         else if (valeur == "POSITION_VITESSE")
             machine.setModePilotage(StateMachine::MODE_PILOTAGE::POSITION_VITESSE);
-        else 
-            sendInfo("Mode de pilotage inconnu : " + valeur);
+        else  {
+            sendWarning("Mode de pilotage inconnu : " + valeur);
+            return;
+        }
+        // C'est le stateMachine qui renvoie le message de la bonne execution du changement.
     }
-    // Configuration des PID
+    // Configuration des Consignes
     else if (commande.startsWith("CONSIGNE")) {
-
+        String items[10];
+        int nbItems = splitCommande(commande, items, 10);
+        if (nbItems < 2) {
+            sendWarning("Type de consigne manquant {POTENTIOMETRE,ECHELON,RAMPE,TRAPEZE,SINUS}");
+            return;
+        }
+        if (machine.setConsigne(items[1], &items[2], nbItems - 2)) {
+            sendInfo("Consigne mise à jour");
+        }
     }
     // Configuration des PID
-    else if (commande.startsWith("PID")) {
+    else if (commande.startsWith("PID") && machine.etat != StateMachine::ETAT::PILOTAGE) {
         String parametres = commande.substring(4);
         parametres.trim();
         // Recherche des séparateurs
@@ -219,7 +239,7 @@ void ComSerie::_SET(String commande) {
         int sep2 = parametres.indexOf(' ', sep1 + 1);
         int sep3 = parametres.indexOf(' ', sep2 + 1);
         if (sep1 == -1 || sep2 == -1 || sep3 == -1) {
-            sendInfo("SET PID : TYPE [VITESSE|POSITION] KP KI KD attendus");
+            sendWarning("SET PID : TYPE [VITESSE|POSITION] KP KI KD attendus");
             return;
         }
         String type_pid = parametres.substring(0, sep1);
@@ -231,9 +251,10 @@ void ComSerie::_SET(String commande) {
         else if (type_pid == "POSITION")
             machine.setPIDPosition(kp, ki, kd);
         else {
-            sendInfo("PID inconnu : " + type_pid);
+            sendWarning("PID inconnu : " + type_pid);
             return;
         }
+        sendInfo("Configuration du PID effectuée");
     }
     // Gestion de la fréquence d'envoie des mesures
     else if (commande.startsWith("MESURES")) {
@@ -241,13 +262,13 @@ void ComSerie::_SET(String commande) {
         valeur.trim();
         // Vérification : chaîne non vide
         if (valeur.length() == 0) {
-            sendInfo("SET MESURES : periode manquante");
+            sendWarning("SET MESURES : periode manquante");
             return;
         }
         // Vérification : uniquement des chiffres
         for (unsigned int i = 0; i < valeur.length(); i++) {
             if (!isDigit(valeur[i])) {
-                sendInfo("SET MESURES : periode invalide");
+                sendWarning("SET MESURES : periode invalide");
                 return;
             }
         }
@@ -257,11 +278,15 @@ void ComSerie::_SET(String commande) {
             sendInfo("Envoi des mesures toutes les " + String(periode) + " ms");
         }
         else {
-            sendInfo("SET MESURES : periode invalide");
+            sendWarning("SET MESURES : periode invalide");
+            return;
         }
     }
-    else 
-        sendInfo("Commande SET inconnue {LIMITES,MODE,CONSIGNE,PID,MESURES}");
+    else {
+        sendWarning("Commande SET inconnue {LIMITES,MODE,CONSIGNE,PID,MESURES}");
+        return;
+    }
+
 }
 
 void ComSerie::_GET(String commande) {
@@ -298,7 +323,7 @@ void ComSerie::_GET(String commande) {
         Serial.println("PID;POSITION;" + (String)machine.pidPosition.kp + ";" + (String)machine.pidPosition.ki + ";" + (String)machine.pidPosition.kd);
     }
     else
-        sendInfo("Commande GET inconnue {CALIBRATION,MODE,PID}.");
+        sendWarning("Commande GET inconnue {CALIBRATION,MODE,PID}.");
 }
 
 void ComSerie::_DO(String commande) {
@@ -318,10 +343,35 @@ void ComSerie::_DO(String commande) {
         machine.changerEtat(StateMachine::ETAT::PILOTAGE);
     else if (commande.startsWith("CALIBRATION"))
         machine.changerEtat(StateMachine::ETAT::CALIBRATION);
-    else 
-        sendInfo("Commande DO inconnue {RESET,INIT,OUVRIR,FERMER,STOP,PILOTER}.");
+    else {
+        sendWarning("Commande DO inconnue {RESET,INIT,OUVRIR,FERMER,STOP,PILOTER}.");
+        return;
+    }
+    sendInfo("Commande DO " + commande + " effectuée");
 }
 
 int ComSerie::mesureEnable() {
     return periode_echantillonnage_mesures;
+}
+
+int ComSerie::splitCommande(const String& commande, String items[], int maxItems) {
+    // Découpe un string de commande sur l'espace et renvoi un tableau contenant chaque items
+    int nbItems = 0;
+    int debut = 0;
+
+    while (debut < commande.length() && nbItems < maxItems) {
+        // Ignorer les espaces
+        while (debut < commande.length() && commande[debut] == ' ')
+            debut++;
+        if (debut >= commande.length())
+            break;
+        int fin = commande.indexOf(' ', debut);
+        if (fin == -1){
+            items[nbItems++] = commande.substring(debut);
+            break;
+        }
+        items[nbItems++] = commande.substring(debut, fin);
+        debut = fin + 1;
+    }
+    return nbItems;
 }

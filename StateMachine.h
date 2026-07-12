@@ -5,7 +5,7 @@
 #include "Motor.h"
 #include "Sensors.h"
 #include "PID.h"
-#include "Consigne.h"
+#include "ConsigneManager.h"
 
 struct Message {
     enum TYPE : uint8_t
@@ -13,6 +13,7 @@ struct Message {
         ETAT,
         MESURE,
         INFO,
+        WARNING,
         ERREUR,
         AUCUN,
     };
@@ -59,7 +60,6 @@ class StateMachine {
         void init();
         void changerEtat(StateMachine::ETAT etat_demande);
         void setMode(StateMachine::MODE_PILOTAGE mode);
-        void setConsigne(Consigne& c);
         void exec();
         void setPIDPosition(float kp, float ki, float kd) {
             pidPosition.setGains(kp, ki, kd);
@@ -70,14 +70,14 @@ class StateMachine {
         void setModePilotage(StateMachine::MODE_PILOTAGE mode) {
             modePilotage = mode;
         }
+        bool setConsigne(const String& type, const String* params, int nbParams);
         bool hasMessage() const;
         Message getMessage();
     
     private:
         Motor& moteur;
         Sensors& capteurs;
-        ConsignePotentiometre consignePotentiometre;
-        Consigne* consigne = nullptr;
+        ConsigneManager consigne;
 
         enum class ETAPE_CALIBRATION : uint8_t {
             OUVERTURE_INITIALE,
