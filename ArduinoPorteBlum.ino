@@ -110,6 +110,6 @@ void ordonnanceur() {
     if (periode != 0 && maintenant - tMesure >= periode) {
         tMesure += periode;
         capteurs.mesures(moteur.getPWM());
-        portserie.sendMesures();
+        //portserie.sendMesures();
     } 
 }

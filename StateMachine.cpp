@@ -197,16 +197,24 @@ bool StateMachine::etatPilote() {
     float consigne_value = consigne->get(time);
     float pwm = 0.0f;
     switch (modePilotage) {
-        case StateMachine::MODE_PILOTAGE::PWM:
+        case StateMachine::MODE_PILOTAGE::PWM: {
             pwm = constrain(consigne_value,-255,255);
             break;
-        case StateMachine::MODE_PILOTAGE::VITESSE:
+        }
+        case StateMachine::MODE_PILOTAGE::VITESSE: {
             pwm = pidVitesse.compute(consigne_value,capteurs.vitesse_moteur,time);
             break;
-        case StateMachine::MODE_PILOTAGE::POSITION:
-            consigne_value = constrain(consigne_value,-120,180);
+        }
+        case StateMachine::MODE_PILOTAGE::POSITION: {
+            consigne_value = constrain(consigne_value,-150,150);
+            Serial.print(consigne_value);
+            Serial.print(";");
+            Serial.print(capteurs.angle_porte);
+            Serial.print(";");
             pwm = pidPosition.compute(consigne_value,capteurs.angle_porte,time);
+            Serial.println(pwm);
             break;
+        }
         case StateMachine::MODE_PILOTAGE::POSITION_VITESSE: {
             consigne_value = constrain(consigne_value,-120,180);
             float consigneVitesse = pidPosition.compute(consigne_value,capteurs.angle_porte,time);

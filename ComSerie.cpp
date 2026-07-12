@@ -244,7 +244,6 @@ void ComSerie::_SET(String commande) {
             sendInfo("SET MESURES : periode manquante");
             return;
         }
-        
         // Vérification : uniquement des chiffres
         for (unsigned int i = 0; i < valeur.length(); i++) {
             if (!isDigit(valeur[i])) {
@@ -253,11 +252,13 @@ void ComSerie::_SET(String commande) {
             }
         }
         unsigned long periode = valeur.toInt();
-        periode_echantillonnage_mesures = periode;
-        if (periode == 0)
-            sendInfo("Envoi des mesures desactive");
-        else
+        if (periode >= 5) {
+            periode_echantillonnage_mesures = periode;
             sendInfo("Envoi des mesures toutes les " + String(periode) + " ms");
+        }
+        else {
+            sendInfo("SET MESURES : periode invalide");
+        }
     }
     else 
         sendInfo("Commande SET inconnue {LIMITES,MODE,CONSIGNE,PID,MESURES}");
@@ -293,8 +294,8 @@ void ComSerie::_GET(String commande) {
         }
     }
     if (commande.startsWith("PID")) {
-        Serial.print("PID;VITESSE;" + (String)machine.pidVitesse.kp + ";" + (String)machine.pidVitesse.ki + ";" + (String)machine.pidVitesse.kd);
-        Serial.print("PID;POSITION;" + (String)machine.pidPosition.kp + ";" + (String)machine.pidPosition.ki + ";" + (String)machine.pidPosition.kd);
+        Serial.println("PID;VITESSE;" + (String)machine.pidVitesse.kp + ";" + (String)machine.pidVitesse.ki + ";" + (String)machine.pidVitesse.kd);
+        Serial.println("PID;POSITION;" + (String)machine.pidPosition.kp + ";" + (String)machine.pidPosition.ki + ";" + (String)machine.pidPosition.kd);
     }
     else
         sendInfo("Commande GET inconnue {CALIBRATION,MODE,PID}.");
