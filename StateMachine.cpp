@@ -1,5 +1,19 @@
 #include "StateMachine.h"
 
+const char* const StateMachine::ETAT_NAMES[] ={
+    "INIT",
+    "REPOS",
+    "FONCTIONNEMENT",
+    "OUVERTURE",
+    "FERMETURE",
+    "PILOTAGE",
+    "CALIBRATION",
+    "DEBRAYAGE",
+    "ERREUR",
+    "STOP"
+};
+
+
 StateMachine::StateMachine(Motor& m, Sensors& c) : moteur(m), capteurs(c), consigne() {
     etat = StateMachine::ETAT::INIT;
     modePilotage = StateMachine::MODE_PILOTAGE::PWM;
@@ -22,16 +36,16 @@ void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
     if (etat == etat_demande)
         return;
     if ((etat == StateMachine::ETAT::CALIBRATION) && !is_calibre) {
-        pushMessage(Message::TYPE::ERREUR,"Calibration échouée");
+        sendReponseNOK("DO","CALIBRATION","Calibration échouée");
         return;
     }
     if (!is_calibre && etat_demande == StateMachine::ETAT::PILOTAGE) {
-        pushMessage(Message::TYPE::WARNING,"Calibration requise");
+        sendWarning("Calibration requise");
         return;
     }
     etat = etat_demande;
     time_etat = millis();
-    pushMessage(Message::TYPE::ETAT,(String)((int)etat));
+    sendEtat(ETAT_NAMES[static_cast<size_t>(etat)]);
 
     // Initiliations des états
     switch (etat) {
@@ -60,7 +74,7 @@ void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
             butee_desactivated = true;
             changerEtapeCalibration(ETAPE_CALIBRATION::OUVERTURE_INITIALE);
             moteur.enable();
-            pushMessage(Message::TYPE::INFO, "Debut de calibration");
+            sendInfo("Debut de calibration");
             break;
         }
         default: {
@@ -86,8 +100,10 @@ void StateMachine::setMode(StateMachine::MODE_PILOTAGE mode) {
         case StateMachine::MODE_PILOTAGE::POSITION_VITESSE:
             message += "asservissement position et vitesse";
             break;
+        default:
+            sendReponseNOK("SET","MODE","Inconnu");
     }
-    pushMessage(Message::TYPE::INFO,message);
+    sendReponseOK("SET","MODE",message);
 }
 
 void StateMachine::exec() {
@@ -197,12 +213,7 @@ bool StateMachine::etatPilote() {
         }
         case StateMachine::MODE_PILOTAGE::POSITION: {
             consigne_value = constrain(consigne_value,-150,150);
-            Serial.print(consigne_value);
-            Serial.print(";");
-            Serial.print(capteurs.angle_porte);
-            Serial.print(";");
             pwm = pidPosition.compute(consigne_value,capteurs.angle_porte,time);
-            Serial.println(pwm);
             break;
         }
         case StateMachine::MODE_PILOTAGE::POSITION_VITESSE: {
@@ -272,7 +283,7 @@ bool StateMachine::etatCalibration() {
         case StateMachine::ETAPE_CALIBRATION::DEBRAYAGE_FINAL: {
             if (etatDebrayage()) {
                 butee_desactivated = false;
-                pushMessage(Message::TYPE::INFO, "Fin de calibration : limite haute=" + String(angle_butee_haute) + "° ; limite basse=" + String(angle_butee_basse) + "°");
+                sendReponseOK("DO","CALIBRATION","Fin de calibration : limite haute=" + String(angle_butee_haute) + "° ; limite basse=" + String(angle_butee_basse) + "°");
                 moteur.stop();
                 changerEtapeCalibration(StateMachine::ETAPE_CALIBRATION::ATTENTE_ENREGISTREMENT);
             }
@@ -301,41 +312,41 @@ void StateMachine::changerEtapeCalibration(StateMachine::ETAPE_CALIBRATION nouve
 
 
 
-bool StateMachine::pushMessage(Message::TYPE t, String message) {
-    if (nbElements >= TAILLE_FIFO)
-        return false;           // FIFO pleine
-    Message m = {t,message};
-    messages[queue] = m;
-    queue = (queue + 1) % TAILLE_FIFO;
-    nbElements++;
+// bool StateMachine::pushMessage(Message::TYPE t, String message) {
+//     if (nbElements >= TAILLE_FIFO)
+//         return false;           // FIFO pleine
+//     Message m = {t,message};
+//     messages[queue] = m;
+//     queue = (queue + 1) % TAILLE_FIFO;
+//     nbElements++;
 
-    return true;
-}
+//     return true;
+// }
 
-bool StateMachine::popMessage(Message &m) {
-    if (nbElements == 0)
-        return false;
-    m = messages[tete];
-    tete = (tete + 1) % TAILLE_FIFO;
-    nbElements--;
+// bool StateMachine::popMessage(Message &m) {
+//     if (nbElements == 0)
+//         return false;
+//     m = messages[tete];
+//     tete = (tete + 1) % TAILLE_FIFO;
+//     nbElements--;
 
-    return true;
-}
+//     return true;
+// }
 
-bool StateMachine::hasMessage() const {
-    return nbElements > 0;
-}
+// bool StateMachine::hasMessage() const {
+//     return nbElements > 0;
+// }
 
-Message StateMachine::getMessage() {
-    Message cmd;
-    if (!popMessage(cmd))
-        return {Message::TYPE::AUCUN,""}; 
-    return cmd;
-}
+// Message StateMachine::getMessage() {
+//     Message cmd;
+//     if (!popMessage(cmd))
+//         return {Message::TYPE::AUCUN,""}; 
+//     return cmd;
+// }
 
 bool StateMachine::setConsigne(const String& type, const String* params, int nbParams) {
     if (etat == StateMachine::ETAT::PILOTAGE) {
-        pushMessage(Message::TYPE::WARNING,"Impossible de changer de consigne pendant l'état pilotage. Le système doit être au repos.");
+        sendError("Impossible de changer de consigne pendant l'état pilotage. Le système doit être au repos.");
         return false;
     }
     return consigne.setConsigne(type, params, nbParams);

@@ -1,5 +1,7 @@
 #include <Arduino.h>
 #include <Bounce2.h>
+#include "Messages.h"
+
 #include "StateMachine.h"
 #include "Sensors.h"
 #include "ComSerie.h"
@@ -62,17 +64,20 @@ void ordonnanceur() {
         if (capteurs.limite_courant_atteinte && !erreurCourant) {
             erreurCourant = true;
             machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
-            portserie.sendError("Limite de courant atteinte",true);
+            sendError("Limite de courant atteinte");
+            //buzzer.bip(); // TODO
         }
         if ((capteurs.limite_haute || capteurs.limite_basse) && !erreurLimitePorte) {
             erreurLimitePorte = true;
             machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
-            portserie.sendError("Limite de la porte atteinte",true);
+            sendError("Limite de la porte atteinte");
+            //buzzer.bip(); // TODO
         }
         if (capteurs.isBlocage(false) && !erreurBlocage && not(machine.butee_desactivated)){
             erreurBlocage = true;
             machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
-            portserie.sendError("Blocage détecté");
+            sendError("Blocage détecté");
+            //buzzer.bip(); // TODO
         }
     }
     
@@ -82,16 +87,15 @@ void ordonnanceur() {
         btTest.update();
         btWireless.update();
         if (btTest.pressed()) {
-            Serial.println("I;Bouton Pilotage pressé");
+            sendInfo("Bouton Pilotage pressé");
             if (machine.etat == StateMachine::ETAT::REPOS) {
-                Serial.println("Changement d'état Pilote demandé");
                 machine.changerEtat(StateMachine::ETAT::PILOTAGE);
             }
             else
                 machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
         }
         if (btWireless.pressed()) {
-            //Serial.println("I;Bouton Radio pressé");
+            sendInfo("Bouton Radio pressé");
             if (machine.etat == StateMachine::ETAT::REPOS)
                 machine.changerEtat(StateMachine::ETAT::FONCTIONNEMENT);
             else
@@ -109,7 +113,9 @@ void ordonnanceur() {
     int periode = portserie.mesureEnable();
     if (periode != 0 && maintenant - tMesure >= periode) {
         tMesure += periode;
-        capteurs.mesures(moteur.getPWM());
-        portserie.sendMesures();
+        float pwm = moteur.getPWM();
+        capteurs.mesures(pwm);
+        sendMesures(capteurs.time_mesures, capteurs.tension, pwm, capteurs.courant_moyen, capteurs.angle_moteur, 
+                    capteurs.vitesse_moteur, capteurs.angle_porte, capteurs.consigne);
     } 
 }

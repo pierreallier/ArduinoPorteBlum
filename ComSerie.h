@@ -2,10 +2,17 @@
 #define COMSERIE_H
 
 #include <Arduino.h>
+#include "SerialTxBuffer.h"
+#include "Message.h"
+
 #include "Sensors.h"
 #include "Motor.h"
 #include "StateMachine.h"
 #include "Buzzer.h"
+
+
+
+
 
 constexpr float RADS_TO_RPM = 60.0f / (2.0f * PI);
 constexpr float RAD_TO_TURN = 1.0f / (2.0f * PI);
@@ -16,14 +23,8 @@ class ComSerie {
         void init();
         void task();
         void printFinInit();
-        void printMesures();
+        //void printMesures();
         void readSerial();
-        void sendMesures();
-        void sendEtat(String etat);
-        void sendInfo(String message);
-        void sendError(String message, bool buz = false);
-        void sendWarning(String message);
-        void sendMessages();
         int mesureEnable();
     
     private:
