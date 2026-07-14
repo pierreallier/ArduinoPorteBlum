@@ -18,6 +18,7 @@ ComSerie portserie(moteur, capteurs, machine);
 
 bool erreurBlocage = false;
 bool erreurCourant = false;
+bool erreurLimitePorte = false;
 
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
@@ -27,6 +28,10 @@ void setup() {
     btTest.setPressedState(LOW); 
     btWireless.attach(WIRELESS_BT,INPUT_PULLUP);
     btWireless.setPressedState(LOW);
+
+    erreurBlocage = false;
+    erreurCourant = false;
+    erreurLimitePorte = false;
 
     moteur.init(); // Initialisation du moteur et du driver
     capteurs.init(); // Initialisation des capteurs
@@ -56,10 +61,17 @@ void ordonnanceur() {
         capteurs.checkSecurites(moteur.getPWM());
         if (capteurs.limite_courant_atteinte && !erreurCourant) {
             erreurCourant = true;
+            machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
             portserie.sendError("Limite de courant atteinte",true);
         }
-        if (capteurs.isBlocage(false) && !erreurBlocage){
+        if ((capteurs.limite_haute || capteurs.limite_basse) && !erreurLimitePorte) {
+            erreurLimitePorte = true;
+            machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
+            portserie.sendError("Limite de la porte atteinte",true);
+        }
+        if (capteurs.isBlocage(false) && !erreurBlocage && not(machine.butee_desactivated)){
             erreurBlocage = true;
+            machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
             portserie.sendError("Blocage détecté");
         }
     }
@@ -70,12 +82,16 @@ void ordonnanceur() {
         btTest.update();
         btWireless.update();
         if (btTest.pressed()) {
-            if (machine.etat == StateMachine::ETAT::REPOS)
+            Serial.println("I;Bouton Pilotage pressé");
+            if (machine.etat == StateMachine::ETAT::REPOS) {
+                Serial.println("Changement d'état Pilote demandé");
                 machine.changerEtat(StateMachine::ETAT::PILOTAGE);
+            }
             else
                 machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
         }
         if (btWireless.pressed()) {
+            //Serial.println("I;Bouton Radio pressé");
             if (machine.etat == StateMachine::ETAT::REPOS)
                 machine.changerEtat(StateMachine::ETAT::FONCTIONNEMENT);
             else
@@ -85,12 +101,14 @@ void ordonnanceur() {
         if(machine.etat == StateMachine::ETAT::REPOS) {
             erreurBlocage = false;
             erreurCourant = false;
+            erreurLimitePorte = false;
         }
     }
 
-    // Mesures des grandeurs (toutes les 50 ms)
-    if (maintenant - tMesure >= 25) {
-        tMesure += 25;
+    // Mesures des grandeurs
+    int periode = portserie.mesureEnable();
+    if (periode != 0 && maintenant - tMesure >= periode) {
+        tMesure += periode;
         capteurs.mesures(moteur.getPWM());
         portserie.sendMesures();
     } 

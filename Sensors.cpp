@@ -14,6 +14,11 @@ void Sensors::init() {
     pinMode(DRIVER_CURRENT, INPUT);
     pinMode(POTENTIOMETRE, INPUT);
 
+    // Initialisation des limites
+    angle_haut_max = ANGLE_MAX;
+    angle_bas_max = ANGLE_MIN; 
+    limite_courant = LIMITE_COURANT;
+
     // Initialisation du tableau du courant
     courant_moyen = 0.0f;
     courant_idx = 0;
@@ -47,21 +52,36 @@ void Sensors::checkSecurites(int pwm) {
 
     // Détection des limites extrémales de la porte
     getCodeurPorte();
-    limite_haute = (angle_porte >= ANGLE_MAX);
-    limite_basse = (angle_porte <= ANGLE_MIN);
+    limite_haute = (angle_porte >= angle_haut_max);
+    limite_basse = (angle_porte <= angle_bas_max);
 
     // Limite de courant
     getCourant();
-    limite_courant_atteinte = (courant_moyen >= LIMITE_COURANT);
+    limite_courant_atteinte = (courant_moyen >= limite_courant);
 
-    if (!(limite_haute || limite_basse || limite_courant_atteinte)) {
-        // Détection blocage
-        if (abs(pwm) > PWM_MIN && abs(codeur_Delta_Pos) <= TICKS_MIN || courant_moyen >= I_BLOCAGE)
-            compteur_blocage++;
-        else 
-            compteur_blocage=0;
-        blocage_detecte = (compteur_blocage >= NB_CYCLES_BLOCAGE);
+    // Limites
+    if (limite_haute || limite_basse || limite_courant_atteinte) {
+        compteur_blocage = 0;
+        blocage_detecte = false;
+        return;
     }
+
+    // Détection blocage
+    uint8_t pwm_abs = abs(pwm);
+    if (pwm_abs < PWM_MIN) { // PWM trop faible pour détecter un blocage mécanique
+        compteur_blocage = 0;
+        blocage_detecte = false;
+        return;
+    }
+    if (abs(codeur_Delta_Pos) > TICKS_MIN && courant_moyen < I_BLOCAGE) { // Le moteur tourne suffisamment
+        compteur_blocage = 0;
+        blocage_detecte = false;
+        return;
+    }
+    compteur_blocage++;
+    uint8_t seuil = (pwm_abs >= PWM_RAPIDE) ? NB_CYCLES_BLOCAGE_RAPIDE : NB_CYCLES_BLOCAGE_LENT;
+    blocage_detecte = (compteur_blocage >= seuil);
+
 }
 
 void Sensors::mesures(int pwm) {
@@ -86,9 +106,9 @@ float Sensors::addCourant(float current) {
 void Sensors::getCodeurPorte() {
     // Lecture du codeur
     // TODO (Détecter ces valeurs par une méthode d'étalonnage du codeur)
-    int codeurValue = map(analogRead(CODEUR_PORTE),0,655,0,360.0)-12;
-    if (codeurValue > 210)
-        codeurValue -= 360;
+    float codeurValue = analogRead(CODEUR_PORTE) * (360.0f / 655.0f) - 12.0f;
+    if (codeurValue > 210.0f)
+        codeurValue -= 360.0f;
     angle_porte = codeurValue;
 }
 
@@ -147,4 +167,26 @@ void Sensors::getPotentiometre() {
 
 void Sensors::setConsigne(int c) {
     consigne = constrain(c, -255, 255);
+}
+
+void Sensors::setLimits(float limite_basse, float limite_haute) {
+    if (limite_basse > ANGLE_MIN){
+        angle_bas_max = limite_basse;
+    }
+    if (limite_haute < ANGLE_MAX) {
+        angle_haut_max = limite_haute;
+    }
+}
+
+void Sensors::resetLimits() {
+    angle_bas_max = ANGLE_MIN;
+    angle_haut_max = ANGLE_MAX;
+}
+
+bool Sensors::setLimitCourant(int limite) {
+    if (limite > 0.0f && limite < 2.0f) {
+        limite_courant = limite;
+        return true;
+    }
+    return false;
 }

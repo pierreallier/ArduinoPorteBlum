@@ -13,11 +13,18 @@ Grandeurs mesurées :
 
 Commandé à partir de deux boutons :
 - un bouton sans fil = fonctionnement normal du système
-- bouton physique = étallonnage de la porte / pilotage via un ordinateur
+- 2 boutons physiques = étallonnage de la porte / pilotage via un ordinateur
 
 TODO:
-- Détection besoin étalonnage si moteur tourne et pas la porte dans la vérification des blocages.
-- Etallonnage de la porte avec le mécanisme de détection des obstacles pour étalonner le capteur angulaire.
-- Ajout des asservissements.
-- Envoyer la consignes (différent du PWM) dans les mesures.
-- Réfléchir à un format de consignes type echelon, trapèze, sinus ...
+- Tester tous les asservissements.
+- Tester toues les types de consignes type echelon, trapèze, sinus ...
+- Ajouter modification limite en courant 
+- Etat arret
+- Implémenter code butées à vide à l'aide du courant et stockage en dur ?
+- Buzzer avec la fonction bip native
+- Réorganiser le code et commenter
+    - MessageBuffer général unique que toutes les classes peut accéder et qui est lu par ComSerie
+    - Fichier de configuration (les constantes générales du programme)
+    - Fichier avec tous les enums (types)
+    - Harmoniser les noms de variables et de fonctions et privatiser ce qui doit être privé et ajouter des get/set
+- Ajotuer accéléromètre et autres boutons

@@ -4,7 +4,7 @@
 void Buzzer::init() {
     pinMode(BUZZER_PIN, OUTPUT);
     digitalWrite(BUZZER_PIN, LOW);
-    enabled = false;
+    enabled = true;
 }
 
 void Buzzer::enable() {
