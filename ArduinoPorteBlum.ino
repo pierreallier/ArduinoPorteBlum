@@ -1,10 +1,11 @@
 #include <Arduino.h>
 #include <Bounce2.h>
 #include "Messages.h"
+#include "Buzzer.h"
 
 #include "StateMachine.h"
 #include "Sensors.h"
-#include "ComSerie.h"
+#include "SerialManager.h"
 #include "Motor.h"
 
 #define TEST_BT 2 // Bouton de mise en fonctionnement / arrêt
@@ -16,7 +17,8 @@ Bounce2::Button btWireless;
 Sensors capteurs;
 Motor moteur(capteurs);
 StateMachine machine(moteur, capteurs);
-ComSerie portserie(moteur, capteurs, machine);
+SerialManager portserie(moteur, capteurs, machine);
+Buzzer buzzer;
 
 bool erreurBlocage = false;
 bool erreurCourant = false;
@@ -25,6 +27,7 @@ bool erreurLimitePorte = false;
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
     portserie.init(); // Initialisation du port série
+    buzzer.init(); // Initialiation du buzzer
 
     btTest.attach(TEST_BT,INPUT_PULLUP);
     btTest.setPressedState(LOW); 
@@ -40,12 +43,14 @@ void setup() {
     machine.init(); // Initialisation de la machine à états
 
     portserie.printFinInit();
+    buzzer.sequenceInit();
 }
 
 void loop() {
     portserie.task();
     machine.exec();
     ordonnanceur();
+    buzzer.task();
 }
 
 uint32_t tVerif = 0;
@@ -65,19 +70,21 @@ void ordonnanceur() {
             erreurCourant = true;
             machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
             sendError("Limite de courant atteinte");
-            //buzzer.bip(); // TODO
+            buzzer.sequenceErreur();
         }
         if ((capteurs.limite_haute || capteurs.limite_basse) && !erreurLimitePorte) {
             erreurLimitePorte = true;
             machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
-            sendError("Limite de la porte atteinte");
-            //buzzer.bip(); // TODO
+            if (machine.etat == StateMachine::ETAT::PILOTAGE) {
+                sendError("Limite de la porte atteinte");
+                buzzer.sequenceErreur();
+            }
         }
         if (capteurs.isBlocage(false) && !erreurBlocage && not(machine.butee_desactivated)){
             erreurBlocage = true;
             machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
             sendError("Blocage détecté");
-            //buzzer.bip(); // TODO
+            buzzer.sequenceErreur();
         }
     }
     

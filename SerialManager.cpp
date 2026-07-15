@@ -1,6 +1,4 @@
-//#include "HardwareSerial.h"
-#include "ComSerie.h"
-
+#include "SerialManager.h"
 #include <avr/wdt.h>
 
 void resetArduino() {
@@ -10,36 +8,23 @@ void resetArduino() {
     }
 }
 
-ComSerie::ComSerie(Motor& m, Sensors& c, StateMachine& s) : moteur(m),capteurs(c),machine(s) {
+SerialManager::SerialManager(Motor& m, Sensors& c, StateMachine& s) : moteur(m),capteurs(c),machine(s) {
 }
 
-void ComSerie::init() {
+void SerialManager::init() {
     Serial.begin(115200);
     Serial.flush();
-    buzzer.init();
 }
 
-void ComSerie::task() {
+void SerialManager::task() {
     if (millis() - time_precedent >= 100) {
         time_precedent += 100;
         readSerial(); // Traitement des données reçues
         SerialTxBuffer::instance().send(Serial); // Envoi des données en attente
-        buzzer.task();
     }
 }
 
-void ComSerie::printFinInit() {
-    Serial.println("");
-    Serial.println(F("==== Pilotage Porte Blum ===="));
-    Serial.println("");
-    Serial.println("Initialisation terminée");
-    Serial.println("");
-    Serial.flush();
-    buzzer.sequenceInit();
-    delay(1000);
-}
-
-// void ComSerie::printMesures() {
+// void SerialManager::printMesures() {
 //     Serial.print(capteurs.time_mesures);
 //     Serial.print(" , Tension:"); // Tension en Volt
 //     Serial.print(capteurs.tension);
@@ -76,7 +61,7 @@ void ComSerie::printFinInit() {
 // }
 
 
-void ComSerie::readSerial() {
+void SerialManager::readSerial() {
     if (Serial.available() > 0) {
         String command = Serial.readStringUntil('\n');
         command.trim(); // Supprime les espaces et les retours à la ligne
@@ -93,7 +78,7 @@ void ComSerie::readSerial() {
     }
 }
 
-void ComSerie::_SET(String commande) {
+void SerialManager::_SET(String commande) {
     commande.trim(); // Supprime les espaces et les retours à la ligne
     commande.toUpperCase(); // Convertit la commande
 
@@ -209,7 +194,7 @@ void ComSerie::_SET(String commande) {
 
 }
 
-void ComSerie::_GET(String commande) {
+void SerialManager::_GET(String commande) {
     commande.trim(); // Supprime les espaces et les retours à la ligne
     commande.toUpperCase(); // Convertit la commande
 
@@ -251,7 +236,7 @@ void ComSerie::_GET(String commande) {
         sendError("Commande GET inconnue {CALIBRATION,MODE,PID}.");
 }
 
-void ComSerie::_DO(String commande) {
+void SerialManager::_DO(String commande) {
     commande.trim(); // Supprime les espaces et les retours à la ligne
     commande.toUpperCase(); // Convertit la commande
 
@@ -279,11 +264,11 @@ void ComSerie::_DO(String commande) {
     sendReponseOK("DO",commande.c_str(),"Effectuée");
 }
 
-int ComSerie::mesureEnable() {
+int SerialManager::mesureEnable() {
     return periode_echantillonnage_mesures;
 }
 
-int ComSerie::splitCommande(const String& commande, String items[], int maxItems) {
+int SerialManager::splitCommande(const String& commande, String items[], int maxItems) {
     // Découpe un string de commande sur l'espace et renvoi un tableau contenant chaque items
     int nbItems = 0;
     int debut = 0;

@@ -4,6 +4,21 @@
 #include "SerialTxBuffer.h"
 
 /**
+ * @brief Envoie un message
+ *
+ * Format :
+ *     R;MESSAGE
+ *
+ * @param message Message associé à la réponse.
+ *
+ * @return true si le message a été ajouté au buffer.
+ * @return false si l'espace disponible est insuffisant.
+ */
+inline bool sendMessage(const char* message) {
+    return SerialTxBuffer::instance().push('R',  message);
+}
+
+/**
  * @brief Envoie une réponse positive à une commande associée à une cible.
  *
  * Format :
@@ -53,6 +68,9 @@ inline bool sendReponseNOK(const char* commande, const char* cible, const String
 /**
  * @brief Envoie un message d'information.
  *
+ * Format :
+ *     I;MESSAGE
+ *
  * @param value Message à transmettre.
  *
  * @return true si le message a été ajouté au buffer.
@@ -65,6 +83,9 @@ inline bool sendInfo(const char* value) {
 /**
  * @brief Envoie un message d'avertissement.
  *
+ * Format :
+ *     W;MESSAGE
+ *
  * @param value Message à transmettre.
  *
  * @return true si le message a été ajouté au buffer.
@@ -76,6 +97,9 @@ inline bool sendWarning(const char* value) {
 
 /**
  * @brief Envoie un message d'erreur.
+ *
+ * Format :
+ *     E;MESSAGE
  *
  * @param value Message à transmettre.
  *
@@ -91,6 +115,9 @@ inline bool sendError(const char* value){
 /**
  * @brief Envoie un changement d'état.
  *
+ * Format :
+ *     S;ETAT
+ *
  * @param value Nouvel état à transmettre.
  *
  * @return true si le message a été ajouté au buffer.
@@ -101,7 +128,7 @@ inline bool sendEtat(const char* value) {
 }
 
 /**
- * @brief Envoie les messures.
+ * @brief Envoie les mesures.
  *
  * @param time le temps de la mesure (en ms)
  * @param tension la tension d'alimentation du système
@@ -112,7 +139,7 @@ inline bool sendEtat(const char* value) {
  * @param angle_porte l'angle de la porte (°)
  * @param consigne la consigne du système
  *
- * ATTENTION : il y a un facteur 100 sur toutes les valeurs sauf le temps (en ms)
+ * ATTENTION : il y a un facteur 1000 sur toutes les valeurs sauf le temps (ms)
  *
  * @return true si le message a été envoyé.
  * @return false si non.
@@ -122,19 +149,19 @@ inline bool sendMesures(uint32_t time, float tension, int pwm, float courant, fl
     Serial.print(F("M;"));
     Serial.print(time,0);
     Serial.write(';');
-    Serial.print((int16_t)(tension * 100));
+    Serial.print((int16_t)(tension * 1000));
     Serial.write(';');
-    Serial.print(pwm);
+    Serial.print(pwm*1000);
     Serial.write(';');
-    Serial.print((int16_t)(courant * 100),2);
+    Serial.print((int16_t)(courant * 1000));
     Serial.write(';');
-    Serial.print((int16_t)(angle_moteur * 100));
+    Serial.print((int32_t)(angle_moteur * 1000));
     Serial.write(';');
-    Serial.print((int16_t)(vitesse_moteur * 100));
+    Serial.print((int32_t)(vitesse_moteur * 1000));
     Serial.write(';');
-    Serial.print((int16_t)(angle_porte * 100));
+    Serial.print((int32_t)(angle_porte * 1000));
     Serial.write(';');
-    Serial.println((int16_t)(consigne * 100));
+    Serial.println((int32_t)(consigne * 1000));
     return true;
 }
 
