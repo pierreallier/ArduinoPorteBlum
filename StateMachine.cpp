@@ -109,10 +109,12 @@ void StateMachine::setMode(StateMachine::MODE_PILOTAGE mode) {
 void StateMachine::exec() {
     switch(etat) {
         case StateMachine::ETAT::INIT: {
+            capteurs.setConsigne(0);
             changerEtat(StateMachine::ETAT::REPOS);
             break;
         }
         case StateMachine::ETAT::REPOS: {
+            capteurs.setConsigne(0);
             break;
         }
         case StateMachine::ETAT::FONCTIONNEMENT: {
@@ -144,12 +146,14 @@ void StateMachine::exec() {
             if (etatDebrayage()) {
                 changerEtat(StateMachine::ETAT::REPOS);
             }
+            capteurs.setConsigne(moteur.getPWM());
             break;
         }
         case StateMachine::ETAT::CALIBRATION: {
             if (etatCalibration()) {
                 changerEtat(StateMachine::ETAT::DEBRAYAGE);
             }
+            capteurs.setConsigne(moteur.getPWM());
             break;
         }
         default: {
@@ -164,6 +168,7 @@ bool StateMachine::etatOuverture(uint16_t speed) {
     /* Gestion de l'ouverture de la porte en BO, retourne false si en cours, true si fini */
     moteur.setDirection(Motor::DIR::OUVERTURE);
     moteur.setSpeed(speed);
+    capteurs.setConsigne(speed);
     if (capteurs.limite_haute) {
         moteur.stop();
         return true;
@@ -175,6 +180,7 @@ bool StateMachine::etatFermeture(uint16_t speed) {
     /* Gestion de la fermeture de la porte en BO, retourne false si en cours, true si fini */
     moteur.setDirection(Motor::DIR::FERMETURE);
     moteur.setSpeed(speed);
+    capteurs.setConsigne(speed);
     if (capteurs.limite_basse) {
         moteur.stop();
         return true;
@@ -205,19 +211,23 @@ bool StateMachine::etatPilote() {
     switch (modePilotage) {
         case StateMachine::MODE_PILOTAGE::PWM: {
             pwm = constrain(consigne_value,-255,255);
+            capteurs.setConsigne(pwm);
             break;
         }
         case StateMachine::MODE_PILOTAGE::VITESSE: {
+            capteurs.setConsigne(consigne_value);
             pwm = pidVitesse.compute(consigne_value,capteurs.vitesse_moteur,time);
             break;
         }
         case StateMachine::MODE_PILOTAGE::POSITION: {
             consigne_value = constrain(consigne_value,-150,150);
+            capteurs.setConsigne(consigne_value);
             pwm = pidPosition.compute(consigne_value,capteurs.angle_porte,time);
             break;
         }
         case StateMachine::MODE_PILOTAGE::POSITION_VITESSE: {
             consigne_value = constrain(consigne_value,-120,180);
+            capteurs.setConsigne(consigne_value);
             float consigneVitesse = pidPosition.compute(consigne_value,capteurs.angle_porte,time);
             pwm = pidVitesse.compute(consigneVitesse,capteurs.vitesse_moteur, time);
             break;

@@ -166,7 +166,7 @@ void Sensors::getPotentiometre() {
 }
 
 void Sensors::setConsigne(int c) {
-    consigne = constrain(c, -255, 255);
+    consigne = c;
 }
 
 void Sensors::setLimits(float limite_basse, float limite_haute) {
