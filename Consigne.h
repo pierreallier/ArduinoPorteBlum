@@ -1,8 +1,7 @@
-#define POTENTIOMETRE A2 // Potentiomètre réglage vitesse moteur
-
 #pragma once
 
 #include <Arduino.h>
+#include "Constantes.h"
 
 /**
  * @brief Classe abstraite représentant une consigne de pilotage.

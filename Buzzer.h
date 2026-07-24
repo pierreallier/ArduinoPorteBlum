@@ -2,8 +2,7 @@
 #define BUZZER_H
 
 #include <Arduino.h>
-
-#define BUZZER_PIN 9
+#include "Constantes.h"
 
 class Buzzer {
 public:

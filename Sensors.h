@@ -2,23 +2,13 @@
 #define SENSORS_H
 
 #include <Arduino.h>
-
-#define CODEUR_PORTE A4 // Codeur de position absolue de la porte
-#define DETECTEUR_MEUBLE A5 // Détecteur de présence du meuble
-#define MOTOR_VOLTAGE A0 // Driver du moteur : mesure de la tension
-#define MOTOR_CURRENT A1 // Mesure du courant fournit au moteur
-#define DRIVER_CURRENT A3 // Driver du moteur : mesure du courant
-#define POTENTIOMETRE A2 // Potentiomètre réglage vitesse moteur
-
-// Codeur incrémental du moteur
-#define CODEUR_A_PIN 18
-#define CODEUR_B_PIN 19
+#include "Constantes.h"
 
 // Constantes des capteurs
 constexpr float RAD_PER_TICK = 2.0f * PI / 128.0f;
 constexpr float K_VITESSE = 2.0f * PI / 128.0f / 0.1f;
-constexpr float CURRENT_COEF = 5.0f / 1024.0f / 0.185f;
-constexpr float VOLTAGE_COEF = 25.0f / 1023.0f;
+constexpr float CURRENT_COEF = 5.0f / 1023.0f / 0.400f;
+constexpr float VOLTAGE_COEF = 29.8f / 1023.0f;
 
 
 // Variables pour le calcul de la moyenne glissante du courant

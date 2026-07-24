@@ -4,12 +4,12 @@
 #include "Sensors.h"
 #include "ComSerie.h"
 #include "Motor.h"
-
-#define TEST_BT 2 // Bouton de mise en fonctionnement / arrêt
-#define WIRELESS_BT 3 // Bouton sans fil 
+#include "Constantes.h"
 
 Bounce2::Button btTest;
 Bounce2::Button btWireless;
+Bounce2::Button btCalibration;
+Bounce2::Button btPilotage;
 
 Sensors capteurs;
 Motor moteur(capteurs);
@@ -28,6 +28,10 @@ void setup() {
     btTest.setPressedState(LOW); 
     btWireless.attach(WIRELESS_BT,INPUT_PULLUP);
     btWireless.setPressedState(LOW);
+    btCalibration.attach(CALIBRATION_BT,INPUT_PULLUP);
+    btCalibration.setPressedState(LOW);
+    btPilotage.attach(PILOTAGE_BT,INPUT_PULLUP);
+    btPilotage.setPressedState(LOW);
 
     erreurBlocage = false;
     erreurCourant = false;
@@ -81,8 +85,9 @@ void ordonnanceur() {
         // Vérification des boutons de commande
         btTest.update();
         btWireless.update();
-        if (btTest.pressed()) {
-            Serial.println("I;Bouton Pilotage pressé");
+        btPilotage.update();
+        if (btPilotage.pressed()) {
+            //Serial.println("I;Bouton Pilotage pressé");
             if (machine.etat == StateMachine::ETAT::REPOS) {
                 Serial.println("Changement d'état Pilote demandé");
                 machine.changerEtat(StateMachine::ETAT::PILOTAGE);
@@ -90,7 +95,7 @@ void ordonnanceur() {
             else
                 machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
         }
-        if (btWireless.pressed()) {
+        if (btWireless.pressed() || btTest.pressed()) {
             //Serial.println("I;Bouton Radio pressé");
             if (machine.etat == StateMachine::ETAT::REPOS)
                 machine.changerEtat(StateMachine::ETAT::FONCTIONNEMENT);

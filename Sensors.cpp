@@ -3,7 +3,7 @@
 volatile int32_t ticks_codeur=0;
 void isr_Codeur() {
     // Gestion interruption du codeur
-    ticks_codeur += (PIND & _BV(PD2)) ? -1 : +1;
+    ticks_codeur += (PIND & _BV(PD3)) ? -1 : +1;
 }
 
 void Sensors::init() {
@@ -125,7 +125,7 @@ void Sensors::getCourant() {
 }
 
 void Sensors::getMeuble() {
-    sur_meuble = (analogRead(DETECTEUR_MEUBLE) > 512) ? true : false;
+    sur_meuble = (analogRead(DETECTEUR_MEUBLE) > 0) ? true : false;
 }
 
 void Sensors::getCodeurMoteur() {
