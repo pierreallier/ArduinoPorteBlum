@@ -1,4 +1,5 @@
 #include "Sensors.h"
+#include <Wire.h>
 
 volatile int32_t ticks_codeur=0;
 void isr_Codeur() {
@@ -187,4 +188,33 @@ bool Sensors::setLimitCourant(int limite) {
         return true;
     }
     return false;
+}
+
+int lireRegistre(uint8_t reg) {
+  Wire.beginTransmission(AS5600_ADDRESS);
+  Wire.write(reg);  // Envoie l'adresse du registre
+  if (Wire.endTransmission(false) != 0) {  // "false" pour ne pas envoyer STOP
+    return -1;  // Erreur I2C (pas de réponse)
+  }
+  // Demande 1 octet de données
+  if (Wire.requestFrom(AS5600_ADDRESS, (uint8_t)1) != 1) {
+    return -1;  // Pas de données reçues
+  }
+  return Wire.read();  // Lit et retourne la valeur
+}
+
+bool Sensors::checkCodeurPorte() {
+    // 1. Vérification de la communication I2C
+    int status = lireRegistre(AS5600_STATUS_REG);
+    if (status == -1) {
+        return false;
+    }
+    // 2. Vérification de l'aimant
+    bool magnetTooWeak = (status & MAGNET_TOO_WEAK) != 0;
+    bool magnetTooStrong = (status & MAGNET_TOO_STRONG) != 0;
+    bool magnetDetected = (status & MAGNET_DETECTED) != 0;
+    if (!magnetDetected && (magnetTooWeak || magnetTooStrong)) {
+        return false;
+    }
+    return true; // pas d'erreur
 }

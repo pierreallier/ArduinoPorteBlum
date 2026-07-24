@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <Bounce2.h>
+#include <Wire.h>
 #include "Messages.h"
 #include "Buzzer.h"
 
@@ -32,6 +33,7 @@ uint32_t tLed = 0;
 
 void setup() {
     portserie.init(); // Initialisation du port série
+    Wire.begin();
     buzzer.init(); // Initialiation du buzzer
 
     btTest.attach(TEST_BT,INPUT_PULLUP);
@@ -51,7 +53,21 @@ void setup() {
     capteurs.init(); // Initialisation des capteurs
     machine.init(); // Initialisation de la machine à états
 
-    portserie.printFinInit();
+    // Vérification codeur porte I2C
+    unsigned long startTime = millis();
+    bool send_error = false;  // Flag pour éviter d'afficher plusieurs fois l'erreur
+    while (!capteurs.checkCodeurPorte()) {
+        if (!send_error) {
+            sendError("Erreur sur le capteur I2C de la porte");
+            digitalWrite(LED_ERROR_PIN, HIGH);
+            portserie.task();  
+            send_error = true;         
+        }
+        delay(1000);  // Petite pause pour éviter de saturer le CPU
+    }
+    sendInfo("Capteur I2C de la porte fonctionnel");
+    digitalWrite(LED_ERROR_PIN, LOW);
+    sendInfo("Initialisation terminée");
     buzzer.sequenceInit();
 }
 

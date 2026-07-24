@@ -23,11 +23,6 @@ class SerialManager {
             Serial.flush();
             delay(500);
         }
-        inline void printFinInit() {
-            Serial.println(F("\nInitialisation terminée\n"));
-            Serial.flush();
-            delay(500);
-        }
 
         //void printMesures();
         void readSerial();

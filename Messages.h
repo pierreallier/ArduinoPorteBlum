@@ -116,7 +116,7 @@ inline bool sendError(const char* value){
  * @brief Envoie un changement d'état.
  *
  * Format :
- *     S;ETAT
+ *     S;ETAT;message (optionnel)
  *
  * @param value Nouvel état à transmettre.
  *
