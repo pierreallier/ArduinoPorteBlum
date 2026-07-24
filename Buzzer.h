@@ -5,7 +5,7 @@
 #include "Constantes.h"
 
 class Buzzer {
-public:
+  public:
     void init();
     void task();
 
@@ -20,7 +20,7 @@ public:
     void sequenceInit();
     void sequenceErreur();  
 
-private:
+  private:
 
     bool enabled = false;
     bool actif = false;

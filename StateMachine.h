@@ -2,42 +2,32 @@
 #define STATEMACHINE_H
 
 #include <Arduino.h>
+#include "Messages.h"
+
 #include "Motor.h"
 #include "Sensors.h"
 #include "PID.h"
 #include "ConsigneManager.h"
-
-struct Message {
-    enum TYPE : uint8_t
-    {
-        ETAT,
-        MESURE,
-        INFO,
-        WARNING,
-        ERREUR,
-        AUCUN,
-    };
-
-    TYPE type;
-    String valeur;
-};
 
 const uint16_t PWM_CALIBRATION = 150; 
 
 class StateMachine {
     public:
         enum class ETAT : byte {
-            INIT=0,
-            REPOS=1,
-            FONCTIONNEMENT=2,
-            OUVERTURE=3,
-            FERMETURE=4,
-            PILOTAGE=5,
-            CALIBRATION=6,
-            DEBRAYAGE=7,
-            ERREUR=8,
-            STOP=9,
+            INIT,
+            REPOS,
+            FONCTIONNEMENT,
+            OUVERTURE,
+            FERMETURE,
+            PILOTAGE,
+            CALIBRATION,
+            DEBRAYAGE,
+            ERREUR,
+            STOP,
+            NB_ETATS
         };
+        
+        static const char* const ETAT_NAMES[static_cast<size_t>(ETAT::NB_ETATS)]; // Tableau des noms (même ordre que l'enum ETAT)
 
         enum class MODE_PILOTAGE : byte {
             PWM,
@@ -71,8 +61,7 @@ class StateMachine {
             modePilotage = mode;
         }
         bool setConsigne(const String& type, const String* params, int nbParams);
-        bool hasMessage() const;
-        Message getMessage();
+
     
     private:
         Motor& moteur;
@@ -102,18 +91,7 @@ class StateMachine {
         bool etatFermeture(uint16_t speed);
         bool etatDebrayage();
         bool etatPilote();
-        bool etatCalibration();
-        
-        static constexpr uint8_t TAILLE_FIFO = 10;
-        Message messages[TAILLE_FIFO];
-        uint8_t tete = 0;
-        uint8_t queue = 0;
-        uint8_t nbElements = 0;
-
-        bool pushMessage(Message::TYPE t, String message);
-        bool popMessage(Message &cmd);
-
-        
+        bool etatCalibration();        
 };
 
 #endif

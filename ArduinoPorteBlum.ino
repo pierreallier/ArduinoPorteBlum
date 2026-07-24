@@ -1,8 +1,11 @@
 #include <Arduino.h>
 #include <Bounce2.h>
+#include "Messages.h"
+#include "Buzzer.h"
+
 #include "StateMachine.h"
 #include "Sensors.h"
-#include "ComSerie.h"
+#include "SerialManager.h"
 #include "Motor.h"
 #include "Constantes.h"
 
@@ -14,7 +17,8 @@ Bounce2::Button btPilotage;
 Sensors capteurs;
 Motor moteur(capteurs);
 StateMachine machine(moteur, capteurs);
-ComSerie portserie(moteur, capteurs, machine);
+SerialManager portserie(moteur, capteurs, machine);
+Buzzer buzzer;
 
 bool erreurBlocage = false;
 bool erreurCourant = false;
@@ -23,6 +27,7 @@ bool erreurLimitePorte = false;
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
     portserie.init(); // Initialisation du port série
+    buzzer.init(); // Initialiation du buzzer
 
     btTest.attach(TEST_BT,INPUT_PULLUP);
     btTest.setPressedState(LOW); 
@@ -42,12 +47,14 @@ void setup() {
     machine.init(); // Initialisation de la machine à états
 
     portserie.printFinInit();
+    buzzer.sequenceInit();
 }
 
 void loop() {
     portserie.task();
     machine.exec();
     ordonnanceur();
+    buzzer.task();
 }
 
 uint32_t tVerif = 0;
@@ -66,17 +73,22 @@ void ordonnanceur() {
         if (capteurs.limite_courant_atteinte && !erreurCourant) {
             erreurCourant = true;
             machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
-            portserie.sendError("Limite de courant atteinte",true);
+            sendError("Limite de courant atteinte");
+            buzzer.sequenceErreur();
         }
         if ((capteurs.limite_haute || capteurs.limite_basse) && !erreurLimitePorte) {
             erreurLimitePorte = true;
             machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
-            portserie.sendError("Limite de la porte atteinte",true);
+            if (machine.etat == StateMachine::ETAT::PILOTAGE) {
+                sendError("Limite de la porte atteinte");
+                buzzer.sequenceErreur();
+            }
         }
         if (capteurs.isBlocage(false) && !erreurBlocage && not(machine.butee_desactivated)){
             erreurBlocage = true;
             machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
-            portserie.sendError("Blocage détecté");
+            sendError("Blocage détecté");
+            buzzer.sequenceErreur();
         }
     }
     
@@ -89,7 +101,6 @@ void ordonnanceur() {
         if (btPilotage.pressed()) {
             //Serial.println("I;Bouton Pilotage pressé");
             if (machine.etat == StateMachine::ETAT::REPOS) {
-                Serial.println("Changement d'état Pilote demandé");
                 machine.changerEtat(StateMachine::ETAT::PILOTAGE);
             }
             else
@@ -114,7 +125,9 @@ void ordonnanceur() {
     int periode = portserie.mesureEnable();
     if (periode != 0 && maintenant - tMesure >= periode) {
         tMesure += periode;
-        capteurs.mesures(moteur.getPWM());
-        portserie.sendMesures();
+        float pwm = moteur.getPWM();
+        capteurs.mesures(pwm);
+        sendMesures(capteurs.time_mesures, capteurs.tension, pwm, capteurs.courant_moyen, capteurs.angle_moteur, 
+                    capteurs.vitesse_moteur, capteurs.angle_porte, capteurs.consigne);
     } 
 }

@@ -34,8 +34,6 @@ void Sensors::init() {
     }
     courant_offset = somme / 500;
 
-    Serial.println(courant_offset);
-
     // Initialisation du codeur du moteur
     pinMode(CODEUR_A_PIN, INPUT_PULLUP);
     pinMode(CODEUR_B_PIN, INPUT_PULLUP);
@@ -166,7 +164,7 @@ void Sensors::getPotentiometre() {
 }
 
 void Sensors::setConsigne(int c) {
-    consigne = constrain(c, -255, 255);
+    consigne = c;
 }
 
 void Sensors::setLimits(float limite_basse, float limite_haute) {

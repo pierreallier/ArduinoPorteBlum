@@ -27,7 +27,7 @@ const float ANGLE_MIN = -140.0f;
 
 class Sensors {
     public:
-        float time_mesures = 0.0f;
+        uint32_t time_mesures = 0;
         float tension = 0.0f;
         float courant_moyen = 0.0f;
         float angle_moteur = 0.0f;

@@ -14,6 +14,13 @@ Grandeurs mesurées :
 Commandé à partir de deux boutons :
 - un bouton sans fil = fonctionnement normal du système
 - 2 boutons physiques = étallonnage de la porte / pilotage via un ordinateur
+- un bouton reset
+
+Retours visuels :
+- Moteur en fonctionnement
+- Mode piloté activé
+- Limite de courant activé
+- Etalonnage (en cours, allumé constant, a faire : clignotement)
 
 TODO:
 - Tester tous les asservissements.
@@ -25,6 +32,8 @@ TODO:
 - Buzzer avec la fonction bip native
 - Réorganiser le code et commenter
     - MessageBuffer général unique que toutes les classes peut accéder et qui est lu par ComSerie
+     -> Sensors en SensorsManager qui stockes les mesures en entier (*1000) et Moyenne vitesse + structure last_mesures ?
+    - Codeur moteur sur A et B (vu que les interruptions ne semblent pas bloquer l'Arduino) 
     - Fichier de configuration (les constantes générales du programme)
     - Fichier avec tous les enums (types)
     - Harmoniser les noms de variables et de fonctions et privatiser ce qui doit être privé et ajouter des get/set

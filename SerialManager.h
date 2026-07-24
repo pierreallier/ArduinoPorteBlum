@@ -1,29 +1,36 @@
-#ifndef COMSERIE_H
-#define COMSERIE_H
+#ifndef SERIALMANAGER_H
+#define SERIALMANAGER_H
 
 #include <Arduino.h>
+#include "SerialTxBuffer.h"
+#include "Messages.h"
+
 #include "Sensors.h"
 #include "Motor.h"
 #include "StateMachine.h"
-#include "Buzzer.h"
 
 constexpr float RADS_TO_RPM = 60.0f / (2.0f * PI);
 constexpr float RAD_TO_TURN = 1.0f / (2.0f * PI);
 
-class ComSerie {
+class SerialManager {
     public:
-        ComSerie(Motor& m, Sensors& c, StateMachine& s);
+        SerialManager(Motor& m, Sensors& c, StateMachine& s);
         void init();
         void task();
-        void printFinInit();
-        void printMesures();
+
+        inline void printStart() { 
+            Serial.println(F("\n==== Pilotage Porte Blum ====\n"));
+            Serial.flush();
+            delay(500);
+        }
+        inline void printFinInit() {
+            Serial.println(F("\nInitialisation terminée\n"));
+            Serial.flush();
+            delay(500);
+        }
+
+        //void printMesures();
         void readSerial();
-        void sendMesures();
-        void sendEtat(String etat);
-        void sendInfo(String message);
-        void sendError(String message, bool buz = false);
-        void sendWarning(String message);
-        void sendMessages();
         int mesureEnable();
     
     private:
@@ -31,7 +38,6 @@ class ComSerie {
         Motor& moteur;
         Sensors& capteurs;
         StateMachine& machine;
-        Buzzer buzzer;
         int periode_echantillonnage_mesures = 25;
 
         void _SET(String commande);
