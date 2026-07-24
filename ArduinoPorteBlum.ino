@@ -23,9 +23,14 @@ Buzzer buzzer;
 bool erreurBlocage = false;
 bool erreurCourant = false;
 bool erreurLimitePorte = false;
+bool ledState = LOW;
+
+uint32_t tVerif = 0;
+uint32_t tAcq = 0;
+uint32_t tMesure = 0;
+uint32_t tLed = 0;
 
 void setup() {
-    pinMode(LED_BUILTIN, OUTPUT);
     portserie.init(); // Initialisation du port série
     buzzer.init(); // Initialiation du buzzer
 
@@ -57,10 +62,6 @@ void loop() {
     buzzer.task();
 }
 
-uint32_t tVerif = 0;
-uint32_t tAcq = 0;
-uint32_t tMesure = 0;
-
 void ordonnanceur() {
     // Tâches périodiques
     uint32_t maintenant = millis();
@@ -72,8 +73,8 @@ void ordonnanceur() {
         capteurs.checkSecurites(moteur.getPWM());
         if (capteurs.limite_courant_atteinte && !erreurCourant) {
             erreurCourant = true;
-            machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
             sendError("Limite de courant atteinte");
+            machine.changerEtat(StateMachine::ETAT::ERREUR);
             buzzer.sequenceErreur();
         }
         if ((capteurs.limite_haute || capteurs.limite_basse) && !erreurLimitePorte) {
@@ -86,18 +87,27 @@ void ordonnanceur() {
         }
         if (capteurs.isBlocage(false) && !erreurBlocage && not(machine.butee_desactivated)){
             erreurBlocage = true;
-            machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
             sendError("Blocage détecté");
+            machine.changerEtat(StateMachine::ETAT::ERREUR);
             buzzer.sequenceErreur();
         }
     }
     
-    if (maintenant - tAcq >= 10) {
-        tAcq += 10;
+    if (maintenant - tAcq >= 50) {
+        tAcq += 50;
         // Vérification des boutons de commande
         btTest.update();
         btWireless.update();
+        btCalibration.update();
         btPilotage.update();
+        if (btCalibration.pressed()) {
+            //Serial.println("I;Bouton Pilotage pressé");
+            if (machine.etat == StateMachine::ETAT::REPOS) {
+                machine.changerEtat(StateMachine::ETAT::CALIBRATION);
+            }
+            else
+                machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
+        }
         if (btPilotage.pressed()) {
             //Serial.println("I;Bouton Pilotage pressé");
             if (machine.etat == StateMachine::ETAT::REPOS) {
@@ -130,4 +140,13 @@ void ordonnanceur() {
         sendMesures(capteurs.time_mesures, capteurs.tension, pwm, capteurs.courant_moyen, capteurs.angle_moteur, 
                     capteurs.vitesse_moteur, capteurs.angle_porte, capteurs.consigne);
     } 
+
+    // Clignotement led
+    if (!machine.is_calibre && machine.etat != StateMachine::ETAT::CALIBRATION) {
+        if (maintenant - tLed >= 1000) {
+            tLed += 1000;
+            ledState = !ledState;
+            digitalWrite(LED_CALIBRATION_PIN, ledState);
+        }
+    }
 }

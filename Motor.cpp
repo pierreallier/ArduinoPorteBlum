@@ -10,7 +10,7 @@ void Motor::init() {
     pinMode(PWM_REV_PIN, OUTPUT);
     pinMode(PWM_FOR_PIN, OUTPUT);
     pinMode(STBY_PIN, OUTPUT);
-    pinMode(LED_BUILTIN, OUTPUT);
+    pinMode(LED_MOTOR_PIN, OUTPUT);
     disable();
 }
 
@@ -72,10 +72,10 @@ void Motor::update() {
     // Met à jour l'état du moteur en fonction de la consigne et des capteurs
     if (enabled == true) {
         digitalWrite(STBY_PIN, HIGH); // Ensure the motor driver is enabled
-        digitalWrite(LED_BUILTIN, HIGH); // Indicate motor enabled
+        digitalWrite(LED_MOTOR_PIN, HIGH); // Indicate motor enabled
     } else {
         digitalWrite(STBY_PIN, LOW); // Ensure the motor driver is disabled
-        digitalWrite(LED_BUILTIN, LOW); // Indicate motor disabled
+        digitalWrite(LED_MOTOR_PIN, LOW); // Indicate motor disabled
     }
     if (direction == Motor::DIR::OUVERTURE && !capteurs.limite_haute) {
         analogWrite(PWM_FOR_PIN, pwm);

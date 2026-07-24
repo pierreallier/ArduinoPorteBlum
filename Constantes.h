@@ -18,17 +18,17 @@
 #define STBY_PIN 5  // Driver du moteur : Standby input
 
 // Boutons
-#define TEST_BT 25 // Bouton de test
+#define TEST_BT 33 // Bouton de test
 #define WIRELESS_BT 27 // Bouton sans fil
-#define CALIBRATION_BT 33 // Bouton de calibration
+#define CALIBRATION_BT 25 // Bouton de calibration
 #define PILOTAGE_BT 41 // Bouton de mise en fonctionnement / arrêt
 
 // Buzzer
 #define BUZZER_PIN 31
 
 // Led
-#define LED1_PIN 29
-#define LED2_PIN 35
-#define LED3_PIN 43
+#define LED_MOTOR_PIN 35
+#define LED_CALIBRATION_PIN 29
+#define LED_PILOTAGE_PIN 43
 #define LED_ERROR_PIN 53
 
