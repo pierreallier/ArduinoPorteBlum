@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "Constantes.h"
+#include "Types.h"
 
 // Constantes des capteurs
 constexpr float RAD_PER_TICK = 2.0f * PI / 128.0f;
@@ -21,7 +22,7 @@ constexpr int PWM_RAPIDE = 150;
 constexpr int NB_CYCLES_BLOCAGE_RAPIDE = 20; // 10 x 5 ms = 50 ms
 constexpr int NB_CYCLES_BLOCAGE_LENT = 50;
 const int TICKS_MIN = 2;
-const float I_BLOCAGE = 1.8f;
+const float I_BLOCAGE = 2.2f;
 const float ANGLE_MAX = 180.0f;
 const float ANGLE_MIN = -140.0f;
 
@@ -42,16 +43,21 @@ class Sensors {
         bool limite_basse = false;
         bool blocage_detecte = false;
         bool limite_courant_atteinte = false;
+        bool etat_meublechange = false;
 
         void init();
         void mesures(int pwm);
-        void checkSecurites(int pwm);
-        bool isBlocage(bool reset = false);
+
+        void updateSecurities(int pwm);
+        bool isBlocage();
+        bool isLimiteCourant();
+        bool isLimiteAngle();
+        bool hasEtatMeubleChange();
         
         void getTension();
         void getCourant();
-        void getMeuble();
-        void getCodeurPorte();
+        bool getMeuble();
+        float getCodeurPorte();
         void getCodeurMoteur();
         void getPotentiometre();
 
@@ -59,9 +65,9 @@ class Sensors {
         float getLimitCourant() const { return limite_courant;}
         bool setLimitCourant(int limite);
         
-        float Sensors::getLimiteBasse() const { return angle_bas_max;}
-        float Sensors::getLimiteHaute() const { return angle_haut_max;}
-        void setLimits(float limite_basse, float limite_haute);
+        float getLimiteBasse() const { return calibrationData.lowLimit;}
+        float getLimiteHaute() const { return calibrationData.highLimit;}
+        void setLimits(CalibrationData c);
         void resetLimits();
 
         bool checkCodeurPorte();
@@ -79,9 +85,10 @@ class Sensors {
         void encoderResetTicks();
         float addCourant(float current);
 
-        float angle_bas_max = ANGLE_MIN;
-        float angle_haut_max = ANGLE_MAX;
+        CalibrationData calibrationData;
         float limite_courant;
+
+        void mesureCodeurPorte();
 };
 
 #endif

@@ -14,13 +14,13 @@ const char* const StateMachine::ETAT_NAMES[] ={
 };
 
 
-StateMachine::StateMachine(Motor& m, Sensors& c) : moteur(m), capteurs(c), consigne() {
+StateMachine::StateMachine(Motor& m, Sensors& c) : moteur(m), capteurs(c), consigne(), calibration(m,c) {
     etat = StateMachine::ETAT::INIT;
     modePilotage = StateMachine::MODE_PILOTAGE::PWM;
-    etape_calibration = StateMachine::ETAPE_CALIBRATION::NONE;
+    //etape_calibration = StateMachine::ETAPE_CALIBRATION::NONE;
     time_etat = millis();
     butee_desactivated = false;
-    is_calibre = false;
+    //is_calibre = false;
 
     pinMode(LED_CALIBRATION_PIN, OUTPUT);
     pinMode(LED_PILOTAGE_PIN, OUTPUT);
@@ -30,10 +30,10 @@ StateMachine::StateMachine(Motor& m, Sensors& c) : moteur(m), capteurs(c), consi
 void StateMachine::init() {
     etat = StateMachine::ETAT::INIT;
     modePilotage = StateMachine::MODE_PILOTAGE::PWM;
-    etape_calibration = StateMachine::ETAPE_CALIBRATION::NONE;
+    //etape_calibration = StateMachine::ETAPE_CALIBRATION::NONE;
     time_etat = millis();
     butee_desactivated = false;
-    is_calibre = false;
+    //is_calibre = false;
 
     pinMode(LED_CALIBRATION_PIN, OUTPUT);
     pinMode(LED_PILOTAGE_PIN, OUTPUT);
@@ -43,11 +43,10 @@ void StateMachine::init() {
 void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
     if (etat == etat_demande)
         return;
-    if ((etat == StateMachine::ETAT::CALIBRATION) && !is_calibre) {
+    if ((etat == StateMachine::ETAT::CALIBRATION) && !is_calibre()) {
         sendReponseNOK("DO","CALIBRATION","Calibration échouée");
-        return;
     }
-    if (!is_calibre && etat_demande == StateMachine::ETAT::PILOTAGE) {
+    if (!is_calibre() && etat_demande == StateMachine::ETAT::PILOTAGE) {
         sendWarning("Calibration requise");
         return;
     }
@@ -82,14 +81,12 @@ void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
             break;
         }
         case StateMachine::ETAT::CALIBRATION: {
-            is_calibre = false;
+            //is_calibre = false;
             capteurs.resetLimits();
             butee_desactivated = true;
-            changerEtapeCalibration(ETAPE_CALIBRATION::OUVERTURE_INITIALE);
-            moteur.enable();
+            calibration.changerEtat(CalibrationManager::ETAT::DEBUT);
             digitalWrite(LED_CALIBRATION_PIN, HIGH);
             digitalWrite(LED_ERROR_PIN, LOW);
-            sendInfo("Debut de calibration");
             break;
         }
         case StateMachine::ETAT::ERREUR: {
@@ -139,7 +136,7 @@ void StateMachine::exec() {
             break;
         }
         case StateMachine::ETAT::FONCTIONNEMENT: {
-             if (capteurs.angle_porte < -100)
+             if (capteurs.getCodeurPorte() < 50)
                 changerEtat(StateMachine::ETAT::OUVERTURE);
             else
                 changerEtat(StateMachine::ETAT::FERMETURE);
@@ -172,9 +169,10 @@ void StateMachine::exec() {
             break;
         }
         case StateMachine::ETAT::CALIBRATION: {
-            if (etatCalibration()) {
+            if (calibration.exec()) {
                 digitalWrite(LED_CALIBRATION_PIN, LOW);
                 changerEtat(StateMachine::ETAT::DEBRAYAGE);
+                butee_desactivated = false;
             }
             capteurs.setConsigne(moteur.getPWM());
             break;
@@ -264,88 +262,92 @@ bool StateMachine::etatPilote() {
     return false;
 }
 
-bool StateMachine::etatCalibration() {
-    /* Gestion de l'état calibration */
-    switch (etape_calibration) {
-        case StateMachine::ETAPE_CALIBRATION::OUVERTURE_INITIALE: {
-            if (etatOuverture(250) || capteurs.isBlocage(true)) {
-                moteur.stop();
-                changerEtapeCalibration(StateMachine::ETAPE_CALIBRATION::ATTENTE_HAUT);
-            }
-            break;
-        }
-        case StateMachine::ETAPE_CALIBRATION::ATTENTE_HAUT: {
-            if (millis() - time_etape_calibration >= 1000) {
-                moteur.debrayage();
-                changerEtapeCalibration(ETAPE_CALIBRATION::DEBRAYAGE_HAUT);
-            }
-            break;
-        }
-        case StateMachine::ETAPE_CALIBRATION::DEBRAYAGE_HAUT: {
-            if (etatDebrayage()) {
-                changerEtapeCalibration(StateMachine::ETAPE_CALIBRATION::RECHERCHE_BUTEE_BASSE);
-            }
-            break;
-        }
-        case StateMachine::ETAPE_CALIBRATION::RECHERCHE_BUTEE_BASSE: {
-            if (etatFermeture(250) || capteurs.isBlocage(true)) {
-                angle_butee_basse = capteurs.angle_porte;
-                moteur.stop();
-                changerEtapeCalibration(StateMachine::ETAPE_CALIBRATION::ATTENTE_BAS);
-            }
-            break;
-        }
-        case StateMachine::ETAPE_CALIBRATION::ATTENTE_BAS: {
-            if (millis() - time_etape_calibration >= 1000) {
-                moteur.debrayage();
-                changerEtapeCalibration(ETAPE_CALIBRATION::DEBRAYAGE_BAS);
-            }
-            break;
-        }
-        case StateMachine::ETAPE_CALIBRATION::DEBRAYAGE_BAS: {
-            if (etatDebrayage()) {
-                changerEtapeCalibration(StateMachine::ETAPE_CALIBRATION::RECHERCHE_BUTEE_HAUTE);
-            }
-            break;
-        }
-        case StateMachine::ETAPE_CALIBRATION::RECHERCHE_BUTEE_HAUTE: {
-            if (etatOuverture(250) || capteurs.isBlocage(true)) {
-                angle_butee_haute = capteurs.angle_porte;
-                is_calibre = true;
-                changerEtapeCalibration(StateMachine::ETAPE_CALIBRATION::DEBRAYAGE_FINAL);
-                moteur.debrayage();
-            }
-            break;
-        }
-        case StateMachine::ETAPE_CALIBRATION::DEBRAYAGE_FINAL: {
-            if (etatDebrayage()) {
-                butee_desactivated = false;
-                sendReponseOK("DO","CALIBRATION","Fin de calibration : limite haute=" + String(angle_butee_haute) + "° ; limite basse=" + String(angle_butee_basse) + "°");
-                moteur.stop();
-                changerEtapeCalibration(StateMachine::ETAPE_CALIBRATION::ATTENTE_ENREGISTREMENT);
-            }
-            break;
-        }
-        case StateMachine::ETAPE_CALIBRATION::ATTENTE_ENREGISTREMENT: {
-            if (millis() - time_etape_calibration >= 1000) {
-                capteurs.setLimits(angle_butee_basse,angle_butee_haute);
-                changerEtapeCalibration(ETAPE_CALIBRATION::NONE);
-                changerEtat(StateMachine::ETAT::REPOS);
-            }
-            break;
-        }
-        case StateMachine::ETAPE_CALIBRATION::NONE:
-            return true;
-        default:
-            break;
-    }
-    return false;
+bool StateMachine::is_calibre() {
+    return calibration.isCalibrationInitialized();
 }
 
-void StateMachine::changerEtapeCalibration(StateMachine::ETAPE_CALIBRATION nouvelle_etape) {
-    time_etape_calibration = millis();
-    etape_calibration = nouvelle_etape;
-}
+// bool StateMachine::etatCalibration() {
+//     /* Gestion de l'état calibration */
+//     switch (etape_calibration) {
+//         case StateMachine::ETAPE_CALIBRATION::OUVERTURE_INITIALE: {
+//             if (etatOuverture(250) || capteurs.isBlocage(true)) {
+//                 moteur.stop();
+//                 changerEtapeCalibration(StateMachine::ETAPE_CALIBRATION::ATTENTE_HAUT);
+//             }
+//             break;
+//         }
+//         case StateMachine::ETAPE_CALIBRATION::ATTENTE_HAUT: {
+//             if (millis() - time_etape_calibration >= 1000) {
+//                 moteur.debrayage();
+//                 changerEtapeCalibration(ETAPE_CALIBRATION::DEBRAYAGE_HAUT);
+//             }
+//             break;
+//         }
+//         case StateMachine::ETAPE_CALIBRATION::DEBRAYAGE_HAUT: {
+//             if (etatDebrayage()) {
+//                 changerEtapeCalibration(StateMachine::ETAPE_CALIBRATION::RECHERCHE_BUTEE_BASSE);
+//             }
+//             break;
+//         }
+//         case StateMachine::ETAPE_CALIBRATION::RECHERCHE_BUTEE_BASSE: {
+//             if (etatFermeture(250) || capteurs.isBlocage(true)) {
+//                 angle_butee_basse = capteurs.angle_porte;
+//                 moteur.stop();
+//                 changerEtapeCalibration(StateMachine::ETAPE_CALIBRATION::ATTENTE_BAS);
+//             }
+//             break;
+//         }
+//         case StateMachine::ETAPE_CALIBRATION::ATTENTE_BAS: {
+//             if (millis() - time_etape_calibration >= 1000) {
+//                 moteur.debrayage();
+//                 changerEtapeCalibration(ETAPE_CALIBRATION::DEBRAYAGE_BAS);
+//             }
+//             break;
+//         }
+//         case StateMachine::ETAPE_CALIBRATION::DEBRAYAGE_BAS: {
+//             if (etatDebrayage()) {
+//                 changerEtapeCalibration(StateMachine::ETAPE_CALIBRATION::RECHERCHE_BUTEE_HAUTE);
+//             }
+//             break;
+//         }
+//         case StateMachine::ETAPE_CALIBRATION::RECHERCHE_BUTEE_HAUTE: {
+//             if (etatOuverture(250) || capteurs.isBlocage(true)) {
+//                 angle_butee_haute = capteurs.angle_porte;
+//                 is_calibre = true;
+//                 changerEtapeCalibration(StateMachine::ETAPE_CALIBRATION::DEBRAYAGE_FINAL);
+//                 moteur.debrayage();
+//             }
+//             break;
+//         }
+//         case StateMachine::ETAPE_CALIBRATION::DEBRAYAGE_FINAL: {
+//             if (etatDebrayage()) {
+//                 butee_desactivated = false;
+//                 sendReponseOK("DO","CALIBRATION","Fin de calibration : limite haute=" + String(angle_butee_haute) + "° ; limite basse=" + String(angle_butee_basse) + "°");
+//                 moteur.stop();
+//                 changerEtapeCalibration(StateMachine::ETAPE_CALIBRATION::ATTENTE_ENREGISTREMENT);
+//             }
+//             break;
+//         }
+//         case StateMachine::ETAPE_CALIBRATION::ATTENTE_ENREGISTREMENT: {
+//             if (millis() - time_etape_calibration >= 1000) {
+//                 capteurs.setLimits(angle_butee_basse,angle_butee_haute);
+//                 changerEtapeCalibration(ETAPE_CALIBRATION::NONE);
+//                 changerEtat(StateMachine::ETAT::REPOS);
+//             }
+//             break;
+//         }
+//         case StateMachine::ETAPE_CALIBRATION::NONE:
+//             return true;
+//         default:
+//             break;
+//     }
+//     return false;
+// }
+
+// void StateMachine::changerEtapeCalibration(StateMachine::ETAPE_CALIBRATION nouvelle_etape) {
+//     time_etape_calibration = millis();
+//     etape_calibration = nouvelle_etape;
+// }
 
 
 

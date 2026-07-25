@@ -16,8 +16,8 @@ void Sensors::init() {
     pinMode(POTENTIOMETRE, INPUT);
 
     // Initialisation des limites
-    angle_haut_max = ANGLE_MAX;
-    angle_bas_max = ANGLE_MIN; 
+    //angle_haut_max = ANGLE_MAX;
+    //angle_bas_max = ANGLE_MIN; 
     limite_courant = LIMITE_COURANT;
 
     // Initialisation du tableau du courant
@@ -43,27 +43,27 @@ void Sensors::init() {
     time_mesures = millis();
 }
 
-void Sensors::checkSecurites(int pwm) {
-    // Vérifie les conditions de sécurité pour le fonctionnement du système : 
+void Sensors::updateSecurities(int pwm) {
+    // Mets à jours les sécurité pour le fonctionnement du système : 
     //  - Limites extrémales de la porte
     //  - Limite de courant du moteur
     //  - Vérifie les blocages
 
     // Détection des limites extrémales de la porte
-    getCodeurPorte();
-    limite_haute = (angle_porte >= angle_haut_max);
-    limite_basse = (angle_porte <= angle_bas_max);
+    mesureCodeurPorte();
+    limite_haute = (angle_porte >= calibrationData.highLimit);
+    limite_basse = (angle_porte <= calibrationData.lowLimit);
 
     // Limite de courant
     getCourant();
     limite_courant_atteinte = (courant_moyen >= limite_courant);
 
     // Limites
-    if (limite_haute || limite_basse || limite_courant_atteinte) {
-        compteur_blocage = 0;
-        blocage_detecte = false;
-        return;
-    }
+    // if (limite_haute || limite_basse || limite_courant_atteinte) {
+    //     compteur_blocage = 0;
+    //     blocage_detecte = false;
+    //     return;
+    // }
 
     // Détection blocage
     uint8_t pwm_abs = abs(pwm);
@@ -82,6 +82,40 @@ void Sensors::checkSecurites(int pwm) {
     blocage_detecte = (compteur_blocage >= seuil);
 
 }
+
+bool Sensors::isBlocage() {
+    if (blocage_detecte) {
+        blocage_detecte = false;
+        return true;
+    }
+    return false;
+}
+
+bool Sensors::isLimiteCourant() {
+    if (limite_courant_atteinte) {
+        limite_courant_atteinte = false;
+        return true;
+    }
+    return false;
+}
+
+bool Sensors::isLimiteAngle() {
+    if (limite_haute || limite_basse) {
+        limite_haute = false;
+        limite_basse = false;
+        return true;
+    }
+    return false;
+}
+
+bool Sensors::hasEtatMeubleChange() {
+    if (etat_meublechange) {
+        etat_meublechange = false;
+        return true;
+    }
+    return false;
+}
+
 
 void Sensors::mesures(int pwm) {
     getCodeurMoteur();
@@ -102,13 +136,13 @@ float Sensors::addCourant(float current) {
     return courantSomme / NB_MOY_COURANT;
 }
 
-void Sensors::getCodeurPorte() {
+void Sensors::mesureCodeurPorte() {
     // Lecture du codeur
-    // TODO (Détecter ces valeurs par une méthode d'étalonnage du codeur)
-    float codeurValue = analogRead(CODEUR_PORTE) * (360.0f / 655.0f) - 12.0f;
-    if (codeurValue > 210.0f)
-        codeurValue -= 360.0f;
-    angle_porte = codeurValue;
+    angle_porte = (analogRead(CODEUR_PORTE) + calibrationData.offset) % 1024; 
+}
+
+float Sensors::getCodeurPorte() {
+    return angle_porte * (360.0f / 655.0f);
 }
 
 void Sensors::getTension() {
@@ -123,8 +157,11 @@ void Sensors::getCourant() {
     courant_moyen = addCourant(current);
 }
 
-void Sensors::getMeuble() {
-    sur_meuble = (analogRead(DETECTEUR_MEUBLE) > 0) ? true : false;
+bool Sensors::getMeuble() {
+    bool etat = (analogRead(DETECTEUR_MEUBLE) > 50) ? true : false;
+    etat_meublechange = (etat != sur_meuble) ? true : false;
+    sur_meuble = etat;
+    return sur_meuble;
 }
 
 void Sensors::getCodeurMoteur() {
@@ -151,15 +188,6 @@ void Sensors::encoderResetTicks() {
     interrupts();
 }
 
-bool Sensors::isBlocage(bool reset=false) {
-    if (blocage_detecte && reset) {
-        blocage_detecte = false;
-        return true;
-    } else {
-        return blocage_detecte;
-    }
-}
-
 void Sensors::getPotentiometre() {
     potentiometre = (analogRead(POTENTIOMETRE)-500)*0.5;
 }
@@ -168,22 +196,17 @@ void Sensors::setConsigne(int c) {
     consigne = c;
 }
 
-void Sensors::setLimits(float limite_basse, float limite_haute) {
-    if (limite_basse > ANGLE_MIN){
-        angle_bas_max = limite_basse;
-    }
-    if (limite_haute < ANGLE_MAX) {
-        angle_haut_max = limite_haute;
-    }
+void Sensors::setLimits(CalibrationData c) {
+    calibrationData = c;
 }
 
 void Sensors::resetLimits() {
-    angle_bas_max = ANGLE_MIN;
-    angle_haut_max = ANGLE_MAX;
+    //angle_bas_max = ANGLE_MIN;
+    //angle_haut_max = ANGLE_MAX;
 }
 
 bool Sensors::setLimitCourant(int limite) {
-    if (limite > 0.0f && limite < 2.0f) {
+    if (limite > 0.0f && limite < 2.5f) {
         limite_courant = limite;
         return true;
     }

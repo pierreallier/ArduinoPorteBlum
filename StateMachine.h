@@ -6,10 +6,12 @@
 
 #include "Motor.h"
 #include "Sensors.h"
+#include "CalibrationManager.h"
 #include "PID.h"
 #include "ConsigneManager.h"
 
-const uint16_t PWM_CALIBRATION = 150; 
+
+//const uint16_t PWM_CALIBRATION = 150; 
 
 class StateMachine {
     public:
@@ -41,7 +43,7 @@ class StateMachine {
         uint32_t time_etat = 0;
 
         bool butee_desactivated = false; // Variable qui spécifie si on doit désactiver la détection des butées
-        bool is_calibre;
+        bool is_calibre();
 
         PID pidPosition;
         PID pidVitesse;
@@ -51,6 +53,7 @@ class StateMachine {
         void changerEtat(StateMachine::ETAT etat_demande);
         void setMode(StateMachine::MODE_PILOTAGE mode);
         void exec();
+
         void setPIDPosition(float kp, float ki, float kd) {
             pidPosition.setGains(kp, ki, kd);
         };
@@ -62,36 +65,40 @@ class StateMachine {
         }
         bool setConsigne(const String& type, const String* params, int nbParams);
 
+        CalibrationManager& getCalibrationManager() {
+            return calibration;
+        }
     
     private:
         Motor& moteur;
         Sensors& capteurs;
         ConsigneManager consigne;
+        CalibrationManager calibration;
 
-        enum class ETAPE_CALIBRATION : uint8_t {
-            OUVERTURE_INITIALE,
-            ATTENTE_HAUT,
-            DEBRAYAGE_HAUT,
-            RECHERCHE_BUTEE_BASSE,
-            ATTENTE_BAS,
-            DEBRAYAGE_BAS,
-            RECHERCHE_BUTEE_HAUTE,
-            ATTENTE_ENREGISTREMENT,
-            DEBRAYAGE_FINAL,
-            NONE,
-        };
-        unsigned long time_etape_calibration = 0;
-        ETAPE_CALIBRATION etape_calibration;
-        float angle_butee_basse;
-        float angle_butee_haute;
+        // enum class ETAPE_CALIBRATION : uint8_t {
+        //     OUVERTURE_INITIALE,
+        //     ATTENTE_HAUT,
+        //     DEBRAYAGE_HAUT,
+        //     RECHERCHE_BUTEE_BASSE,
+        //     ATTENTE_BAS,
+        //     DEBRAYAGE_BAS,
+        //     RECHERCHE_BUTEE_HAUTE,
+        //     ATTENTE_ENREGISTREMENT,
+        //     DEBRAYAGE_FINAL,
+        //     NONE,
+        // };
+        // unsigned long time_etape_calibration = 0;
+        // ETAPE_CALIBRATION etape_calibration;
+        //float angle_butee_basse;
+        //float angle_butee_haute;
         
-        void changerEtapeCalibration(StateMachine::ETAPE_CALIBRATION nouvelle_etape);
+        //void changerEtapeCalibration(StateMachine::ETAPE_CALIBRATION nouvelle_etape);
         
         bool etatOuverture(uint16_t speed);
         bool etatFermeture(uint16_t speed);
         bool etatDebrayage();
         bool etatPilote();
-        bool etatCalibration();        
+        //bool etatCalibration();        
 };
 
 #endif
