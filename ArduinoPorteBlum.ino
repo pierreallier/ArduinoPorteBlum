@@ -75,6 +75,8 @@ void setup() {
 
     sendInfo("Initialisation terminée");
     buzzer.sequenceInit();
+    portserie.task();
+    delay(1000);
 }
 
 void loop() {
@@ -161,6 +163,7 @@ void ordonnanceur() {
 
     // Mesures des grandeurs
     int periode = portserie.mesureEnable();
+    //int periode = 100;
     if (periode != 0 && maintenant - tMesure >= periode) {
         tMesure += periode;
         float pwm = moteur.getPWM();
@@ -176,5 +179,13 @@ void ordonnanceur() {
             ledState = !ledState;
             digitalWrite(LED_CALIBRATION_PIN, ledState);
         }
+        float pwm = moteur.getPWM();
+        //sendMesures(capteurs.time_mesures, capteurs.tension, pwm, capteurs.courant_moyen, capteurs.angle_moteur, 
+        //            capteurs.vitesse_moteur, capteurs.getCodeurPorte(), capteurs.consigne);
+        // Serial.print(capteurs.getRawCodeurPorte());
+        // Serial.print(";");
+        // Serial.print(capteurs.angle_porte);
+        // Serial.print(";");
+        // Serial.println(capteurs.getCodeurPorte());
     }
 }

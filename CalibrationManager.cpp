@@ -164,7 +164,7 @@ bool CalibrationManager::exec() {
         case CalibrationManager::ETAT::ATTENTE_ENREGISTREMENT: {
             if (millis() - time_etat >= 1000) {
                 sendReponseOK("DO","CALIBRATION","Fin de calibration : limite haute=" + String(angle_butee_haute) + " ; limite basse=" + String(angle_butee_basse));
-                setCalibration(getConfig(), (angle_butee_haute + (1024 - angle_butee_basse)) % 1024, 0, 1024 - angle_butee_basse);
+                setCalibration(getConfig(), (angle_butee_haute + (675 - angle_butee_basse)) % 675, 0, 675 - angle_butee_basse);
                 changerEtat(CalibrationManager::ETAT::NONE);
             }
             break;

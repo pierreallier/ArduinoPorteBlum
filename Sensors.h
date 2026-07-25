@@ -33,7 +33,7 @@ class Sensors {
         float courant_moyen = 0.0f;
         float angle_moteur = 0.0f;
         float vitesse_moteur = 0.0f;
-        float angle_porte = 0.0f;
+        int32_t angle_porte = 0;
         float potentiometre = 0.0f;
         bool sur_meuble = false;
 
@@ -58,6 +58,7 @@ class Sensors {
         void getCourant();
         bool getMeuble();
         float getCodeurPorte();
+        int getRawCodeurPorte();
         void getCodeurMoteur();
         void getPotentiometre();
 

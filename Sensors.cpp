@@ -138,11 +138,15 @@ float Sensors::addCourant(float current) {
 
 void Sensors::mesureCodeurPorte() {
     // Lecture du codeur
-    angle_porte = (analogRead(CODEUR_PORTE) + calibrationData.offset) % 1024; 
+    angle_porte = (analogRead(CODEUR_PORTE) + calibrationData.offset) % 675; 
+}
+
+int Sensors::getRawCodeurPorte() {
+    return analogRead(CODEUR_PORTE);
 }
 
 float Sensors::getCodeurPorte() {
-    return angle_porte * (360.0f / 655.0f);
+    return angle_porte * (360.0f / 674);
 }
 
 void Sensors::getTension() {

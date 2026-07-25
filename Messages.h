@@ -146,38 +146,39 @@ inline bool sendEtat(const char* value, const char* message=nullptr) {
  */
 inline bool sendMesures(uint32_t time, float tension, int pwm, float courant, float angle_moteur, 
                         float vitesse_moteur, float angle_porte, float consigne) {
-    // Serial.print(F("M;"));
-    // Serial.print(time);
-    // Serial.write(';');
-    // Serial.print((int16_t)(tension * 100));
-    // Serial.write(';');
-    // Serial.print(pwm*100);
-    // Serial.write(';');
-    // Serial.print((int16_t)(courant * 100));
-    // Serial.write(';');
-    // Serial.print((int32_t)(angle_moteur * 100));
-    // Serial.write(';');
-    // Serial.print((int16_t)(vitesse_moteur * 100));
-    // Serial.write(';');
-    // Serial.print((int16_t)(angle_porte * 100));
-    // Serial.write(';');
-    // Serial.println((int16_t)(consigne * 100));
-    // return true;
+    Serial.print(F("M;"));
+    Serial.print(time);
+    Serial.write(';');
+    Serial.print(tension);
+    Serial.write(';');
+    Serial.print(pwm);
+    Serial.write(';');
+    Serial.print(courant);
+    Serial.write(';');
+    Serial.print(angle_moteur);
+    Serial.write(';');
+    Serial.print(vitesse_moteur);
+    Serial.write(';');
+    Serial.print(angle_porte);
+    Serial.write(';');
+    Serial.println(consigne);
+    return true;
     // Crée une chaîne pour les valeurs principales
-    char values[128];
-    snprintf(values, sizeof(values),
-             "%lu;%d;%d;%d;%ld;%d;%d;%d",
-             time,
-             (int16_t)(tension * 100),
-             pwm * 100,
-             (int16_t)(courant * 100),
-             (int32_t)(angle_moteur * 100),
-             (int16_t)(vitesse_moteur * 100),
-             (int16_t)(angle_porte * 100),
-             (int16_t)(consigne * 100));
+    // char values[128];
+    // snprintf(values, sizeof(values),
+    //         "%lu;%.2f;%d;%.2f;%.2f;%.2f;%.2f;%.2f",  // Tous les champs en %d (int32_t)
+    //         time,
+    //         tension,
+    //         pwm,
+    //         courant,
+    //         angle_moteur,
+    //         vitesse_moteur,
+    //         angle_porte,
+    //         consigne
+    //         );
 
     // Envoie via le buffer
-    return SerialTxBuffer::instance().push('M', values);
+    //return SerialTxBuffer::instance().push('M', values);
 }
 
 #endif
