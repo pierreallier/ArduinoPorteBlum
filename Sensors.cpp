@@ -110,12 +110,11 @@ bool Sensors::resetSecurities() {
 }
 
 
-void Sensors::mesures(int pwm) {
+void Sensors::mesures(int p) {
     getCodeurMoteur();
     getTension();
-    //meuble.update();
     getPotentiometre();
-    consigne = pwm;
+    pwm = p;
 }
 
 float Sensors::addCourant(float current) {

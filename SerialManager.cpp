@@ -14,6 +14,7 @@ SerialManager::SerialManager(Motor& m, Sensors& s, StateMachine& ma, Calibration
 void SerialManager::init() {
     Serial.begin(115200);
     Serial.flush();
+    loadMesurePeriode();
     printStart();
 }
 
@@ -24,43 +25,6 @@ void SerialManager::task() {
         SerialTxBuffer::instance().send(Serial); // Envoi des données en attente
     }
 }
-
-// void SerialManager::printMesures() {
-//     Serial.print(capteurs.time_mesures);
-//     Serial.print(" , Tension:"); // Tension en Volt
-//     Serial.print(capteurs.tension);
-//     Serial.print(" , PWM:");
-//     Serial.print(moteur.getPWM());
-//     Serial.print(" , Intensité:"); // Courant moteur en Ampère
-//     Serial.print(capteurs.courant_moyen);
-//     Serial.print(" , AngleMoteur:"); // Angle moteur en degré
-//     Serial.print(capteurs.angle_moteur * RAD_TO_TURN);
-//     Serial.print(" , VitesseMoteur:"); // Vitesse rotation moteur en rad/s
-//     Serial.print(capteurs.vitesse_moteur * RADS_TO_RPM);
-//     Serial.print(" , AnglePorte:"); // Angle porte en degré
-//     Serial.print(capteurs.angle_porte);
-//     Serial.print(" , Potentiomètre:"); // Consigne du potentiomètre en -255/255
-//     Serial.print(capteurs.potentiometre);
-//     Serial.print(" , Moteur:");
-//     Serial.print(moteur.isEnabled() ? "ON" : "OFF");
-//     Serial.print(" , Direction:");
-//     switch(moteur.getDirection()) {
-//         case Motor::DIR::OUVERTURE:
-//             Serial.print("OUVERTURE");
-//             break;
-//         case Motor::DIR::FERMETURE:
-//             Serial.print("FERMETURE");
-//             break;
-//     }
-//     Serial.print(" , Limites:");
-//     if (capteurs.blocage_detecte) {
-//         Serial.println("BB");
-//     } else {
-//         Serial.print(capteurs.limite_haute ? "H" : "N");
-//         Serial.println(capteurs.limite_basse ? "B" : "N");
-//     }
-// }
-
 
 void SerialManager::readSerial() {
     if (Serial.available() > 0) {
@@ -187,14 +151,18 @@ void SerialManager::_SET(String commande) {
                 return;
             }
         }
-        unsigned long periode = valeur.toInt();
-        if (periode >= 5) {
-            periode_echantillonnage_mesures = periode;
-            sendReponseOK("SET","MESURES","Envoi des mesures toutes les " + String(periode) + " ms");
-        }
-        else {
-            sendReponseNOK("SET","MESURES","periode invalide");
+        uint16_t periode = valeur.toInt();
+        periode = (periode / 5)*5;
+        if (periode > 1275) {
+            sendReponseNOK("SET","MESURES","Periode trop grande " + String(periode));
             return;
+        }
+        if (periode >= 5) {
+            setMesurePeriode(periode);
+            sendReponseOK("SET","MESURES","Envoi des mesures toutes les " + String(periode) + " ms");
+        } else {
+            setMesurePeriode(0);
+            sendReponseOK("SET","MESURES","Envoi des mesures désactivé");
         }
     }
     else {
@@ -284,7 +252,17 @@ void SerialManager::_DO(String commande) {
     sendReponseOK("DO",commande.c_str(),"Effectuée");
 }
 
-int SerialManager::mesureEnable() {
+void SerialManager::loadMesurePeriode() {
+    periode_echantillonnage_mesures = static_cast<uint16_t>(EEPROM.read(EEPROM_ADDR_TENVOIS))*5;
+}
+
+void SerialManager::setMesurePeriode(uint16_t periode) {
+    uint8_t periode_eeprom = periode / 5;
+    EEPROM.update(EEPROM_ADDR_TENVOIS, periode_eeprom);
+    periode_echantillonnage_mesures = periode_eeprom * 5;
+}
+
+uint16_t SerialManager::getMesurePeriode() {
     return periode_echantillonnage_mesures;
 }
 

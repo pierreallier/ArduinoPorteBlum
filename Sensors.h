@@ -33,6 +33,7 @@ class Sensors {
         int32_t angle_porte = 0;
         float potentiometre = 0.0f;    
         float consigne = 0.0f;
+        int pwm = 0;
 
         bool limite_haute = false;
         bool limite_basse = false;

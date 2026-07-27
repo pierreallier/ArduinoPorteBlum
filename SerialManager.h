@@ -2,12 +2,15 @@
 #define SERIALMANAGER_H
 
 #include <Arduino.h>
+#include <EEPROM.h>
 #include "SerialTxBuffer.h"
 #include "Messages.h"
 
 #include "Sensors.h"
 #include "Motor.h"
 #include "StateMachine.h"
+
+#define EEPROM_ADDR_TENVOIS 15
 
 constexpr float RADS_TO_RPM = 60.0f / (2.0f * PI);
 constexpr float RAD_TO_TURN = 1.0f / (2.0f * PI);
@@ -26,7 +29,8 @@ class SerialManager {
 
         //void printMesures();
         void readSerial();
-        int mesureEnable();
+
+        uint16_t getMesurePeriode();
     
     private:
         Motor& moteur;
@@ -35,12 +39,15 @@ class SerialManager {
         CalibrationManager& calibration;
 
         uint32_t time_precedent = 0;    
-        int periode_echantillonnage_mesures = 25;
+        uint16_t periode_echantillonnage_mesures = 25;
 
         void _SET(String commande);
         void _GET(String commande);
         void _DO(String commande);
         int splitCommande(const String& commande, String items[], int maxItems);
+
+        void loadMesurePeriode();
+        void setMesurePeriode(uint16_t);
 };
 
 

@@ -16,21 +16,16 @@ Bounce2::Button btCalibration;
 Bounce2::Button btPilotage;
 
 Sensors capteurs;
+Buzzer buzzer;
 Motor moteur(capteurs);
 CalibrationManager calibration(moteur, capteurs);
 StateMachine machine(moteur, capteurs, calibration);
 SerialManager portserie(moteur, capteurs, machine, calibration);
-Buzzer buzzer;
-
-bool erreurBlocage = false;
-bool erreurCourant = false;
-bool erreurLimitePorte = false;
-bool ledState = LOW;
 
 uint32_t tVerif = 0;
-uint32_t tAcq = 0;
+uint32_t tBt = 0;
 uint32_t tMesure = 0;
-uint32_t tLed = 0;
+uint32_t tEnvoi = 0;
 
 void setup() {
     portserie.init(); // Initialisation du port série
@@ -44,10 +39,6 @@ void setup() {
     btCalibration.setPressedState(LOW);
     btPilotage.attach(PILOTAGE_BT,INPUT_PULLUP);
     btPilotage.setPressedState(LOW);
-
-    erreurBlocage = false;
-    erreurCourant = false;
-    erreurLimitePorte = false;
 
     moteur.init(); // Initialisation du moteur et du driver
     capteurs.init(); // Initialisation des capteurs
@@ -143,8 +134,8 @@ void ordonnanceur() {
         }
     }
     
-    if (maintenant - tAcq >= 50) {
-        tAcq += 50;
+    if (maintenant - tBt >= 50) {
+        tBt += 50;
         // Vérification des boutons de commande
         btTest.update();
         btWireless.update();
@@ -173,13 +164,16 @@ void ordonnanceur() {
     }
 
     // Mesures des grandeurs
-    int periode = portserie.mesureEnable();
-    //int periode = 100;
-    if (periode != 0 && maintenant - tMesure >= periode) {
-        tMesure += periode;
+    int PERIODE_ENVOI = portserie.getMesurePeriode();
+    int PERIODE_MESURE = min(PERIODE_ENVOI,25);
+    if (maintenant - tMesure >= PERIODE_MESURE) {
+        tMesure += PERIODE_MESURE;
         float pwm = moteur.getPWM();
         capteurs.mesures(pwm);
-        //sendMesures(capteurs.time_mesures, capteurs.tension, pwm, capteurs.courant_moyen, capteurs.angle_moteur, 
-        //            capteurs.vitesse_moteur, capteurs.getCodeurPorte(), capteurs.consigne);
+    }
+    if (PERIODE_ENVOI != 0 && maintenant - tEnvoi >= PERIODE_ENVOI) {
+        tEnvoi += PERIODE_ENVOI;
+        sendMesures(capteurs.time_mesures, capteurs.tension, capteurs.pwm, capteurs.courant_moyen, capteurs.angle_moteur, 
+                    capteurs.vitesse_moteur, capteurs.getCodeurPorte(), capteurs.consigne);
     } 
 }
