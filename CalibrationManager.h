@@ -7,9 +7,9 @@
 #include "Sensors.h"
 
 // Adresses EEPROM
-#define EEPROM_ADDR_ACTIVE_FLAG   0   // 1 octet (bool)
-#define EEPROM_ADDR_ON_FURNITURE  2   // 6 octets (3x uint16_t)
-#define EEPROM_ADDR_OFF_FURNITURE 8 // 6 octets (3x uint16_t)
+#define EEPROM_ADDR_ACTIVE_FLAG   0   // 1 octet (bool) + 1 octet CRC
+#define EEPROM_ADDR_ON_FURNITURE  2   // 6 octets (3x uint16_t) + 1 octet CRC
+#define EEPROM_ADDR_OFF_FURNITURE 8 // 6 octets (3x uint16_t) + 1 octet CRC
 
 // Valeur pour indiquer qu'une valeur n'est pas initialisée
 #define UNINITIALIZED_VALUE 0xFFFF
@@ -36,6 +36,7 @@ public:
         RECHERCHE_BUTEE_HAUTE,
         ATTENTE_ENREGISTREMENT,
         DEBRAYAGE_FINAL,
+        ERREUR,
         NONE,
     };
 
@@ -64,6 +65,8 @@ public:
     Config getConfig() {
         return capteurs.getMeuble() ? CalibrationManager::Config::ON_FURNITURE : CalibrationManager::Config::OFF_FURNITURE;
     }
+
+    String CalibrationManager::getCalibrationString();
 
     void updateConfig(CalibrationManager::Config config) {
         capteurs.setLimits(calibrationData[config]);

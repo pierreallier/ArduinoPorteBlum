@@ -72,7 +72,7 @@ void Sensors::updateSecurities(int pwm) {
         blocage_detecte = false;
         return;
     }
-    if (abs(codeur_Delta_Pos) > TICKS_MIN && courant_moyen < I_BLOCAGE) { // Le moteur tourne suffisamment
+    if (abs(codeur_Delta_Pos) > TICKS_MIN) { // Le moteur tourne suffisamment
         compteur_blocage = 0;
         blocage_detecte = false;
         return;
@@ -86,6 +86,7 @@ void Sensors::updateSecurities(int pwm) {
 bool Sensors::isBlocage() {
     if (blocage_detecte) {
         blocage_detecte = false;
+        compteur_blocage = 0;
         return true;
     }
     return false;
@@ -114,6 +115,15 @@ bool Sensors::hasEtatMeubleChange() {
         return true;
     }
     return false;
+}
+
+bool Sensors::resetSecurities() {
+    blocage_detecte = false;
+    compteur_blocage = 0;
+    limite_courant_atteinte = false;
+    limite_haute = false;
+    limite_basse = false;
+    return true;
 }
 
 

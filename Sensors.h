@@ -19,7 +19,7 @@ const unsigned int NB_MOY_COURANT = 5;
 // Détections butées
 const int PWM_MIN = 50;
 constexpr int PWM_RAPIDE = 150;
-constexpr int NB_CYCLES_BLOCAGE_RAPIDE = 20; // 10 x 5 ms = 50 ms
+constexpr int NB_CYCLES_BLOCAGE_RAPIDE = 10; // 10 x 5 ms = 50 ms
 constexpr int NB_CYCLES_BLOCAGE_LENT = 50;
 const int TICKS_MIN = 2;
 const float I_BLOCAGE = 2.2f;
@@ -53,6 +53,7 @@ class Sensors {
         bool isLimiteCourant();
         bool isLimiteAngle();
         bool hasEtatMeubleChange();
+        bool resetSecurities();
         
         void getTension();
         void getCourant();

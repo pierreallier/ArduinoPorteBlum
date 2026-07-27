@@ -68,6 +68,15 @@ void setup() {
     sendInfo("Capteur I2C de la porte fonctionnel");
     digitalWrite(LED_ERROR_PIN, LOW);
 
+    // Vérification type de montage
+    if (capteurs.getMeuble()) {
+        sendInfo("Système monté sur un meuble");
+    } else {
+        sendInfo("Système non monté");
+    }
+    machine.getCalibrationManager().updateConfig();
+    sendInfo(machine.getCalibrationManager().getCalibrationString().c_str());
+
     // Vérifications de la calibration
     if (machine.getCalibrationManager().isNotCalibrated()) {
         sendWarning("Calibration requise");
@@ -105,8 +114,7 @@ void ordonnanceur() {
                     sendInfo("Limite de la porte atteinte");
                     machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
                 }
-                capteurs.isLimiteCourant();
-                capteurs.isBlocage();
+                capteurs.resetSecurities();
             } else {
                 if (capteurs.isLimiteCourant()) {
                     sendError("Limite de courant atteinte");
@@ -119,7 +127,11 @@ void ordonnanceur() {
                     buzzer.sequenceErreur();
                 }
                 if (capteurs.hasEtatMeubleChange()) {
-                    sendWarning("ServoDrive déconnecté / connecté");
+                    if (capteurs.getMeuble()) {
+                        sendWarning("ServoDrive monté sur un meuble");
+                    } else {
+                        sendWarning("ServoDrive démonté du meuble");
+                    }
                     machine.getCalibrationManager().updateConfig();
                     if (!machine.getCalibrationManager().isCalibrationInitialized()) {
                         sendWarning("Calibration requise");
@@ -168,8 +180,8 @@ void ordonnanceur() {
         tMesure += periode;
         float pwm = moteur.getPWM();
         capteurs.mesures(pwm);
-        sendMesures(capteurs.time_mesures, capteurs.tension, pwm, capteurs.courant_moyen, capteurs.angle_moteur, 
-                    capteurs.vitesse_moteur, capteurs.getCodeurPorte(), capteurs.consigne);
+        //sendMesures(capteurs.time_mesures, capteurs.tension, pwm, capteurs.courant_moyen, capteurs.angle_moteur, 
+        //            capteurs.vitesse_moteur, capteurs.getCodeurPorte(), capteurs.consigne);
     } 
 
     // Clignotement led

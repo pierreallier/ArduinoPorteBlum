@@ -3,11 +3,8 @@
 #include "Constantes.h"
 
 CalibrationManager::CalibrationManager(Motor& m, Sensors& c) : moteur(m), capteurs(c) { 
-    //loadFromEeprom(); // Initialiser les données à partir de la RAM
     etat = CalibrationManager::ETAT::NONE;
-    eepromActive = false;
-    setDefaultValues(ON_FURNITURE);
-    setDefaultValues(OFF_FURNITURE);
+    loadFromEeprom(); // Initialiser les données à partir de la RAM
     updateConfig(getConfig());
 }
 
@@ -15,28 +12,27 @@ CalibrationManager::CalibrationManager(Motor& m, Sensors& c) : moteur(m), capteu
 void CalibrationManager::setEepromActive(bool active) { // Activer/désactiver l'utilisation de l'EEPROM
     if (eepromActive == active) return; // Pas de changement
     eepromActive = active;
+    uint8_t flag = eepromActive ? 1 : 0;
+    EEPROM.update(EEPROM_ADDR_ACTIVE_FLAG, flag);
     if (eepromActive) {
         loadFromEeprom(); // Charger les données depuis l'EEPROM
     }
-    saveToEeprom(); // Sauvegarder le nouvel état
 }
-
-
-void CalibrationManager::saveToEeprom() { // Sauvegarder toutes les données en EEPROM
-    if (!eepromActive) return;
-    // Sauvegarder le flag d'activation
-    EEPROM.put(EEPROM_ADDR_ACTIVE_FLAG, eepromActive);
-    // Sauvegarder les données pour chaque configuration
-    EEPROM.put(EEPROM_ADDR_ON_FURNITURE, calibrationData[ON_FURNITURE]);
-    EEPROM.put(EEPROM_ADDR_OFF_FURNITURE, calibrationData[OFF_FURNITURE]);
-}
-
-    
+   
 void CalibrationManager::loadFromEeprom() { // Charger toutes les données depuis l'EEPROM
     // Charger le flag d'activation
-    bool storedActiveFlag;
+    uint8_t storedActiveFlag;
     EEPROM.get(EEPROM_ADDR_ACTIVE_FLAG, storedActiveFlag);
-    if (!storedActiveFlag) {
+    // Gestion EEPROM corrompue ou non initilisée
+    if (storedActiveFlag != 0 && storedActiveFlag != 1) {
+        // Flag invalide ou EEPROM non initialisée
+        eepromActive = false;
+        setDefaultValues(ON_FURNITURE);
+        setDefaultValues(OFF_FURNITURE);
+        // Réinitialisation du flag à une valeur valide
+        EEPROM.update(EEPROM_ADDR_ACTIVE_FLAG, 0);
+        return;
+    } else if (storedActiveFlag == 0) {
         // Si l'EEPROM est désactivée, initialiser avec les valeurs par défaut
         setDefaultValues(ON_FURNITURE);
         setDefaultValues(OFF_FURNITURE);
@@ -49,9 +45,11 @@ void CalibrationManager::loadFromEeprom() { // Charger toutes les données depui
         // Vérifier si les données sont valides (non initialisées)
         if (isCalibrationUninitialized(ON_FURNITURE)) {
             setDefaultValues(ON_FURNITURE);
+            EEPROM.put(EEPROM_ADDR_ON_FURNITURE, calibrationData[ON_FURNITURE]);
         }
         if (isCalibrationUninitialized(OFF_FURNITURE)) {
             setDefaultValues(OFF_FURNITURE);
+            EEPROM.put(EEPROM_ADDR_OFF_FURNITURE, calibrationData[OFF_FURNITURE]);
         }
     }
 }
@@ -63,7 +61,11 @@ void CalibrationManager::setCalibration(CalibrationManager::Config config, uint1
     calibrationData[config].offset = offset;
     updateConfig(config);
     if (eepromActive) {
-        saveToEeprom();
+        if (config == ON_FURNITURE) {
+            EEPROM.put(EEPROM_ADDR_ON_FURNITURE, calibrationData[ON_FURNITURE]);
+        } else if (config == OFF_FURNITURE) {
+            EEPROM.put(EEPROM_ADDR_OFF_FURNITURE, calibrationData[OFF_FURNITURE]);
+        }
     }
 }
 
@@ -78,9 +80,34 @@ bool CalibrationManager::getCalibration(CalibrationManager::Config config, int& 
     return true;
 }
 
+String CalibrationManager::getCalibrationString() {
+    String message;
+
+    message = "Mémorisation EEPROM : ";
+    message += eepromActive ? "ON" : "OFF";
+
+    message += " ; Monté sur meuble : ";
+    message += "limite haute=";
+    message += String(calibrationData[ON_FURNITURE].highLimit);
+    message += ", limite basse=";
+    message += String(calibrationData[ON_FURNITURE].lowLimit);
+    message += ", offset=";
+    message += String(calibrationData[ON_FURNITURE].offset);
+
+    message += " ; Démonté du meuble : ";
+    message += "limite haute=";
+    message += String(calibrationData[OFF_FURNITURE].highLimit);
+    message += ", limite basse=";
+    message += String(calibrationData[OFF_FURNITURE].lowLimit);
+    message += ", offset=";
+    message += String(calibrationData[OFF_FURNITURE].offset);
+
+    return message;
+}
+
 
 bool CalibrationManager::isCalibrationUninitialized(CalibrationManager::Config config) {
-    return (calibrationData[config].highLimit > 1024);
+    return (calibrationData[config].highLimit > 1024 || calibrationData[config].lowLimit > 1024 || calibrationData[config].offset > 1024);
 }
 
     // Définir des valeurs par défaut pour une configuration
@@ -115,6 +142,13 @@ void CalibrationManager::changerEtat(CalibrationManager::ETAT nouvelle_etape) {
 
 bool CalibrationManager::exec() {
     /* Gestion de l'état calibration */
+    // Vérification des sécurités (car non gérées au niveau supérieur)
+    bool blocage = capteurs.isBlocage();
+    if (false && !blocage && capteurs.isLimiteCourant()) {
+        changerEtat(CalibrationManager::ETAT::ERREUR);
+        moteur.stop();
+    }
+    // Execution des états
     switch (etat) {
         case CalibrationManager::ETAT::DEBUT: {
             sendInfo("Debut de calibration");
@@ -122,7 +156,7 @@ bool CalibrationManager::exec() {
             changerEtat(CalibrationManager::ETAT::OUVERTURE_INITIALE);
         }
         case CalibrationManager::ETAT::OUVERTURE_INITIALE: {
-            if (ouverture(PWM_CALIBRATION) || capteurs.isBlocage()) {
+            if (ouverture(PWM_CALIBRATION) || blocage) {
                 moteur.stop();
                 changerEtat(CalibrationManager::ETAT::ATTENTE_HAUT);
             }
@@ -135,8 +169,8 @@ bool CalibrationManager::exec() {
             break;
         }
         case CalibrationManager::ETAT::RECHERCHE_BUTEE_BASSE: {
-            if (fermeture(PWM_CALIBRATION) || capteurs.isBlocage()) { // Faire une gestion interne ?
-                angle_butee_basse = analogRead(CODEUR_PORTE); // lire directement depuis le capteur
+            if (fermeture(PWM_CALIBRATION) || blocage) {
+                angle_butee_basse = analogRead(CODEUR_PORTE);
                 moteur.stop();
                 changerEtat(CalibrationManager::ETAT::ATTENTE_BAS);
             }
@@ -149,8 +183,8 @@ bool CalibrationManager::exec() {
             break;
         }
         case CalibrationManager::ETAT::RECHERCHE_BUTEE_HAUTE: {
-            if (ouverture(PWM_CALIBRATION) || capteurs.isBlocage()) {
-                angle_butee_haute = analogRead(CODEUR_PORTE); // lire directement depuis le capteur
+            if (ouverture(PWM_CALIBRATION) || blocage) {
+                angle_butee_haute = analogRead(CODEUR_PORTE);
                 moteur.stop();
                 is_calibre = true;
                 changerEtat(CalibrationManager::ETAT::ATTENTE_ENREGISTREMENT);
@@ -165,6 +199,13 @@ bool CalibrationManager::exec() {
             if (millis() - time_etat >= 1000) {
                 sendReponseOK("DO","CALIBRATION","Fin de calibration : limite haute=" + String(angle_butee_haute) + " ; limite basse=" + String(angle_butee_basse));
                 setCalibration(getConfig(), (angle_butee_haute + (675 - angle_butee_basse)) % 675, 0, 675 - angle_butee_basse);
+                changerEtat(CalibrationManager::ETAT::NONE);
+            }
+            break;
+        }
+        case CalibrationManager::ETAT::ERREUR: {
+            if (millis() - time_etat >= 1000) {
+                sendReponseNOK("DO","CALIBRATION","Calibration échouée - Limite de courant atteinte");
                 changerEtat(CalibrationManager::ETAT::NONE);
             }
             break;

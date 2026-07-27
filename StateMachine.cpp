@@ -44,11 +44,11 @@ void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
     if (etat == etat_demande)
         return;
     if ((etat == StateMachine::ETAT::CALIBRATION) && !is_calibre()) {
-        sendReponseNOK("DO","CALIBRATION","Calibration échouée");
-    }
-    if (!is_calibre() && etat_demande == StateMachine::ETAT::PILOTAGE) {
-        sendWarning("Calibration requise");
-        return;
+         calibration.changerEtat(CalibrationManager::ETAT::ERREUR);
+     }
+    if (!is_calibre() && (etat_demande == StateMachine::ETAT::PILOTAGE || etat_demande == StateMachine::ETAT::OUVERTURE ||etat_demande == StateMachine::ETAT::FERMETURE)) {
+        sendError("Calibration requise");
+        etat_demande = StateMachine::ETAT::ERREUR;
     }
     etat = etat_demande;
     time_etat = millis();
@@ -217,7 +217,7 @@ bool StateMachine::etatDebrayage() {
     /* Gestion du debrayage du moteur */
     int32_t delta_angle = abs(capteurs.angle_moteur - moteur.codeur_avant_debrayage);
     float delta_courant = abs(1 - moteur.courant_avant_debrayage/capteurs.courant_moyen);
-    if (millis() - time_etat >= 100 || delta_angle > 100 || delta_courant > 0.5) {
+    if (millis() - time_etat >= 200 || delta_angle > 100 || delta_courant > 0.5) {
         moteur.stop();
         return true;
     }

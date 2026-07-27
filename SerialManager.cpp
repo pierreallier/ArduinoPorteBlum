@@ -83,21 +83,27 @@ void SerialManager::_SET(String commande) {
     commande.trim(); // Supprime les espaces et les retours à la ligne
     commande.toUpperCase(); // Convertit la commande
 
-    // if (commande.startsWith("LIMITES") && machine.etat == StateMachine::ETAT::REPOS) {
-    //     String valeurs = commande.substring(7);
-    //     valeurs.trim();
-    //     int separateur = valeurs.indexOf(' ');
-    //     if (separateur == -1) {
-    //         sendReponseNOK("SET","LIMITES","deux valeurs attendues");
-    //         return;
-    //     }
-    //     float limite_basse = valeurs.substring(0, separateur).toFloat();
-    //     float limite_haute = valeurs.substring(separateur + 1).toFloat();
-    //     capteurs.setLimits(limite_basse, limite_haute);
-    //     sendReponseOK("SET","LIMITES","Limites modifiees : basse=" +String(limite_basse, 2) +" ; haute=" +String(limite_haute, 2));
-    //     return;
-    // }
-    if (commande.startsWith("COURANT") && machine.etat == StateMachine::ETAT::REPOS) {
+    if (commande.startsWith("CALIBRATION") && machine.etat == StateMachine::ETAT::REPOS) {
+        String valeurs = commande.substring(11);
+        valeurs.trim();
+        valeurs.toUpperCase();
+        // Lecture du statut de l'activation
+        bool active;
+        if (valeurs == "ON") {
+            active = true;
+        }
+        else if (valeurs == "OFF") {
+            active = false;
+        }
+        else {
+            sendReponseNOK("SET","CALIBRATION","Valeur attendue : ON ou OFF");
+            return;
+        }
+        machine.getCalibrationManager().setEepromActive(active);
+        sendReponseOK("SET", "CALIBRATION", machine.getCalibrationManager().getCalibrationString());
+        return;
+    }
+    else if (commande.startsWith("COURANT") && machine.etat == StateMachine::ETAT::REPOS) {
         String valeurs = commande.substring(8);
         valeurs.trim();
         float limite = valeurs.substring(0).toFloat();
@@ -200,12 +206,22 @@ void SerialManager::_GET(String commande) {
     commande.toUpperCase(); // Convertit la commande
 
     if (commande.startsWith("CALIBRATION")) {
-        if (machine.is_calibre()) 
-            sendReponseOK("GET","CALIBRATION","Système calibré : limite basse=" + String(capteurs.getLimiteBasse()) + "° limite haute=" + capteurs.getLimiteHaute() + "°");
+        if (machine.is_calibre())
+            sendReponseOK("GET","CALIBRATION","Système calibré;" + machine.getCalibrationManager().getCalibrationString());
         else 
-            sendReponseNOK("GET","CALIBRATION","Système non calibré : limite basse=" + String(capteurs.getLimiteBasse()) + "° limite haute=" + capteurs.getLimiteHaute() + "°");
+            sendReponseNOK("GET","CALIBRATION","Système non calibré;" + machine.getCalibrationManager().getCalibrationString());
     }
-    if (commande.startsWith("MODE")) {
+    else if (commande.startsWith("LIMITS")) {
+        if (machine.is_calibre())
+            sendReponseOK("GET","LIMITS","Système calibré : limite basse=" + String(capteurs.getLimiteBasse()) + " limite haute=" + String(capteurs.getLimiteHaute()));
+        else 
+            sendReponseNOK("GET","LIMITS","Système non calibré : limite basse=" + String(capteurs.getLimiteBasse()) + " limite haute=" + String(capteurs.getLimiteHaute()));
+
+    }
+    else if (commande.startsWith("MEUBLE")) {
+        sendReponseOK("GET","MEUBLE",capteurs.getMeuble() ? "Sur meuble": "Hors meuble");
+    }
+    else if (commande.startsWith("MODE")) {
         switch (machine.modePilotage) {
             case StateMachine::MODE_PILOTAGE::PWM: {
                 sendReponseOK("GET","MODE","PWM");
@@ -229,7 +245,7 @@ void SerialManager::_GET(String commande) {
             }
         }
     }
-    if (commande.startsWith("PID")) {
+    else if (commande.startsWith("PID")) {
         sendReponseOK("GET","PID VITESSE",(String)machine.pidVitesse.kp + ";" + (String)machine.pidVitesse.ki + ";" + (String)machine.pidVitesse.kd);
         sendReponseOK("GET","PID POSITION",(String)machine.pidPosition.kp + ";" + (String)machine.pidPosition.ki + ";" + (String)machine.pidPosition.kd);
     }
