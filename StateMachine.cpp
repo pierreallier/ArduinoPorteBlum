@@ -14,28 +14,15 @@ const char* const StateMachine::ETAT_NAMES[] ={
 };
 
 
-StateMachine::StateMachine(Motor& m, Sensors& c) : moteur(m), capteurs(c), consigne(), calibration(m,c) {
-    etat = StateMachine::ETAT::INIT;
-    modePilotage = StateMachine::MODE_PILOTAGE::PWM;
-    //etape_calibration = StateMachine::ETAPE_CALIBRATION::NONE;
-    time_etat = millis();
-    butee_desactivated = false;
-    //is_calibre = false;
-
-    pinMode(LED_CALIBRATION_PIN, OUTPUT);
-    pinMode(LED_PILOTAGE_PIN, OUTPUT);
-    pinMode(LED_ERROR_PIN, OUTPUT);
+StateMachine::StateMachine(Motor& m, Sensors& s, CalibrationManager& c) : moteur(m), capteurs(s), consigne(), calibration(c) {
 }
 
 void StateMachine::init() {
     etat = StateMachine::ETAT::INIT;
     modePilotage = StateMachine::MODE_PILOTAGE::PWM;
-    //etape_calibration = StateMachine::ETAPE_CALIBRATION::NONE;
     time_etat = millis();
-    butee_desactivated = false;
-    //is_calibre = false;
 
-    pinMode(LED_CALIBRATION_PIN, OUTPUT);
+    //pinMode(LED_CALIBRATION_PIN, OUTPUT);
     pinMode(LED_PILOTAGE_PIN, OUTPUT);
     pinMode(LED_ERROR_PIN, OUTPUT);
 }
@@ -43,10 +30,11 @@ void StateMachine::init() {
 void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
     if (etat == etat_demande)
         return;
-    if ((etat == StateMachine::ETAT::CALIBRATION) && !is_calibre()) {
-         calibration.changerEtat(CalibrationManager::ETAT::ERREUR);
-     }
-    if (!is_calibre() && (etat_demande == StateMachine::ETAT::PILOTAGE || etat_demande == StateMachine::ETAT::OUVERTURE ||etat_demande == StateMachine::ETAT::FERMETURE)) {
+    if ((etat == StateMachine::ETAT::CALIBRATION) && calibration.isNotCalibrated()) {
+        sendError("Calibration annulé");
+        calibration.changerEtat(CalibrationManager::ETAT::ERREUR);
+    }
+    if (calibration.isNotCalibrated() && (etat_demande == StateMachine::ETAT::PILOTAGE || etat_demande == StateMachine::ETAT::OUVERTURE ||etat_demande == StateMachine::ETAT::FERMETURE)) {
         sendError("Calibration requise");
         etat_demande = StateMachine::ETAT::ERREUR;
     }
@@ -57,10 +45,9 @@ void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
     // Initiliations des états
     switch (etat) {
         case StateMachine::ETAT::DEBRAYAGE: {
-            butee_desactivated = false;
             moteur.enable();
             moteur.debrayage();
-            digitalWrite(LED_CALIBRATION_PIN, LOW);
+            //digitalWrite(LED_CALIBRATION_PIN, LOW);
             digitalWrite(LED_PILOTAGE_PIN, LOW);
             break;
         }
@@ -75,17 +62,14 @@ void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
             pidVitesse.reset();
             consigne.init(time_etat);
             moteur.enable();
-            digitalWrite(LED_PILOTAGE_PIN, HIGH);
+            //digitalWrite(LED_PILOTAGE_PIN, HIGH);
             digitalWrite(LED_ERROR_PIN, LOW);
             butee_desactivated = true;
             break;
         }
         case StateMachine::ETAT::CALIBRATION: {
-            //is_calibre = false;
-            capteurs.resetLimits();
-            butee_desactivated = true;
             calibration.changerEtat(CalibrationManager::ETAT::DEBUT);
-            digitalWrite(LED_CALIBRATION_PIN, HIGH);
+            //digitalWrite(LED_CALIBRATION_PIN, HIGH);
             digitalWrite(LED_ERROR_PIN, LOW);
             break;
         }
@@ -95,7 +79,7 @@ void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
         }
         default: {
             moteur.disable();
-            digitalWrite(LED_CALIBRATION_PIN, LOW);
+            //digitalWrite(LED_CALIBRATION_PIN, LOW);
             digitalWrite(LED_MOTOR_PIN, LOW);
             break;
         } 
@@ -170,9 +154,8 @@ void StateMachine::exec() {
         }
         case StateMachine::ETAT::CALIBRATION: {
             if (calibration.exec()) {
-                digitalWrite(LED_CALIBRATION_PIN, LOW);
+                //digitalWrite(LED_CALIBRATION_PIN, LOW);
                 changerEtat(StateMachine::ETAT::DEBRAYAGE);
-                butee_desactivated = false;
             }
             capteurs.setConsigne(moteur.getPWM());
             break;
@@ -262,9 +245,9 @@ bool StateMachine::etatPilote() {
     return false;
 }
 
-bool StateMachine::is_calibre() {
-    return calibration.isCalibrationInitialized();
-}
+// bool StateMachine::is_calibre() {
+//     return calibration.isCalibrationInitialized();
+// }
 
 // bool StateMachine::etatCalibration() {
 //     /* Gestion de l'état calibration */

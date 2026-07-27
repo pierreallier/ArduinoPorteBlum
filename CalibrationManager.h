@@ -5,6 +5,7 @@
 #include "Types.h"
 #include "Motor.h"
 #include "Sensors.h"
+#include "AnalogStateDetector.h"
 
 // Adresses EEPROM
 #define EEPROM_ADDR_ACTIVE_FLAG   0   // 1 octet (bool) + 1 octet CRC
@@ -27,54 +28,53 @@ public:
     // Les différents états pour la calibration
     enum class ETAT : uint8_t {
         DEBUT,
-        OUVERTURE_INITIALE,
+        OUVERTURE,
         ATTENTE_HAUT,
-        DEBRAYAGE_HAUT,
-        RECHERCHE_BUTEE_BASSE,
+        BUTEE_BASSE,
         ATTENTE_BAS,
-        DEBRAYAGE_BAS,
-        RECHERCHE_BUTEE_HAUTE,
-        ATTENTE_ENREGISTREMENT,
-        DEBRAYAGE_FINAL,
+        BUTEE_HAUTE,
+        ENREGISTREMENT,
         ERREUR,
         NONE,
+        NB_ETATS
     };
+
+    static const char* const ETAT_NAMES[static_cast<size_t>(ETAT::NB_ETATS)]; // Tableau des noms (même ordre que l'enum ETAT)
 
     
     CalibrationManager(Motor& m, Sensors& c); // Constructeur
+
+    void init(); // Initialise les données
+    void task(); // Execute les taches périodiques
     
     void setEepromActive(bool active); // Activer/désactiver l'utilisation de l'EEPROM
+    void clearEeprom(); // Efface les données sauvegardé en EEPROM
     void setCalibration(CalibrationManager::Config config, uint16_t highLimit, uint16_t lowLimit, uint16_t offset); // Définir les valeurs d'étalonnage pour une configuration
     bool getCalibration(CalibrationManager::Config config, int& highLimit, int& lowLimit, int& offset); // Obtenir les valeurs d'étalonnage pour une configuration. Retourne true si les valeurs sont valides, false sinon
 
-    bool isCalibrationInitialized() { // Vérifier si les données sont initialisées
-        return !isCalibrationUninitialized(getConfig());
-    }
-
-    bool isCalibrated() {
-        return !isCalibrationUninitialized(getConfig());
-    }
-    bool isNotCalibrated() {
-        return isCalibrationUninitialized(getConfig());
-    }
-
-    bool isEepromActive() const { // Vérifier si l'EEPROM est active
-        return eepromActive;
-    }
+    bool isNotCalibrated() { return isCalibrationUninitialized(getConfig());}
+    bool isCalibrated() { return !isNotCalibrated();} // Vérifie que le système est calibré
+    bool isEepromActive() const {  return eepromActive;} // Vérifier si l'EEPROM est active
 
     Config getConfig() {
-        return capteurs.getMeuble() ? CalibrationManager::Config::ON_FURNITURE : CalibrationManager::Config::OFF_FURNITURE;
+        return meuble.etat() ? CalibrationManager::Config::ON_FURNITURE : CalibrationManager::Config::OFF_FURNITURE;
+    }
+    bool getEtat() const {
+        return meuble.etat();
+    }
+    bool hasChanged() const {
+        if (meuble.changed()) {
+            updateCapteurs();
+            return true;
+        }
+        return false;
     }
 
     String getCalibrationString();
-    void clearEeprom();
+    
 
-    void updateCapteurs(CalibrationManager::Config config) {
-        capteurs.setLimits(calibrationData[config]);
-    }
-    void updateCapteurs() {
-        capteurs.setLimits(calibrationData[getConfig()]);
-    }
+    void updateCapteurs(CalibrationManager::Config config) { capteurs.setLimits(calibrationData[config]);}
+    void updateCapteurs() { capteurs.setLimits(calibrationData[getConfig()]);}
 
     // Gestion machine à état
     void changerEtat(CalibrationManager::ETAT nouvelle_etape); // Changer d'état 
@@ -91,18 +91,22 @@ private:
     bool ouverture(uint16_t speed);
     bool fermeture(uint16_t speed);
 
-    CalibrationData calibrationData[2]; // 0: ON_FURNITURE, 1: OFF_FURNITURE
+    // Données de calibrations
     bool eepromActive;
-
-    ETAT etat;
-    uint32_t time_etat = 0;
-
-    bool is_calibre;
-    uint16_t angle_butee_basse;
-    uint16_t angle_butee_haute;
+    CalibrationData calibrationData[2]; // 0: ON_FURNITURE, 1: OFF_FURNITURE
 
     Motor& moteur;
     Sensors& capteurs;
+    AnalogStateDetector meuble = AnalogStateDetector(DETECTEUR_MEUBLE, 100, 50, 500);
+
+    bool ledState = false;
+
+    // Variables pour la machine à états
+    ETAT etat;
+    uint32_t time_etat = 0;
+    uint32_t time_capteur = 0;
+    uint16_t angle_butee_basse;
+    uint16_t angle_butee_haute;
 };
 
 #endif

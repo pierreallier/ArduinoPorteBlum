@@ -2,10 +2,48 @@
 #include "Messages.h"
 #include "Constantes.h"
 
+const char* const CalibrationManager::ETAT_NAMES[] ={
+    "CALIBRATION_DEBUT",
+    "CALIBRATION_OUVERTURE",
+    "CALIBRATION_PAUSEHAUT",
+    "CALIBRATION_BUTEEBASSES",
+    "CALIBRATION_PAUSEBAS",
+    "CALIBRATION_BUTEEHAUTES",
+    "CALIBRATION_ENREGISTREMENT",
+    "CALIBRATION_ERREUR",
+    "CALIBRATION_NONE"
+};
+
 CalibrationManager::CalibrationManager(Motor& m, Sensors& c) : moteur(m), capteurs(c) { 
+}
+
+void CalibrationManager::init() {
+    meuble.init();
+
+    pinMode(LED_CALIBRATION_PIN, OUTPUT);
+    digitalWrite(LED_CALIBRATION_PIN, LOW);
+
     etat = CalibrationManager::ETAT::NONE;
     loadFromEeprom(); // Initialiser les données à partir de la RAM
     updateCapteurs(getConfig());
+
+    time_etat = millis();
+    time_capteur = time_etat;
+}
+
+void CalibrationManager::task() {
+    const uint32_t now = millis();
+    // Vérification du détecteur de meuble: toutes les 100 ms
+    if (now - time_capteur >= 100) {
+        time_capteur += 100;
+        meuble.update();
+    }
+    // Clignotement LED toutes les 1s si calibration requise
+    if (isNotCalibrated() && (now - time_etat >= 1000)) {
+        time_etat += 1000;
+        ledState = !ledState;
+        digitalWrite(LED_CALIBRATION_PIN, ledState);
+    }
 }
 
 
@@ -144,6 +182,7 @@ bool CalibrationManager::fermeture(uint16_t speed) {
 
 
 void CalibrationManager::changerEtat(CalibrationManager::ETAT nouvelle_etape) {
+    sendEtat(ETAT_NAMES[static_cast<size_t>(etat)]);
     time_etat = millis();
     etat = nouvelle_etape;
 }
@@ -160,10 +199,12 @@ bool CalibrationManager::exec() {
     switch (etat) {
         case CalibrationManager::ETAT::DEBUT: {
             sendInfo("Debut de calibration");
+            ledState = HIGH;
+            digitalWrite(LED_CALIBRATION_PIN, HIGH);
             moteur.enable();
-            changerEtat(CalibrationManager::ETAT::OUVERTURE_INITIALE);
+            changerEtat(CalibrationManager::ETAT::OUVERTURE);
         }
-        case CalibrationManager::ETAT::OUVERTURE_INITIALE: {
+        case CalibrationManager::ETAT::OUVERTURE: {
             if (ouverture(PWM_CALIBRATION) || blocage) {
                 moteur.stop();
                 changerEtat(CalibrationManager::ETAT::ATTENTE_HAUT);
@@ -172,11 +213,11 @@ bool CalibrationManager::exec() {
         }
         case CalibrationManager::ETAT::ATTENTE_HAUT: {
             if (millis() - time_etat >= 1000) {;
-                changerEtat(CalibrationManager::ETAT::RECHERCHE_BUTEE_BASSE);
+                changerEtat(CalibrationManager::ETAT::BUTEE_BASSE);
             }
             break;
         }
-        case CalibrationManager::ETAT::RECHERCHE_BUTEE_BASSE: {
+        case CalibrationManager::ETAT::BUTEE_BASSE: {
             if (fermeture(PWM_CALIBRATION) || blocage) {
                 angle_butee_basse = analogRead(CODEUR_PORTE);
                 moteur.stop();
@@ -186,24 +227,19 @@ bool CalibrationManager::exec() {
         }
         case CalibrationManager::ETAT::ATTENTE_BAS: {
             if (millis() - time_etat >= 1000) {
-                changerEtat(CalibrationManager::ETAT::RECHERCHE_BUTEE_HAUTE);
+                changerEtat(CalibrationManager::ETAT::BUTEE_HAUTE);
             }
             break;
         }
-        case CalibrationManager::ETAT::RECHERCHE_BUTEE_HAUTE: {
+        case CalibrationManager::ETAT::BUTEE_HAUTE: {
             if (ouverture(PWM_CALIBRATION) || blocage) {
                 angle_butee_haute = analogRead(CODEUR_PORTE);
                 moteur.stop();
-                is_calibre = true;
-                changerEtat(CalibrationManager::ETAT::ATTENTE_ENREGISTREMENT);
+                changerEtat(CalibrationManager::ETAT::ENREGISTREMENT);
             }
             break;
         }
-        case CalibrationManager::ETAT::DEBRAYAGE_FINAL: {
-            changerEtat(CalibrationManager::ETAT::ATTENTE_ENREGISTREMENT);
-            break;
-        }
-        case CalibrationManager::ETAT::ATTENTE_ENREGISTREMENT: {
+        case CalibrationManager::ETAT::ENREGISTREMENT: {
             if (millis() - time_etat >= 1000) {
                 sendReponseOK("DO","CALIBRATION","Fin de calibration : limite haute=" + String(angle_butee_haute) + " ; limite basse=" + String(angle_butee_basse));
                 setCalibration(getConfig(), (angle_butee_haute + (675 - angle_butee_basse)) % 675, 0, 675 - angle_butee_basse);
@@ -218,8 +254,11 @@ bool CalibrationManager::exec() {
             }
             break;
         }
-        case CalibrationManager::ETAT::NONE:
+        case CalibrationManager::ETAT::NONE: {
+            ledState = LOW;
+            digitalWrite(LED_CALIBRATION_PIN, LOW);
             return true;
+        }
         default:
             break;
     }

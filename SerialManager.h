@@ -14,7 +14,7 @@ constexpr float RAD_TO_TURN = 1.0f / (2.0f * PI);
 
 class SerialManager {
     public:
-        SerialManager(Motor& m, Sensors& c, StateMachine& s);
+        SerialManager(Motor& m, Sensors& s, StateMachine& ma, CalibrationManager& c);
         void init();
         void task();
 
@@ -29,10 +29,12 @@ class SerialManager {
         int mesureEnable();
     
     private:
-        uint32_t time_precedent = 0;
         Motor& moteur;
         Sensors& capteurs;
         StateMachine& machine;
+        CalibrationManager& calibration;
+
+        uint32_t time_precedent = 0;    
         int periode_echantillonnage_mesures = 25;
 
         void _SET(String commande);

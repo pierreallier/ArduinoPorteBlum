@@ -9,15 +9,12 @@ void isr_Codeur() {
 
 void Sensors::init() {
     pinMode(CODEUR_PORTE, INPUT);
-    pinMode(DETECTEUR_MEUBLE, INPUT);
     pinMode(MOTOR_VOLTAGE, INPUT);
     pinMode(MOTOR_CURRENT, INPUT);
     pinMode(DRIVER_CURRENT, INPUT);
     pinMode(POTENTIOMETRE, INPUT);
 
     // Initialisation des limites
-    //angle_haut_max = ANGLE_MAX;
-    //angle_bas_max = ANGLE_MIN; 
     limite_courant = LIMITE_COURANT;
 
     // Initialisation du tableau du courant
@@ -57,13 +54,6 @@ void Sensors::updateSecurities(int pwm) {
     // Limite de courant
     getCourant();
     limite_courant_atteinte = (courant_moyen >= limite_courant);
-
-    // Limites
-    // if (limite_haute || limite_basse || limite_courant_atteinte) {
-    //     compteur_blocage = 0;
-    //     blocage_detecte = false;
-    //     return;
-    // }
 
     // Détection blocage
     uint8_t pwm_abs = abs(pwm);
@@ -109,13 +99,6 @@ bool Sensors::isLimiteAngle() {
     return false;
 }
 
-bool Sensors::hasEtatMeubleChange() {
-    if (etat_meublechange) {
-        etat_meublechange = false;
-        return true;
-    }
-    return false;
-}
 
 bool Sensors::resetSecurities() {
     blocage_detecte = false;
@@ -130,7 +113,7 @@ bool Sensors::resetSecurities() {
 void Sensors::mesures(int pwm) {
     getCodeurMoteur();
     getTension();
-    getMeuble();
+    //meuble.update();
     getPotentiometre();
     consigne = pwm;
 }
@@ -171,12 +154,6 @@ void Sensors::getCourant() {
     courant_moyen = addCourant(current);
 }
 
-bool Sensors::getMeuble() {
-    bool etat = (analogRead(DETECTEUR_MEUBLE) > 50) ? true : false;
-    etat_meublechange = (etat != sur_meuble) ? true : false;
-    sur_meuble = etat;
-    return sur_meuble;
-}
 
 void Sensors::getCodeurMoteur() {
     codeur_Delta_Pos = encoderGetTicks();
@@ -214,10 +191,6 @@ void Sensors::setLimits(CalibrationData c) {
     calibrationData = c;
 }
 
-void Sensors::resetLimits() {
-    //angle_bas_max = ANGLE_MIN;
-    //angle_haut_max = ANGLE_MAX;
-}
 
 bool Sensors::setLimitCourant(int limite) {
     if (limite > 0.0f && limite < 2.5f) {

@@ -48,7 +48,7 @@ class StateMachine {
         PID pidPosition;
         PID pidVitesse;
 
-        StateMachine(Motor& m, Sensors& c);
+        StateMachine(Motor& m, Sensors& s, CalibrationManager& c);
         void init();
         void changerEtat(StateMachine::ETAT etat_demande);
         void setMode(StateMachine::MODE_PILOTAGE mode);
@@ -64,41 +64,17 @@ class StateMachine {
             modePilotage = mode;
         }
         bool setConsigne(const String& type, const String* params, int nbParams);
-
-        CalibrationManager& getCalibrationManager() {
-            return calibration;
-        }
     
     private:
         Motor& moteur;
         Sensors& capteurs;
         ConsigneManager consigne;
-        CalibrationManager calibration;
-
-        // enum class ETAPE_CALIBRATION : uint8_t {
-        //     OUVERTURE_INITIALE,
-        //     ATTENTE_HAUT,
-        //     DEBRAYAGE_HAUT,
-        //     RECHERCHE_BUTEE_BASSE,
-        //     ATTENTE_BAS,
-        //     DEBRAYAGE_BAS,
-        //     RECHERCHE_BUTEE_HAUTE,
-        //     ATTENTE_ENREGISTREMENT,
-        //     DEBRAYAGE_FINAL,
-        //     NONE,
-        // };
-        // unsigned long time_etape_calibration = 0;
-        // ETAPE_CALIBRATION etape_calibration;
-        //float angle_butee_basse;
-        //float angle_butee_haute;
-        
-        //void changerEtapeCalibration(StateMachine::ETAPE_CALIBRATION nouvelle_etape);
-        
+        CalibrationManager& calibration;
+ 
         bool etatOuverture(uint16_t speed);
         bool etatFermeture(uint16_t speed);
         bool etatDebrayage();
-        bool etatPilote();
-        //bool etatCalibration();        
+        bool etatPilote();        
 };
 
 #endif

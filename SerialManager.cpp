@@ -8,7 +8,7 @@ void resetArduino() {
     }
 }
 
-SerialManager::SerialManager(Motor& m, Sensors& c, StateMachine& s) : moteur(m),capteurs(c),machine(s) {
+SerialManager::SerialManager(Motor& m, Sensors& s, StateMachine& ma, CalibrationManager& c) : moteur(m),capteurs(s),machine(ma),calibration(c) {
 }
 
 void SerialManager::init() {
@@ -96,14 +96,14 @@ void SerialManager::_SET(String commande) {
             active = false;
         }
         else if (valeurs == "EFFACER") {
-            machine.getCalibrationManager().clearEeprom();
+            calibration.clearEeprom();
         }
         else {
             sendReponseNOK("SET","CALIBRATION","Valeur attendue : ON / OFF / EFFACER");
             return;
         }
-        machine.getCalibrationManager().setEepromActive(active);
-        sendReponseOK("SET", "CALIBRATION", machine.getCalibrationManager().getCalibrationString());
+        calibration.setEepromActive(active);
+        sendReponseOK("SET", "CALIBRATION", calibration.getCalibrationString());
         return;
     }
     else if (commande.startsWith("COURANT") && machine.etat == StateMachine::ETAT::REPOS) {
@@ -209,20 +209,20 @@ void SerialManager::_GET(String commande) {
     commande.toUpperCase(); // Convertit la commande
 
     if (commande.startsWith("CALIBRATION")) {
-        if (machine.is_calibre())
-            sendReponseOK("GET","CALIBRATION","Système calibré;" + machine.getCalibrationManager().getCalibrationString());
+        if (calibration.isCalibrated())
+            sendReponseOK("GET","CALIBRATION","Système calibré;" + calibration.getCalibrationString());
         else 
-            sendReponseNOK("GET","CALIBRATION","Système non calibré;" + machine.getCalibrationManager().getCalibrationString());
+            sendReponseNOK("GET","CALIBRATION","Système non calibré;" + calibration.getCalibrationString());
     }
     else if (commande.startsWith("LIMITS")) {
-        if (machine.is_calibre())
+        if (calibration.isCalibrated())
             sendReponseOK("GET","LIMITS","Système calibré : limite basse=" + String(capteurs.getLimiteBasse()) + " limite haute=" + String(capteurs.getLimiteHaute()));
         else 
             sendReponseNOK("GET","LIMITS","Système non calibré : limite basse=" + String(capteurs.getLimiteBasse()) + " limite haute=" + String(capteurs.getLimiteHaute()));
 
     }
     else if (commande.startsWith("MEUBLE")) {
-        sendReponseOK("GET","MEUBLE",capteurs.getMeuble() ? "Sur meuble": "Hors meuble");
+        sendReponseOK("GET","MEUBLE",calibration.getEtat() ? "Sur meuble": "Hors meuble");
     }
     else if (commande.startsWith("MODE")) {
         switch (machine.modePilotage) {

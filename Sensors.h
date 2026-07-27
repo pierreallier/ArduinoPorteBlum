@@ -22,9 +22,6 @@ constexpr int PWM_RAPIDE = 150;
 constexpr int NB_CYCLES_BLOCAGE_RAPIDE = 10; // 10 x 5 ms = 50 ms
 constexpr int NB_CYCLES_BLOCAGE_LENT = 50;
 const int TICKS_MIN = 2;
-const float I_BLOCAGE = 2.2f;
-const float ANGLE_MAX = 180.0f;
-const float ANGLE_MIN = -140.0f;
 
 class Sensors {
     public:
@@ -34,16 +31,13 @@ class Sensors {
         float angle_moteur = 0.0f;
         float vitesse_moteur = 0.0f;
         int32_t angle_porte = 0;
-        float potentiometre = 0.0f;
-        bool sur_meuble = false;
-
+        float potentiometre = 0.0f;    
         float consigne = 0.0f;
 
         bool limite_haute = false;
         bool limite_basse = false;
         bool blocage_detecte = false;
         bool limite_courant_atteinte = false;
-        bool etat_meublechange = false;
 
         void init();
         void mesures(int pwm);
@@ -52,12 +46,10 @@ class Sensors {
         bool isBlocage();
         bool isLimiteCourant();
         bool isLimiteAngle();
-        bool hasEtatMeubleChange();
         bool resetSecurities();
         
         void getTension();
         void getCourant();
-        bool getMeuble();
         float getCodeurPorte();
         int getRawCodeurPorte();
         void getCodeurMoteur();
@@ -70,7 +62,6 @@ class Sensors {
         float getLimiteBasse() const { return calibrationData.lowLimit;}
         float getLimiteHaute() const { return calibrationData.highLimit;}
         void setLimits(CalibrationData c);
-        void resetLimits();
 
         bool checkCodeurPorte();
 

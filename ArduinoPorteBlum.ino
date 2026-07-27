@@ -17,8 +17,9 @@ Bounce2::Button btPilotage;
 
 Sensors capteurs;
 Motor moteur(capteurs);
-StateMachine machine(moteur, capteurs);
-SerialManager portserie(moteur, capteurs, machine);
+CalibrationManager calibration(moteur, capteurs);
+StateMachine machine(moteur, capteurs, calibration);
+SerialManager portserie(moteur, capteurs, machine, calibration);
 Buzzer buzzer;
 
 bool erreurBlocage = false;
@@ -33,7 +34,6 @@ uint32_t tLed = 0;
 
 void setup() {
     portserie.init(); // Initialisation du port série
-    Wire.begin();
     buzzer.init(); // Initialiation du buzzer
 
     btTest.attach(TEST_BT,INPUT_PULLUP);
@@ -52,8 +52,10 @@ void setup() {
     moteur.init(); // Initialisation du moteur et du driver
     capteurs.init(); // Initialisation des capteurs
     machine.init(); // Initialisation de la machine à états
+    calibration.init(); // Initialisation de la calibration
 
     // Vérification codeur porte I2C
+    Wire.begin();
     unsigned long startTime = millis();
     bool send_error = false;  // Flag pour éviter d'afficher plusieurs fois l'erreur
     while (!capteurs.checkCodeurPorte()) {
@@ -69,14 +71,13 @@ void setup() {
     digitalWrite(LED_ERROR_PIN, LOW);
 
     // Vérification type de montage et calibration
-    if (capteurs.getMeuble()) {
+    if (calibration.getEtat()) {
         sendInfo("Système monté sur un meuble");
     } else {
         sendInfo("Système non monté");
     }
-    machine.getCalibrationManager().updateCapteurs();
-    sendInfo(machine.getCalibrationManager().getCalibrationString().c_str());
-    if (machine.getCalibrationManager().isNotCalibrated()) {
+    sendInfo(calibration.getCalibrationString().c_str());
+    if (calibration.isNotCalibrated()) {
         sendWarning("Calibration requise");
     }
 
@@ -88,6 +89,7 @@ void setup() {
 
 void loop() {
     portserie.task();
+    calibration.task();
     machine.exec();
     ordonnanceur();
     buzzer.task();
@@ -124,14 +126,13 @@ void ordonnanceur() {
                     machine.changerEtat(StateMachine::ETAT::ERREUR);
                     buzzer.sequenceErreur();
                 }
-                if (capteurs.hasEtatMeubleChange()) {
-                    if (capteurs.getMeuble()) {
+                if (calibration.hasChanged()) {
+                    if (calibration.getEtat()) {
                         sendWarning("ServoDrive monté sur un meuble");
                     } else {
                         sendWarning("ServoDrive démonté du meuble");
                     }
-                    machine.getCalibrationManager().updateCapteurs();
-                    if (!machine.getCalibrationManager().isCalibrationInitialized()) {
+                    if (calibration.isNotCalibrated()) {
                         sendWarning("Calibration requise");
                     }
                     if (machine.etat != StateMachine::ETAT::REPOS) {
@@ -181,21 +182,4 @@ void ordonnanceur() {
         //sendMesures(capteurs.time_mesures, capteurs.tension, pwm, capteurs.courant_moyen, capteurs.angle_moteur, 
         //            capteurs.vitesse_moteur, capteurs.getCodeurPorte(), capteurs.consigne);
     } 
-
-    // Clignotement led
-    if (maintenant - tLed >= 1000) {
-        tLed += 1000;
-        if (machine.getCalibrationManager().isNotCalibrated() && machine.etat != StateMachine::ETAT::CALIBRATION) {
-            ledState = !ledState;
-            digitalWrite(LED_CALIBRATION_PIN, ledState);
-        }
-        float pwm = moteur.getPWM();
-        //sendMesures(capteurs.time_mesures, capteurs.tension, pwm, capteurs.courant_moyen, capteurs.angle_moteur, 
-        //            capteurs.vitesse_moteur, capteurs.getCodeurPorte(), capteurs.consigne);
-        // Serial.print(capteurs.getRawCodeurPorte());
-        // Serial.print(";");
-        // Serial.print(capteurs.angle_porte);
-        // Serial.print(";");
-        // Serial.println(capteurs.getCodeurPorte());
-    }
 }
