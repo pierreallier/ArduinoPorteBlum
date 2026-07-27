@@ -68,16 +68,14 @@ void setup() {
     sendInfo("Capteur I2C de la porte fonctionnel");
     digitalWrite(LED_ERROR_PIN, LOW);
 
-    // Vérification type de montage
+    // Vérification type de montage et calibration
     if (capteurs.getMeuble()) {
         sendInfo("Système monté sur un meuble");
     } else {
         sendInfo("Système non monté");
     }
-    machine.getCalibrationManager().updateConfig();
+    machine.getCalibrationManager().updateCapteurs();
     sendInfo(machine.getCalibrationManager().getCalibrationString().c_str());
-
-    // Vérifications de la calibration
     if (machine.getCalibrationManager().isNotCalibrated()) {
         sendWarning("Calibration requise");
     }
@@ -132,7 +130,7 @@ void ordonnanceur() {
                     } else {
                         sendWarning("ServoDrive démonté du meuble");
                     }
-                    machine.getCalibrationManager().updateConfig();
+                    machine.getCalibrationManager().updateCapteurs();
                     if (!machine.getCalibrationManager().isCalibrationInitialized()) {
                         sendWarning("Calibration requise");
                     }

@@ -66,12 +66,13 @@ public:
         return capteurs.getMeuble() ? CalibrationManager::Config::ON_FURNITURE : CalibrationManager::Config::OFF_FURNITURE;
     }
 
-    String CalibrationManager::getCalibrationString();
+    String getCalibrationString();
+    void clearEeprom();
 
-    void updateConfig(CalibrationManager::Config config) {
+    void updateCapteurs(CalibrationManager::Config config) {
         capteurs.setLimits(calibrationData[config]);
     }
-    void updateConfig() {
+    void updateCapteurs() {
         capteurs.setLimits(calibrationData[getConfig()]);
     }
 

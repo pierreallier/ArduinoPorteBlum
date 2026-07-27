@@ -5,7 +5,7 @@
 CalibrationManager::CalibrationManager(Motor& m, Sensors& c) : moteur(m), capteurs(c) { 
     etat = CalibrationManager::ETAT::NONE;
     loadFromEeprom(); // Initialiser les données à partir de la RAM
-    updateConfig(getConfig());
+    updateCapteurs(getConfig());
 }
 
 
@@ -17,6 +17,14 @@ void CalibrationManager::setEepromActive(bool active) { // Activer/désactiver l
     if (eepromActive) {
         loadFromEeprom(); // Charger les données depuis l'EEPROM
     }
+}
+
+void CalibrationManager::clearEeprom() { // Efface les valeurs stockées dans l'EEPROM
+    setDefaultValues(ON_FURNITURE);
+    EEPROM.put(EEPROM_ADDR_ON_FURNITURE, calibrationData[ON_FURNITURE]);
+    setDefaultValues(OFF_FURNITURE);
+    EEPROM.put(EEPROM_ADDR_OFF_FURNITURE, calibrationData[OFF_FURNITURE]);
+    updateCapteurs(getConfig());
 }
    
 void CalibrationManager::loadFromEeprom() { // Charger toutes les données depuis l'EEPROM
@@ -59,7 +67,7 @@ void CalibrationManager::setCalibration(CalibrationManager::Config config, uint1
     calibrationData[config].highLimit = highLimit;
     calibrationData[config].lowLimit = lowLimit;
     calibrationData[config].offset = offset;
-    updateConfig(config);
+    updateCapteurs(config);
     if (eepromActive) {
         if (config == ON_FURNITURE) {
             EEPROM.put(EEPROM_ADDR_ON_FURNITURE, calibrationData[ON_FURNITURE]);

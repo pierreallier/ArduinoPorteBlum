@@ -95,8 +95,11 @@ void SerialManager::_SET(String commande) {
         else if (valeurs == "OFF") {
             active = false;
         }
+        else if (valeurs == "EFFACER") {
+            machine.getCalibrationManager().clearEeprom();
+        }
         else {
-            sendReponseNOK("SET","CALIBRATION","Valeur attendue : ON ou OFF");
+            sendReponseNOK("SET","CALIBRATION","Valeur attendue : ON / OFF / EFFACER");
             return;
         }
         machine.getCalibrationManager().setEepromActive(active);
