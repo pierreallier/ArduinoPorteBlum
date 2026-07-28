@@ -161,7 +161,7 @@ void StateMachine::exec() {
             break;
         }
         case StateMachine::ETAT::ERREUR: {
-            changerEtat(StateMachine::ETAT::DEBRAYAGE);
+            changerEtat(StateMachine::ETAT::REPOS);
             break;
         }
         default: {
@@ -199,8 +199,8 @@ bool StateMachine::etatFermeture(uint16_t speed) {
 bool StateMachine::etatDebrayage() {
     /* Gestion du debrayage du moteur */
     int32_t delta_angle = abs(capteurs.angle_moteur - moteur.codeur_avant_debrayage);
-    float delta_courant = abs(1 - moteur.courant_avant_debrayage/capteurs.courant_moyen);
-    if (millis() - time_etat >= 200 || delta_angle > 100 || delta_courant > 0.5) {
+    //float delta_courant = abs(1 - moteur.courant_avant_debrayage/capteurs.courant_moyen);
+    if (millis() - time_etat >= 200 || delta_angle > 100 ) { //|| delta_courant > 0.5) {
         moteur.stop();
         return true;
     }

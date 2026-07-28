@@ -161,7 +161,7 @@ void SerialManager::_SET(String commande) {
             setMesurePeriode(periode);
             sendReponseOK("SET","MESURES","Envoi des mesures toutes les " + String(periode) + " ms");
         } else {
-            setMesurePeriode(0);
+            setMesurePeriode(1275);
             sendReponseOK("SET","MESURES","Envoi des mesures désactivé");
         }
     }
@@ -189,8 +189,27 @@ void SerialManager::_GET(String commande) {
             sendReponseNOK("GET","LIMITS","Système non calibré : limite basse=" + String(capteurs.getLimiteBasse()) + " limite haute=" + String(capteurs.getLimiteHaute()));
 
     }
-    else if (commande.startsWith("MEUBLE")) {
-        sendReponseOK("GET","MEUBLE",calibration.getEtat() ? "Sur meuble": "Hors meuble");
+    else if (commande.startsWith("MESURES")) {
+        String valeur = commande.substring(7);
+        valeur.trim();
+        // Vérification : chaîne non vide
+        if (valeur.length() == 0) {
+            sendReponseNOK("GET","MESURES","nom du capteur manquant");
+            return;
+        }
+        if (valeur == "PERIODE") {
+            if (getMesurePeriode() > 1000) {
+                sendReponseOK("GET","MESURES PERIODE","Désactivé");
+            } else {
+                sendReponseOK("GET","MESURES PERIODE",String(getMesurePeriode()));
+            }
+        }
+        if (valeur == "MEUBLE") {
+            sendReponseOK("GET","MESURES MEUBLE",calibration.getEtat() ? "Sur meuble": "Hors meuble");
+        }
+        if (valeur == "PORTE") {
+            sendReponseOK("GET","MESURES PORTE",String(capteurs.getCodeurPorte()));
+        }
     }
     else if (commande.startsWith("MODE")) {
         switch (machine.modePilotage) {
@@ -243,8 +262,10 @@ void SerialManager::_DO(String commande) {
         machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
     else if (commande.startsWith("PILOTER"))
         machine.changerEtat(StateMachine::ETAT::PILOTAGE);
-    else if (commande.startsWith("CALIBRATION"))
+    else if (commande.startsWith("CALIBRATION")) {
         machine.changerEtat(StateMachine::ETAT::CALIBRATION);
+        return;
+    }
     else {
         sendError("Commande DO inconnue {RESET,INIT,OUVRIR,FERMER,STOP,PILOTER}.");
         return;

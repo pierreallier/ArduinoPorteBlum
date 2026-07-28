@@ -27,6 +27,8 @@ uint32_t tBt = 0;
 uint32_t tMesure = 0;
 uint32_t tEnvoi = 0;
 
+bool is_time_securite = false;
+
 void setup() {
     portserie.init(); // Initialisation du port série
     buzzer.init(); // Initialiation du buzzer
@@ -87,14 +89,29 @@ void loop() {
 }
 
 void ordonnanceur() {
+    int PERIODE_ENVOI = portserie.getMesurePeriode();
+    int PERIODE_MESURE = min(PERIODE_ENVOI,25);
+    float pwm = moteur.getPWM();
+
     // Tâches périodiques
     uint32_t maintenant = millis();
 
-    // Sécurités (toutes les 5 ms)
+    // Mesures - Sécurités (toutes les 5 ms)
     if (maintenant - tVerif >= 5) {
         tVerif += 5;   
         // Vérifications des sécurités
-        capteurs.updateSecurities(moteur.getPWM());
+        capteurs.updateSecurities(pwm);
+        is_time_securite = true;
+    }
+    // Mesures des autres grandeurs (au maximum toutes les 25 ms)
+    if (maintenant - tMesure >= PERIODE_MESURE) {
+        tMesure += PERIODE_MESURE;
+        capteurs.mesures(pwm);
+    }
+
+    // Vérifications des sécurités 
+    if (is_time_securite) {
+        is_time_securite = false;
         if (machine.etat != StateMachine::ETAT::CALIBRATION) {
             if (capteurs.isLimiteAngle() & machine.etat != StateMachine::ETAT::DEBRAYAGE) {
                 if (machine.etat == StateMachine::ETAT::PILOTAGE) {
@@ -105,7 +122,7 @@ void ordonnanceur() {
                     sendInfo("Limite de la porte atteinte");
                     machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
                 }
-                capteurs.resetSecurities();
+                //capteurs.resetSecurities();
             } else {
                 if (capteurs.isLimiteCourant()) {
                     sendError("Limite de courant atteinte");
@@ -164,14 +181,7 @@ void ordonnanceur() {
     }
 
     // Mesures des grandeurs
-    int PERIODE_ENVOI = portserie.getMesurePeriode();
-    int PERIODE_MESURE = min(PERIODE_ENVOI,25);
-    if (maintenant - tMesure >= PERIODE_MESURE) {
-        tMesure += PERIODE_MESURE;
-        float pwm = moteur.getPWM();
-        capteurs.mesures(pwm);
-    }
-    if (PERIODE_ENVOI != 0 && maintenant - tEnvoi >= PERIODE_ENVOI) {
+    if (PERIODE_ENVOI <= 1000 && maintenant - tEnvoi >= PERIODE_ENVOI) {
         tEnvoi += PERIODE_ENVOI;
         sendMesures(capteurs.time_mesures, capteurs.tension, capteurs.pwm, capteurs.courant_moyen, capteurs.angle_moteur, 
                     capteurs.vitesse_moteur, capteurs.getCodeurPorte(), capteurs.consigne);

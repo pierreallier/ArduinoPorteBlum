@@ -24,11 +24,12 @@ void CalibrationManager::init() {
     digitalWrite(LED_CALIBRATION_PIN, LOW);
 
     etat = CalibrationManager::ETAT::NONE;
-    loadFromEeprom(); // Initialiser les données à partir de la RAM
+    loadFromEeprom(false); // Initialiser les données à partir de la RAM
     updateCapteurs(getConfig());
 
     time_etat = millis();
     time_capteur = time_etat;
+    time_led = time_etat;
 }
 
 void CalibrationManager::task() {
@@ -39,8 +40,8 @@ void CalibrationManager::task() {
         meuble.update();
     }
     // Clignotement LED toutes les 1s si calibration requise
-    if (isNotCalibrated() && (now - time_etat >= 1000)) {
-        time_etat += 1000;
+    if (isNotCalibrated() && (etat == CalibrationManager::ETAT::NONE) && (now - time_led >= 1000)) {
+        time_led += 1000;
         ledState = !ledState;
         digitalWrite(LED_CALIBRATION_PIN, ledState);
     }
@@ -65,7 +66,7 @@ void CalibrationManager::clearEeprom() { // Efface les valeurs stockées dans l'
     updateCapteurs(getConfig());
 }
    
-void CalibrationManager::loadFromEeprom() { // Charger toutes les données depuis l'EEPROM
+void CalibrationManager::loadFromEeprom(bool forced = true) { // Charger toutes les données depuis l'EEPROM (si faux, ne charge pas)
     // Charger le flag d'activation
     uint8_t storedActiveFlag;
     EEPROM.get(EEPROM_ADDR_ACTIVE_FLAG, storedActiveFlag);
@@ -78,7 +79,7 @@ void CalibrationManager::loadFromEeprom() { // Charger toutes les données depui
         // Réinitialisation du flag à une valeur valide
         EEPROM.update(EEPROM_ADDR_ACTIVE_FLAG, 0);
         return;
-    } else if (storedActiveFlag == 0) {
+    } else if (!forced || storedActiveFlag == 0) {
         // Si l'EEPROM est désactivée, initialiser avec les valeurs par défaut
         setDefaultValues(ON_FURNITURE);
         setDefaultValues(OFF_FURNITURE);
@@ -191,10 +192,15 @@ bool CalibrationManager::exec() {
     /* Gestion de l'état calibration */
     // Vérification des sécurités (car non gérées au niveau supérieur)
     bool blocage = capteurs.isBlocage();
-    if (false && !blocage && capteurs.isLimiteCourant()) {
-        changerEtat(CalibrationManager::ETAT::ERREUR);
-        moteur.stop();
-    }
+    // if (false && !blocage && capteurs.isLimiteCourant()) {
+    //     if (etat == CalibrationManager::ETAT::OUVERTURE || etat == CalibrationManager::ETAT::BUTEE_HAUTE) {
+    //         sendError("Courant trop important en ouverture, augmenter la raideur du ressort");
+    //     } else if (etat == CalibrationManager::ETAT::BUTEE_BASSE) {
+    //         sendError("Courant trop important en fermeture, diminuer la raideur du ressort");
+    //     }
+    //     changerEtat(CalibrationManager::ETAT::ERREUR);
+    //     moteur.stop();
+    // }
     // Execution des états
     switch (etat) {
         case CalibrationManager::ETAT::DEBUT: {
@@ -203,6 +209,7 @@ bool CalibrationManager::exec() {
             digitalWrite(LED_CALIBRATION_PIN, HIGH);
             moteur.enable();
             changerEtat(CalibrationManager::ETAT::OUVERTURE);
+            break;
         }
         case CalibrationManager::ETAT::OUVERTURE: {
             if (ouverture(PWM_CALIBRATION) || blocage) {

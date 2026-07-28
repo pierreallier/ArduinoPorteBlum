@@ -8,9 +8,9 @@
 #include "AnalogStateDetector.h"
 
 // Adresses EEPROM
-#define EEPROM_ADDR_ACTIVE_FLAG   0   // 1 octet (bool) + 1 octet CRC
-#define EEPROM_ADDR_ON_FURNITURE  2   // 6 octets (3x uint16_t) + 1 octet CRC
-#define EEPROM_ADDR_OFF_FURNITURE 8 // 6 octets (3x uint16_t) + 1 octet CRC
+#define EEPROM_ADDR_ACTIVE_FLAG   0   // 1 octet (bool)
+#define EEPROM_ADDR_ON_FURNITURE  2   // 6 octets (3x uint16_t) 
+#define EEPROM_ADDR_OFF_FURNITURE 8 // 6 octets (3x uint16_t)
 
 // Valeur pour indiquer qu'une valeur n'est pas initialisée
 #define UNINITIALIZED_VALUE 0xFFFF
@@ -82,7 +82,7 @@ public:
 
 private:
     // Gestion EEPROM
-    void loadFromEeprom(); // Charger toutes les données depuis l'EEPROM
+    void loadFromEeprom(bool forced = true); // Charger toutes les données depuis l'EEPROM
     void saveToEeprom(); // Sauvegarder toutes les données en EEPROM
 
     bool isCalibrationUninitialized(CalibrationManager::Config config); // Vérifier si une configuration est non initialisée
@@ -105,6 +105,7 @@ private:
     ETAT etat;
     uint32_t time_etat = 0;
     uint32_t time_capteur = 0;
+    uint32_t time_led = 0;
     uint16_t angle_butee_basse;
     uint16_t angle_butee_haute;
 };
