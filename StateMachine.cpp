@@ -154,14 +154,13 @@ void StateMachine::exec() {
         }
         case StateMachine::ETAT::CALIBRATION: {
             if (calibration.exec()) {
-                //digitalWrite(LED_CALIBRATION_PIN, LOW);
                 changerEtat(StateMachine::ETAT::DEBRAYAGE);
             }
             capteurs.setConsigne(moteur.getPWM());
             break;
         }
         case StateMachine::ETAT::ERREUR: {
-            changerEtat(StateMachine::ETAT::REPOS);
+            changerEtat(StateMachine::ETAT::DEBRAYAGE);
             break;
         }
         default: {

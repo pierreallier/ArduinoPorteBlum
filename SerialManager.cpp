@@ -208,7 +208,7 @@ void SerialManager::_GET(String commande) {
             sendReponseOK("GET","MESURES MEUBLE",calibration.getEtat() ? "Sur meuble": "Hors meuble");
         }
         if (valeur == "PORTE") {
-            sendReponseOK("GET","MESURES PORTE",String(capteurs.getCodeurPorte()));
+            sendReponseOK("GET","MESURES PORTE",String(capteurs.angle_porte) + "CAN et " + String(capteurs.getCodeurPorte()) + "°");
         }
     }
     else if (commande.startsWith("MODE")) {

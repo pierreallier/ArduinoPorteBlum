@@ -103,7 +103,7 @@ void ordonnanceur() {
         capteurs.updateSecurities(pwm);
         is_time_securite = true;
     }
-    // Mesures des autres grandeurs (au maximum toutes les 25 ms)
+    // Mesures des autres grandeurs (au maximum toutes les 25 ms) pour conserver le même timestamps que les sécurités
     if (maintenant - tMesure >= PERIODE_MESURE) {
         tMesure += PERIODE_MESURE;
         capteurs.mesures(pwm);
@@ -113,7 +113,7 @@ void ordonnanceur() {
     if (is_time_securite) {
         is_time_securite = false;
         if (machine.etat != StateMachine::ETAT::CALIBRATION) {
-            if (capteurs.isLimiteAngle() & machine.etat != StateMachine::ETAT::DEBRAYAGE) {
+            if (capteurs.isLimiteAngle() && (machine.etat != StateMachine::ETAT::DEBRAYAGE && machine.etat != StateMachine::ETAT::REPOS)) {
                 if (machine.etat == StateMachine::ETAT::PILOTAGE) {
                     sendError("Limite de la porte atteinte");
                     machine.changerEtat(StateMachine::ETAT::ERREUR);
@@ -122,7 +122,7 @@ void ordonnanceur() {
                     sendInfo("Limite de la porte atteinte");
                     machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
                 }
-                //capteurs.resetSecurities();
+                capteurs.resetSecurities();
             } else {
                 if (capteurs.isLimiteCourant()) {
                     sendError("Limite de courant atteinte");
