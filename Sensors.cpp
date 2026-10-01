@@ -130,15 +130,15 @@ float Sensors::addCourant(float current) {
 
 void Sensors::mesureCodeurPorte() {
     // Lecture du codeur
-    angle_porte = (675 - analogRead(CODEUR_PORTE) + calibrationData.offset) % 675; 
+    angle_porte = (analogRead(CODEUR_PORTE) + calibrationData.offset) % ADC_MAX;
 }
 
 int Sensors::getRawCodeurPorte() {
-    return 675 - analogRead(CODEUR_PORTE);
+    return analogRead(CODEUR_PORTE);
 }
 
 float Sensors::getCodeurPorte() {
-    return angle_porte * (360.0f / 674);
+    return angle_porte * (360.0f / 1023.0f);
 }
 
 void Sensors::getTension() {
@@ -199,31 +199,26 @@ bool Sensors::setLimitCourant(int limite) {
     return false;
 }
 
-int lireRegistre(uint8_t reg) {
-  Wire.beginTransmission(AS5600_ADDRESS);
-  Wire.write(reg);  // Envoie l'adresse du registre
-  if (Wire.endTransmission(false) != 0) {  // "false" pour ne pas envoyer STOP
-    return -1;  // Erreur I2C (pas de réponse)
-  }
-  // Demande 1 octet de données
-  if (Wire.requestFrom(AS5600_ADDRESS, (uint8_t)1) != 1) {
-    return -1;  // Pas de données reçues
-  }
-  return Wire.read();  // Lit et retourne la valeur
+int lireRegistre(uint8_t adresse, uint8_t reg) {
+    Wire.beginTransmission(adresse);
+    Wire.write(reg);
+    if (Wire.endTransmission(false) != 0) {
+        return -1;
+    }
+    if (Wire.requestFrom(adresse, (uint8_t)1) != 1) {
+        return -1;
+    }
+    return Wire.read();
 }
 
 bool Sensors::checkCodeurPorte() {
-    // 1. Vérification de la communication I2C
-    int status = lireRegistre(AS5600_STATUS_REG);
-    if (status == -1) {
+    int high = lireRegistre(MT6701_ADDRESS, MT6701_ANGLE_REG);
+    if (high < 0)
         return false;
-    }
-    // 2. Vérification de l'aimant
-    bool magnetTooWeak = (status & MAGNET_TOO_WEAK) != 0;
-    bool magnetTooStrong = (status & MAGNET_TOO_STRONG) != 0;
-    bool magnetDetected = (status & MAGNET_DETECTED) != 0;
-    if (!magnetDetected && (magnetTooWeak || magnetTooStrong)) {
+    int low = lireRegistre(MT6701_ADDRESS, MT6701_ANGLE_REG+1);
+    if (low < 0)
         return false;
-    }
-    return true; // pas d'erreur
+    uint16_t angle = ((uint16_t)high << 6) | (low & 0x3F);
+    // angle est compris entre 0 et 16383
+    return angle <= 16383;
 }

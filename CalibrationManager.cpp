@@ -232,7 +232,7 @@ bool CalibrationManager::exec() {
     case CalibrationManager::ETAT::BUTEE_BASSE:
       {
         if (fermeture(PWM_CALIBRATION) || blocage) {
-          angle_butee_basse = 675 - analogRead(CODEUR_PORTE);
+          angle_butee_basse = analogRead(CODEUR_PORTE);
           moteur.stop();
           changerEtat(CalibrationManager::ETAT::ATTENTE_BAS);
         }
@@ -248,7 +248,7 @@ bool CalibrationManager::exec() {
     case CalibrationManager::ETAT::BUTEE_HAUTE:
       {
         if (ouverture(PWM_CALIBRATION) || blocage) {
-          angle_butee_haute = 675 - analogRead(CODEUR_PORTE);
+          angle_butee_haute = analogRead(CODEUR_PORTE);
           moteur.stop();
           changerEtat(CalibrationManager::ETAT::ENREGISTREMENT);
         }
@@ -258,7 +258,7 @@ bool CalibrationManager::exec() {
       {
         if (millis() - time_etat >= 1000) {
           sendReponseOK("DO", "CALIBRATION", "Fin de calibration : limite haute=" + String(angle_butee_haute) + " ; limite basse=" + String(angle_butee_basse));
-          setCalibration(getConfig(), (angle_butee_haute + (675 - angle_butee_basse)) % 675, 0, 675-angle_butee_basse);
+          setCalibration(getConfig(), (angle_butee_haute + (ADC_MAX - angle_butee_basse)) % ADC_MAX, 0, ADC_MAX-angle_butee_basse);
           changerEtat(CalibrationManager::ETAT::NONE);
         }
         break;

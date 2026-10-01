@@ -119,7 +119,7 @@ void ordonnanceur() {
                     machine.changerEtat(StateMachine::ETAT::ERREUR);
                     buzzer.sequenceErreur();
                 } else {
-                    sendInfo(("Limite de la porte atteinte" + String(capteurs.getCodeurPorte())).c_str());
+                    sendInfo(("Limite de la porte atteinte " + String(capteurs.getCodeurPorte())).c_str());
                     machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
                 }
                 capteurs.resetSecurities();
