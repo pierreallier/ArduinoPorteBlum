@@ -15,7 +15,9 @@
 // Valeur pour indiquer qu'une valeur n'est pas initialisée
 #define UNINITIALIZED_VALUE 0xFFFF
 
-const uint16_t PWM_CALIBRATION = 250; // Vitesse moteur pour la calibration
+constexpr uint16_t PWM_CALIBRATION = 250; // Vitesse moteur pour la calibration
+constexpr uint16_t COURSE_MAX_ADC = (359UL * ADC_MAX) / 360; // Course maximale en ADC (359°) pour éviter le dépassement de 360°
+constexpr uint16_t COURSE_MIN_ADC = (300UL * ADC_MAX) / 360; // Course minimale en ADC pour valider la calibration
 
 class CalibrationManager {
 public:

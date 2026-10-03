@@ -209,13 +209,16 @@ bool CalibrationManager::exec() {
         sendInfo("Debut de calibration");
         ledState = HIGH;
         digitalWrite(LED_CALIBRATION_PIN, HIGH);
+        angle_butee_basse = 0;
+        angle_butee_haute = 0;
         moteur.enable();
         changerEtat(CalibrationManager::ETAT::OUVERTURE);
+        ouverture(PWM_CALIBRATION);
         break;
       }
     case CalibrationManager::ETAT::OUVERTURE:
       {
-        if (ouverture(PWM_CALIBRATION) || blocage) {
+        if (blocage) {
           moteur.stop();
           changerEtat(CalibrationManager::ETAT::ATTENTE_HAUT);
         }
@@ -224,16 +227,18 @@ bool CalibrationManager::exec() {
     case CalibrationManager::ETAT::ATTENTE_HAUT:
       {
         if (millis() - time_etat >= 1000) {
-          ;
           changerEtat(CalibrationManager::ETAT::BUTEE_BASSE);
+          fermeture(PWM_CALIBRATION);
         }
         break;
       }
     case CalibrationManager::ETAT::BUTEE_BASSE:
       {
-        if (fermeture(PWM_CALIBRATION) || blocage) {
-          angle_butee_basse = analogRead(CODEUR_PORTE);
+        if (blocage) {
           moteur.stop();
+          angle_butee_basse = analogRead(CODEUR_PORTE);
+          Serial.print("Angle Bas : ");
+          Serial.println(angle_butee_basse);
           changerEtat(CalibrationManager::ETAT::ATTENTE_BAS);
         }
         break;
@@ -242,14 +247,17 @@ bool CalibrationManager::exec() {
       {
         if (millis() - time_etat >= 1000) {
           changerEtat(CalibrationManager::ETAT::BUTEE_HAUTE);
+          ouverture(PWM_CALIBRATION);
         }
         break;
       }
     case CalibrationManager::ETAT::BUTEE_HAUTE:
       {
-        if (ouverture(PWM_CALIBRATION) || blocage) {
-          angle_butee_haute = analogRead(CODEUR_PORTE);
+        if (blocage) {
           moteur.stop();
+          angle_butee_haute = analogRead(CODEUR_PORTE);
+          Serial.print("Angle Haut : ");
+          Serial.println(angle_butee_haute);
           changerEtat(CalibrationManager::ETAT::ENREGISTREMENT);
         }
         break;
@@ -257,8 +265,13 @@ bool CalibrationManager::exec() {
     case CalibrationManager::ETAT::ENREGISTREMENT:
       {
         if (millis() - time_etat >= 1000) {
+          uint16_t course = ADC_MAX - abs((int)angle_butee_haute - (int)angle_butee_basse);
+          if (course < COURSE_MIN_ADC || course > COURSE_MAX_ADC) {
+            changerEtat(CalibrationManager::ETAT::ERREUR);
+            break;
+          }
           sendReponseOK("DO", "CALIBRATION", "Fin de calibration : limite haute=" + String(angle_butee_haute) + " ; limite basse=" + String(angle_butee_basse));
-          setCalibration(getConfig(), (angle_butee_haute + (ADC_MAX - angle_butee_basse)) % ADC_MAX, 0, ADC_MAX-angle_butee_basse);
+          setCalibration(getConfig(), course, 0, ADC_MAX-angle_butee_basse);
           changerEtat(CalibrationManager::ETAT::NONE);
         }
         break;
@@ -266,7 +279,7 @@ bool CalibrationManager::exec() {
     case CalibrationManager::ETAT::ERREUR:
       {
         if (millis() - time_etat >= 1000) {
-          sendReponseNOK("DO", "CALIBRATION", "Calibration échouée - Limite de courant atteinte");
+          sendReponseNOK("DO", "CALIBRATION", "Calibration échouée");
           changerEtat(CalibrationManager::ETAT::NONE);
         }
         break;
