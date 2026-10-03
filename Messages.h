@@ -181,4 +181,17 @@ inline bool sendMesures(uint32_t time, float tension, int pwm, float courant, fl
     //return SerialTxBuffer::instance().push('M', values);
 }
 
+/**
+ * @brief Envoie un message du mode test.
+ * Format : T;CIBLE;VALEUR
+ */
+inline bool sendTest(const char* cible, const char* valeur) {
+    return SerialTxBuffer::instance().push('T', cible, valeur);
+}
+inline bool sendTest(const char* cible, long valeur) {
+    char buf[12];
+    snprintf(buf, sizeof(buf), "%ld", valeur);
+    return sendTest(cible, buf);
+}
+
 #endif

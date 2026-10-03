@@ -372,3 +372,25 @@ bool StateMachine::setConsigne(const String& type, const String* params, int nbP
     }
     return consigne.setConsigne(type, params, nbParams);
 }
+
+void StateMachine::suspendre() {
+    // exec() ne tourne pas pendant le test : on applique l'arrêt nous-mêmes
+    moteur.stop();
+    moteur.disable();
+    moteur.update();   // PWM à 0 et STBY à LOW
+}
+
+void StateMachine::reprendre() {
+    capteurs.isBlocage();   // Efface un éventuel blocage mémorisé avant le test
+
+    if (etat == StateMachine::ETAT::CALIBRATION) {
+        // Calibration interrompue : retour à REPOS avec calibration requise (LED clignotante)
+        calibration.changerEtat(CalibrationManager::ETAT::DEBUT);
+        digitalWrite(LED_CALIBRATION_PIN, LOW);
+        time_etat = millis();
+        sendEtat(ETAT_NAMES[static_cast<size_t>(etat)]);
+        sendInfo("Calibration interrompue par le test : a relancer");
+        return;
+    }
+    time_etat = millis();
+}

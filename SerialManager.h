@@ -31,6 +31,9 @@ class SerialManager {
         void readSerial();
 
         uint16_t getMesurePeriode();
+
+        bool demandeTest = false;                          // Levé par DO TEST, consommé par loop()
+        inline void resync() { time_precedent = millis(); } // Resynchronise le timer après le test
     
     private:
         Motor& moteur;

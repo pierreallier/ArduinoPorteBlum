@@ -3,6 +3,7 @@
 #include <Wire.h>
 #include "Messages.h"
 #include "Buzzer.h"
+#include "TestManager.h"
 
 #include "StateMachine.h"
 #include "Sensors.h"
@@ -17,6 +18,7 @@ Bounce2::Button btPilotage;
 
 Sensors capteurs;
 Buzzer buzzer;
+TestManager testeur(buzzer);
 Motor moteur(capteurs);
 CalibrationManager calibration(moteur, capteurs);
 StateMachine machine(moteur, capteurs, calibration);
@@ -82,10 +84,28 @@ void setup() {
 
 void loop() {
     portserie.task();
-    calibration.task();
     machine.exec();
-    ordonnanceur();
+    if (portserie.demandeTest) {
+        portserie.demandeTest = false;
+        lancerTest();
+    } else {
+        calibration.task();
+        ordonnanceur();
+    }
     buzzer.task();
+}
+
+void lancerTest() {
+    machine.suspendre();
+    testeur.run();                    // Bloquant jusqu'à DO STOP
+    machine.reprendre();
+
+    // Resynchronisation des timers pour éviter le rattrapage des cycles manqués
+    tVerif = tMesure = tBt  = tEnvoi = millis();
+    portserie.resync();
+
+    // Évite qu'un appui pendant le test soit pris pour une nouvelle commande
+    btTest.update(); btWireless.update(); btCalibration.update(); btPilotage.update();
 }
 
 void ordonnanceur() {

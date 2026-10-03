@@ -252,6 +252,16 @@ void SerialManager::_DO(String commande) {
         resetArduino();
         return;
     }
+    if (commande.startsWith("TEST")) {
+        if (machine.etat == StateMachine::ETAT::REPOS ||
+            machine.etat == StateMachine::ETAT::CALIBRATION) {
+            demandeTest = true;
+            sendReponseOK("DO", "TEST", "Demandée");
+        } else {
+            sendReponseNOK("DO", "TEST", "Possible uniquement au repos ou en calibration");
+        }
+        return;
+    }
     if (commande.startsWith("INIT"))
         machine.changerEtat(StateMachine::ETAT::INIT);
     else if (commande.startsWith("OUVRIR"))
@@ -267,7 +277,7 @@ void SerialManager::_DO(String commande) {
         return;
     }
     else {
-        sendError("Commande DO inconnue {RESET,INIT,OUVRIR,FERMER,STOP,PILOTER}.");
+        sendError("Commande DO inconnue {RESET,INIT,OUVRIR,FERMER,STOP,PILOTER,CALIBRATION,TEST}.");
         return;
     }
     sendReponseOK("DO",commande.c_str(),"Effectuée");

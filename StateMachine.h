@@ -64,6 +64,9 @@ class StateMachine {
             modePilotage = mode;
         }
         bool setConsigne(const String& type, const String* params, int nbParams);
+
+        void suspendre();   // Stoppe le fonctionnement avant le test
+        void reprendre();   // Restaure le fonctionnement après le test
     
     private:
         Motor& moteur;
