@@ -64,8 +64,6 @@ class Sensors {
         float getLimiteHaute() const { return calibrationData.highLimit;}
         void setLimits(CalibrationData c);
 
-        bool checkCodeurPorte();
-
     private:
         int courant_offset = 0;
         unsigned int courant_idx = 0;

@@ -1,15 +1,11 @@
 #include "TestManager.h"
-#include <Wire.h>
 
 // TODO : 
 // - ne pas utiliser la librairie de message mais Serial.print() directement
-// - voir pour s'affranchir de la librairie Wire si on utilise nI2C (pb de compatibilité)
-// - ajouter variable adresse de l'accéléromètre
 
 namespace {
     struct Broche { const char* nom; uint8_t pin; };
-    struct PeripheriqueI2C { const char* nom; uint8_t adresse; };
-
+    
     const Broche LEDS[] = {
         {"LED_MOTOR",       LED_MOTOR_PIN},
         {"LED_CALIBRATION", LED_CALIBRATION_PIN},
@@ -30,21 +26,15 @@ namespace {
         {"CAPTEUR_A4_DETECTEUR_MEUBLE", DETECTEUR_MEUBLE},
         {"CAPTEUR_A5_POTENTIOMETRE",    POTENTIOMETRE}
     };
-    const PeripheriqueI2C I2C_DEVICES[] = {
-        {"I2C_CODEUR_PORTE", MT6701_ADDRESS},
-        {"I2C_Acceleromètre", 0x06}
-    };
 
     const uint8_t NB_LEDS     = sizeof(LEDS)     / sizeof(LEDS[0]);
     const uint8_t NB_BOUTONS  = sizeof(BOUTONS)  / sizeof(BOUTONS[0]);
     const uint8_t NB_CAPTEURS = sizeof(CAPTEURS) / sizeof(CAPTEURS[0]);
-    const uint8_t NB_I2C = sizeof(I2C_DEVICES) / sizeof(I2C_DEVICES[0]);
 
     const uint32_t DUREE_SORTIE    = 1500; // ms par sortie
     const uint8_t  NB_LECTURES     = 5;   // par capteur
     const uint32_t PERIODE_LECTURE = 250;  // ms -> 5 s par capteur
     const uint32_t PERIODE_ENTREES = 20;   // ms (anti-rebond simple)
-    const uint8_t NB_VERIF_I2C = 8;   // 8 x 250 ms = 2 s par capteur
 }
 
 void TestManager::run() {
@@ -144,18 +134,44 @@ void TestManager::lireCommande() {
 }
 
 void TestManager::testI2C() {
-    for (uint8_t i = 0; i < NB_I2C && !quitter; i++) {
-        for (uint8_t k = 0; k < NB_VERIF_I2C && !quitter; k++) {
-            Wire.beginTransmission(I2C_DEVICES[i].adresse);
-            uint8_t err = Wire.endTransmission();   // 0 = le capteur a répondu (ACK)
-            if (err == 0) {
-                sendTest(I2C_DEVICES[i].nom, "OK");
-            } else {
-                char buf[16];
-                snprintf(buf, sizeof(buf), "ABSENT_ERR%u", err);
-                sendTest(I2C_DEVICES[i].nom, buf);
-            }
-            attendre(PERIODE_LECTURE);
-        }
+    if (quitter) return;
+
+    if (!verifierCodeur()) {
+        sendTest("I2C_CODEUR_PORTE", "NON_PRESENT");
+    } else {
+        sendTest("I2C_CODEUR_PORTE", "PRESENT");
     }
+    attendre(PERIODE_LECTURE);        // laisse partir le message (service() vide le buffer TX)
+
+    if (quitter) return;
+
+    if (!verifierBNO()) {
+        sendTest("I2C_ACCELEROMETRE", "NON_PRESENT");
+    } else {
+        sendTest("I2C_ACCELEROMETRE", "PRESENT");
+    }
+    attendre(PERIODE_LECTURE);
+}
+
+bool TestManager::verifierBNO() {
+    if (!bno.isEnabled())
+        return false;
+    bno.update();
+    if (!bno.isConnected())
+        return bno.checkPresence();
+
+    uint32_t t0 = millis();
+    bool demande = false;
+    while ((uint32_t)(millis() - t0) < 50) {
+        bno.update();
+        if (!demande)
+            demande = bno.requestData(millis());   // réessaie tant qu'une lecture précédente est en cours
+        else if (bno.available())
+            break;
+    }
+    return demande && bno.available() && bno.isConnected();
+}
+
+bool TestManager::verifierCodeur() {
+    return codeurPorte.checkPresence(100);
 }

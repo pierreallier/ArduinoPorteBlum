@@ -1,8 +1,9 @@
 #include <Arduino.h>
 #include <Bounce2.h>
-#include <Wire.h>
 #include "Messages.h"
 #include "Buzzer.h"
+#include "BN0055.h"
+#include "MT6701.h"
 #include "TestManager.h"
 
 #include "StateMachine.h"
@@ -17,8 +18,11 @@ Bounce2::Button btCalibration;
 Bounce2::Button btPilotage;
 
 Sensors capteurs;
+BN0055 bno;
+MT6701 codeurPorte;
 Buzzer buzzer;
-TestManager testeur(buzzer);
+
+TestManager testeur(buzzer, codeurPorte, bno);
 Motor moteur(capteurs);
 CalibrationManager calibration(moteur, capteurs);
 StateMachine machine(moteur, capteurs, calibration);
@@ -28,6 +32,7 @@ uint32_t tVerif = 0;
 uint32_t tBt = 0;
 uint32_t tMesure = 0;
 uint32_t tEnvoi = 0;
+uint32_t tBno = 0;
 
 bool is_time_securite = false;
 
@@ -46,15 +51,15 @@ void setup() {
     btPilotage.setPressedState(LOW);
 
     moteur.init(); // Initialisation du moteur et du driver
+    codeurPorte.init(); // Initialisation du codeur absolu de la porte
+    bno.init(); // Initialisation du capteur BN0055
     capteurs.init(); // Initialisation des capteurs
     machine.init(); // Initialisation de la machine à états
     calibration.init(); // Initialisation de la calibration
 
     // Vérification codeur porte I2C
-    Wire.begin();
-    unsigned long startTime = millis();
     bool send_error = false;  // Flag pour éviter d'afficher plusieurs fois l'erreur
-    while (!capteurs.checkCodeurPorte()) {
+    while (!codeurPorte.checkPresence()) {
         if (!send_error) {
             sendError("Erreur sur le capteur I2C de la porte");
             digitalWrite(LED_ERROR_PIN, HIGH);
@@ -77,6 +82,17 @@ void setup() {
         sendWarning("Calibration requise");
     }
 
+    // Vérification capteur BN0055
+    bno.setEnabled(true);
+    if (!bno.checkPresence()) {
+        sendWarning("Capteur BN0055 non détecté");
+        bno.setEnabled(false);  // Désactivation du capteur pour éviter les erreurs de lecture
+    } else {
+        sendInfo("Capteur BN0055 détecté");
+        bno.requestData(0);  // Demande de lecture initiale
+    }
+    portserie.task();
+
     sendInfo("Initialisation terminée");
     buzzer.sequenceInit();
     portserie.task();
@@ -91,6 +107,7 @@ void loop() {
         lancerTest();
     } else {
         calibration.task();
+        bno.update();
         ordonnanceur();
     }
     buzzer.task();
@@ -102,7 +119,7 @@ void lancerTest() {
     machine.reprendre();
 
     // Resynchronisation des timers pour éviter le rattrapage des cycles manqués
-    tVerif = tMesure = tBt  = tEnvoi = millis();
+    tVerif = tMesure = tBt  = tEnvoi = tBno = millis();
     portserie.resync();
 
     // Évite qu'un appui pendant le test soit pris pour une nouvelle commande
@@ -129,6 +146,21 @@ void ordonnanceur() {
         tMesure += PERIODE_MESURE;
         capteurs.mesures(pwm);
     }
+
+    // Envoies des mesures sur le port série
+    if (PERIODE_ENVOI <= 1000 && maintenant - tEnvoi >= PERIODE_ENVOI) {
+        tEnvoi += PERIODE_ENVOI;
+        if (maintenant - tBno >= 5 * PERIODE_ENVOI) {
+            tBno += 5 * PERIODE_ENVOI;
+            sendMesures(bno.getTime(),bno.getAcceleration(0),bno.getAcceleration(1), bno.getAcceleration(2), 
+                        bno.getGyroscope(0), bno.getGyroscope(1), bno.getGyroscope(2), 
+                        bno.getEulerAngle(0), bno.getEulerAngle(1), bno.getEulerAngle(2));
+            bno.requestData(maintenant);
+        } else {
+            sendMesures(capteurs.time_mesures, capteurs.tension, capteurs.pwm, capteurs.courant_moyen, capteurs.angle_moteur, 
+                        capteurs.vitesse_moteur, capteurs.getCodeurPorte(), capteurs.consigne);
+        }
+    } 
 
     // Vérifications des sécurités 
     if (is_time_securite) {
@@ -171,7 +203,7 @@ void ordonnanceur() {
             }
         }
     }
-    
+
     if (maintenant - tBt >= 50) {
         tBt += 50;
         // Vérification des boutons de commande
@@ -200,11 +232,4 @@ void ordonnanceur() {
                 machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
         }
     }
-
-    // Mesures des grandeurs
-    if (PERIODE_ENVOI <= 1000 && maintenant - tEnvoi >= PERIODE_ENVOI) {
-        tEnvoi += PERIODE_ENVOI;
-        sendMesures(capteurs.time_mesures, capteurs.tension, capteurs.pwm, capteurs.courant_moyen, capteurs.angle_moteur, 
-                    capteurs.vitesse_moteur, capteurs.getCodeurPorte(), capteurs.consigne);
-    } 
 }
