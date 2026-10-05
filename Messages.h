@@ -139,8 +139,6 @@ inline bool sendEtat(const char* value, const char* message=nullptr) {
  * @param angle_porte l'angle de la porte (°)
  * @param consigne la consigne du système
  *
- * ATTENTION : il y a un facteur 1000 sur toutes les valeurs sauf le temps (ms)
- *
  * @return true si le message a été envoyé.
  * @return false si non.
  */
@@ -179,6 +177,51 @@ inline bool sendMesures(uint32_t time, float tension, int pwm, float courant, fl
 
     // Envoie via le buffer
     //return SerialTxBuffer::instance().push('M', values);
+}
+
+
+/** 
+ * @brief Envoie les mesures du capteur BN0055.
+ * Format :
+ *     M;time;accelX;accelY;accelZ;gyroX;gyroY;gyroZ;heading;roll;pitch
+ * @param time le temps de la mesure (en ms)
+ * @param accelX l'accélération sur l'axe X (m/s²) 
+ * @param accelY l'accélération sur l'axe Y (m/s²)
+ * @param accelZ l'accélération sur l'axe Z (m/s²)
+ * @param gyroX la vitesse angulaire sur l'axe X (°/s)
+ * @param gyroY la vitesse angulaire sur l'axe Y (°/s)
+ * @param gyroZ la vitesse angulaire sur l'axe Z (°/s)
+ * @param heading l'angle de lacet (°)
+ * @param roll l'angle de roulis (°)
+ * @param pitch l'angle de tangage (°)
+ *
+ * @return true si le message a été envoyé.
+ * @return false si non.
+ */
+inline bool sendMesures(uint32_t time, float acceleration_x, float acceleration_y, float acceleration_z,
+                        float gyro_x, float gyro_y, float gyro_z,
+                        float euler_angle_x, float euler_angle_y, float euler_angle_z) {
+    Serial.print(F("M;"));
+    Serial.print(time);
+    Serial.write(';');
+    Serial.print(acceleration_x);
+    Serial.write(';');
+    Serial.print(acceleration_y);
+    Serial.write(';');
+    Serial.print(acceleration_z);
+    Serial.write(';');
+    Serial.print(gyro_x);
+    Serial.write(';');
+    Serial.print(gyro_y);
+    Serial.write(';');
+    Serial.print(gyro_z);
+    Serial.write(';');
+    Serial.print(euler_angle_x);
+    Serial.write(';');
+    Serial.print(euler_angle_y);
+    Serial.write(';');
+    Serial.println(euler_angle_z);
+    return true;
 }
 
 /**

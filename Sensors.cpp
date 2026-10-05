@@ -1,5 +1,4 @@
 #include "Sensors.h"
-#include <Wire.h>
 
 volatile int32_t ticks_codeur=0;
 void isr_Codeur() {
@@ -197,28 +196,4 @@ bool Sensors::setLimitCourant(int limite) {
         return true;
     }
     return false;
-}
-
-int lireRegistre(uint8_t adresse, uint8_t reg) {
-    Wire.beginTransmission(adresse);
-    Wire.write(reg);
-    if (Wire.endTransmission(false) != 0) {
-        return -1;
-    }
-    if (Wire.requestFrom(adresse, (uint8_t)1) != 1) {
-        return -1;
-    }
-    return Wire.read();
-}
-
-bool Sensors::checkCodeurPorte() {
-    int high = lireRegistre(MT6701_ADDRESS, MT6701_ANGLE_REG);
-    if (high < 0)
-        return false;
-    int low = lireRegistre(MT6701_ADDRESS, MT6701_ANGLE_REG+1);
-    if (low < 0)
-        return false;
-    uint16_t angle = ((uint16_t)high << 6) | (low & 0x3F);
-    // angle est compris entre 0 et 16383
-    return angle <= 16383;
 }
