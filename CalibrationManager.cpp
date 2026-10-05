@@ -265,13 +265,13 @@ bool CalibrationManager::exec() {
     case CalibrationManager::ETAT::ENREGISTREMENT:
       {
         if (millis() - time_etat >= 1000) {
-          uint16_t course = ADC_MAX - abs((int)angle_butee_haute - (int)angle_butee_basse);
+          uint16_t course = angle_butee_haute <= angle_butee_basse ? angle_butee_basse - angle_butee_haute : ADC_MAX - angle_butee_haute + angle_butee_basse;
           if (course < COURSE_MIN_ADC || course > COURSE_MAX_ADC) {
             changerEtat(CalibrationManager::ETAT::ERREUR);
             break;
           }
           sendReponseOK("DO", "CALIBRATION", "Fin de calibration : limite haute=" + String(angle_butee_haute) + " ; limite basse=" + String(angle_butee_basse));
-          setCalibration(getConfig(), course, 0, ADC_MAX-angle_butee_basse);
+          setCalibration(getConfig(), course-5, 0, angle_butee_basse-2);
           changerEtat(CalibrationManager::ETAT::NONE);
         }
         break;

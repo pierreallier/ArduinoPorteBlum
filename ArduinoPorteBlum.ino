@@ -34,6 +34,7 @@ bool is_time_securite = false;
 void setup() {
     portserie.init(); // Initialisation du port série
     buzzer.init(); // Initialiation du buzzer
+    buzzer.disable();
 
     btTest.attach(TEST_BT,INPUT_PULLUP);
     btTest.setPressedState(LOW); 
