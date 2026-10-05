@@ -1,6 +1,8 @@
 #ifndef ANALOGSTATEDETECTOR_H
 #define ANALOGSTATEDETECTOR_H
 
+#include <Arduino.h>
+
 /**
  * @class AnalogStateDetector
  * @brief Détecte les changements d'état d'un capteur analogique avec temporisation.

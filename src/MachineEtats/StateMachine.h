@@ -2,10 +2,10 @@
 #define STATEMACHINE_H
 
 #include <Arduino.h>
-#include "Messages.h"
+#include "../Serial/Messages.h"
 
-#include "Motor.h"
-#include "Sensors.h"
+#include "../Outputs/Motor.h"
+#include "../Inputs/Sensors.h"
 #include "CalibrationManager.h"
 #include "PID.h"
 #include "ConsigneManager.h"

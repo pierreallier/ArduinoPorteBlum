@@ -1,6 +1,6 @@
 #include "CalibrationManager.h"
-#include "Messages.h"
-#include "Constantes.h"
+#include "../Serial/Messages.h"
+#include "../Config/Constantes.h"
 
 const char* const CalibrationManager::ETAT_NAMES[] = {
   "CALIBRATION_DEBUT",
@@ -271,7 +271,7 @@ bool CalibrationManager::exec() {
             break;
           }
           sendReponseOK("DO", "CALIBRATION", "Fin de calibration : limite haute=" + String(angle_butee_haute) + " ; limite basse=" + String(angle_butee_basse));
-          setCalibration(getConfig(), course-5, 0, angle_butee_basse-2);
+          setCalibration(getConfig(), course-2, 0, angle_butee_basse);
           changerEtat(CalibrationManager::ETAT::NONE);
         }
         break;

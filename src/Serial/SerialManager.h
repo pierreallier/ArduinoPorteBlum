@@ -6,9 +6,9 @@
 #include "SerialTxBuffer.h"
 #include "Messages.h"
 
-#include "Sensors.h"
-#include "Motor.h"
-#include "StateMachine.h"
+#include "../Inputs/Sensors.h"
+#include "../Outputs/Motor.h"
+#include "../MachineEtats/StateMachine.h"
 
 #define EEPROM_ADDR_TENVOIS 15
 
@@ -30,7 +30,7 @@ class SerialManager {
         //void printMesures();
         void readSerial();
 
-        uint16_t getMesurePeriode();
+        uint32_t getMesurePeriode();
 
         bool demandeTest = false;                          // Levé par DO TEST, consommé par loop()
         inline void resync() { time_precedent = millis(); } // Resynchronise le timer après le test

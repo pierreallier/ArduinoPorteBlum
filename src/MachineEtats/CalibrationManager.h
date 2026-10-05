@@ -2,10 +2,10 @@
 #define CALIBRATIONMANAGER_H
 
 #include <EEPROM.h>
-#include "Types.h"
-#include "Motor.h"
-#include "Sensors.h"
-#include "AnalogStateDetector.h"
+#include "../Config/Types.h"
+#include "../Outputs/Motor.h"
+#include "../Inputs/Sensors.h"
+#include "../Inputs/AnalogStateDetector.h"
 
 // Adresses EEPROM
 #define EEPROM_ADDR_ACTIVE_FLAG   0   // 1 octet (bool)
@@ -74,7 +74,6 @@ public:
 
     String getCalibrationString();
     
-
     void updateCapteurs(CalibrationManager::Config config) { capteurs.setLimits(calibrationData[config]);}
     void updateCapteurs() { capteurs.setLimits(calibrationData[getConfig()]);}
 

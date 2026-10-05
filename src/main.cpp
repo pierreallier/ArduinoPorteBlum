@@ -1,16 +1,16 @@
 #include <Arduino.h>
 #include <Bounce2.h>
-#include "Messages.h"
-#include "Buzzer.h"
-#include "BN0055.h"
-#include "MT6701.h"
-#include "TestManager.h"
+#include "Serial/Messages.h"
+#include "Outputs/Buzzer.h"
+#include "Inputs/BN0055.h"
+#include "Inputs/MT6701.h"
+#include "MachineEtats/TestManager.h"
 
-#include "StateMachine.h"
-#include "Sensors.h"
-#include "SerialManager.h"
-#include "Motor.h"
-#include "Constantes.h"
+#include "MachineEtats/StateMachine.h"
+#include "Inputs/Sensors.h"
+#include "Serial/SerialManager.h"
+#include "Outputs/Motor.h"
+#include "Config/Constantes.h"
 
 Bounce2::Button btTest;
 Bounce2::Button btWireless;
@@ -35,6 +35,9 @@ uint32_t tEnvoi = 0;
 uint32_t tBno = 0;
 
 bool is_time_securite = false;
+
+void lancerTest();
+void ordonnanceur();
 
 void setup() {
     portserie.init(); // Initialisation du port série
@@ -127,8 +130,8 @@ void lancerTest() {
 }
 
 void ordonnanceur() {
-    int PERIODE_ENVOI = portserie.getMesurePeriode();
-    int PERIODE_MESURE = min(PERIODE_ENVOI,25);
+    uint32_t PERIODE_ENVOI = portserie.getMesurePeriode();
+    uint32_t PERIODE_MESURE = min(PERIODE_ENVOI,25);
     float pwm = moteur.getPWM();
 
     // Tâches périodiques

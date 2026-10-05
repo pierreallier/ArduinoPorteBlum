@@ -2,8 +2,8 @@
 #define MOTOR_H
 
 #include <Arduino.h>
-#include "Sensors.h"
-#include "Constantes.h"
+#include "../Inputs/Sensors.h"
+#include "../Config/Constantes.h"
 
 class Motor {
     public:

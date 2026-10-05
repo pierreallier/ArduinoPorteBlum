@@ -2,8 +2,8 @@
 #define SENSORS_H
 
 #include <Arduino.h>
-#include "Constantes.h"
-#include "Types.h"
+#include "../Config/Constantes.h"
+#include "../Config/Types.h"
 
 // Constantes des capteurs
 constexpr float RAD_PER_TICK = 2.0f * PI / 128.0f;

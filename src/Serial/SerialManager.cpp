@@ -284,7 +284,7 @@ void SerialManager::_DO(String commande) {
 }
 
 void SerialManager::loadMesurePeriode() {
-    periode_echantillonnage_mesures = static_cast<uint16_t>(EEPROM.read(EEPROM_ADDR_TENVOIS))*5;
+    periode_echantillonnage_mesures = static_cast<uint32_t>(EEPROM.read(EEPROM_ADDR_TENVOIS))*5;
 }
 
 void SerialManager::setMesurePeriode(uint16_t periode) {
@@ -293,7 +293,7 @@ void SerialManager::setMesurePeriode(uint16_t periode) {
     periode_echantillonnage_mesures = periode_eeprom * 5;
 }
 
-uint16_t SerialManager::getMesurePeriode() {
+uint32_t SerialManager::getMesurePeriode() {
     return periode_echantillonnage_mesures;
 }
 

@@ -2,7 +2,7 @@
 #define BUZZER_H
 
 #include <Arduino.h>
-#include "Constantes.h"
+#include "../Config/Constantes.h"
 
 class Buzzer {
   public:
