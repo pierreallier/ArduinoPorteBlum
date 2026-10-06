@@ -2,10 +2,10 @@
 #define CALIBRATIONMANAGER_H
 
 #include <EEPROM.h>
-#include "Types.h"
-#include "Motor.h"
-#include "Sensors.h"
-#include "AnalogStateDetector.h"
+#include "../Config/Types.h"
+#include "../Outputs/Motor.h"
+#include "../Inputs/SensorsManager.h"
+#include "../Inputs/AnalogStateDetector.h"
 
 // Adresses EEPROM
 #define EEPROM_ADDR_ACTIVE_FLAG   0   // 1 octet (bool)
@@ -44,7 +44,7 @@ public:
     static const char* const ETAT_NAMES[static_cast<size_t>(ETAT::NB_ETATS)]; // Tableau des noms (même ordre que l'enum ETAT)
 
     
-    CalibrationManager(Motor& m, Sensors& c); // Constructeur
+    CalibrationManager(Motor& m, SensorsManager& c); // Constructeur
 
     void init(); // Initialise les données
     void task(); // Execute les taches périodiques
@@ -64,23 +64,23 @@ public:
     bool getEtat() const {
         return meuble.etat();
     }
-    bool hasChanged() const {
+    bool hasChanged() {
         if (meuble.changed()) {
             updateCapteurs();
             return true;
         }
         return false;
     }
-
-    String getCalibrationString();
     
-
     void updateCapteurs(CalibrationManager::Config config) { capteurs.setLimits(calibrationData[config]);}
     void updateCapteurs() { capteurs.setLimits(calibrationData[getConfig()]);}
 
     // Gestion machine à état
     void changerEtat(CalibrationManager::ETAT nouvelle_etape); // Changer d'état 
     bool exec(); // Execution de la machine à états
+
+    uint16_t getCourse() { return calibrationData[getConfig()].highLimit;}
+    uint16_t getOffset() { return calibrationData[getConfig()].offset;}
 
 private:
     // Gestion EEPROM
@@ -98,7 +98,7 @@ private:
     CalibrationData calibrationData[2]; // 0: ON_FURNITURE, 1: OFF_FURNITURE
 
     Motor& moteur;
-    Sensors& capteurs;
+    SensorsManager& capteurs;
     AnalogStateDetector meuble = AnalogStateDetector(DETECTEUR_MEUBLE, 100, 50, 500);
 
     bool ledState = false;

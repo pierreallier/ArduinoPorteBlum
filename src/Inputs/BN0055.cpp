@@ -176,7 +176,7 @@ bool BN0055::requestData(uint32_t now) {
         return false;
     }
     _state = READING;
-    _lastReadTime = now;
+    _mesures.time = now;
     return true;
 }
 
@@ -209,49 +209,25 @@ bool BN0055::available() {
 }
 
 
-bool BN0055::readData(float &accelX,float &accelY,float &accelZ,
-                      float &gyroX,float &gyroY,float &gyroZ,
-                      float &heading,float &roll,float &pitch) {
+bool BN0055::readData() {
     if (!_dataAvailable)
         return false;
     // Conversion du buffer brut
     // Gyroscope
-    gyroX = makeInt16(_dataBuffer, 0) / 16.0f;
-    gyroY = makeInt16(_dataBuffer, 2) / 16.0f;
-    gyroZ = makeInt16(_dataBuffer, 4) / 16.0f;
+    _mesures.gyroX = ((int32_t)makeInt16(_dataBuffer, 0) * 100) >> 4; // Conversion en centi-degrés/s
+    _mesures.gyroY = ((int32_t)makeInt16(_dataBuffer, 2) * 100) >> 4;
+    _mesures.gyroZ = ((int32_t)makeInt16(_dataBuffer, 4) * 100) >> 4;
     // Euler
-    heading = makeInt16(_dataBuffer, 6) / 16.0f;
-    roll    = makeInt16(_dataBuffer, 8) / 16.0f;
-    pitch   = makeInt16(_dataBuffer, 10) / 16.0f;
+    _mesures.heading = ((int32_t)makeInt16(_dataBuffer, 6) * 100) >> 4; // Conversion en centi-degrés
+    _mesures.roll    = ((int32_t)makeInt16(_dataBuffer, 8) * 100) >> 4;
+    _mesures.pitch   = ((int32_t)makeInt16(_dataBuffer, 10) * 100) >> 4;
     // Accélération linéaire
-    accelX = makeInt16(_dataBuffer, 20) / 100.0f;
-    accelY = makeInt16(_dataBuffer, 22) / 100.0f;
-    accelZ = makeInt16(_dataBuffer, 24) / 100.0f;
+    _mesures.accelX = makeInt16(_dataBuffer, 20); // Conversion en centi-degrés/s²
+    _mesures.accelY = makeInt16(_dataBuffer, 22);
+    _mesures.accelZ = makeInt16(_dataBuffer, 24);
     // Mesure consommée
     _dataAvailable = false;
     return true;
-}
-
-float BN0055::getAcceleration(int axis) {
-    if (axis < 0 || axis > 2)
-        return 0.0f;
-    return makeInt16(_dataBuffer, 20 + axis * 2) / 100.0f;
-}
-
-float BN0055::getGyroscope(int axis) {
-    if (axis < 0 || axis > 2)
-        return 0.0f;
-    return makeInt16(_dataBuffer, axis * 2) / 16.0f;
-}
-
-float BN0055::getEulerAngle(int axis) {
-    if (axis < 0 || axis > 2)
-        return 0.0f;
-    return makeInt16(_dataBuffer, 6 + axis * 2) / 16.0f;
-}
-
-void BN0055::clear() {
-    _dataAvailable = false;
 }
 
 

@@ -1,6 +1,6 @@
 #include "Motor.h"
 
-Motor::Motor(Sensors& c) : capteurs(c) {
+Motor::Motor(SensorsManager& c) : capteurs(c) {
     direction = Motor::DIR::OUVERTURE;
 }
 
@@ -54,8 +54,8 @@ void Motor::disable() {
 
 void Motor::debrayage() {
     // Arrête le moteur en enregistrant quelques mesures
-    codeur_avant_debrayage = capteurs.angle_moteur;
-    courant_avant_debrayage = capteurs.courant_moyen;
+    codeur_avant_debrayage = capteurs.getAngleMoteur();
+    courant_avant_debrayage = capteurs.getCourant();
     if (direction == Motor::DIR::OUVERTURE) {
        setSpeedDir(-150); // Apply a small reverse speed to stop the motor
     } else if (direction == Motor::DIR::FERMETURE) {
@@ -77,10 +77,10 @@ void Motor::update() {
         digitalWrite(STBY_PIN, LOW); // Ensure the motor driver is disabled
         digitalWrite(LED_MOTOR_PIN, LOW); // Indicate motor disabled
     }
-    if (direction == Motor::DIR::OUVERTURE && !capteurs.limite_haute) {
+    if (direction == Motor::DIR::OUVERTURE && !capteurs.isLimiteHaute()) {
         analogWrite(PWM_FOR_PIN, pwm);
         analogWrite(PWM_REV_PIN, 0);
-    } else if (direction == Motor::DIR::FERMETURE && !capteurs.limite_basse) {
+    } else if (direction == Motor::DIR::FERMETURE && !capteurs.isLimiteBasse()) {
         analogWrite(PWM_REV_PIN, pwm);
         analogWrite(PWM_FOR_PIN, 0);
     } else {

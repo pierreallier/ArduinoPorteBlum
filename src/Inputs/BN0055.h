@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <nI2C.h>
+#include "../Config/Types.h"
 
 // Capteur de position BNO055 (9 axes) lu en I2C asynchrone via nI2C.
 //
@@ -53,15 +54,8 @@ public:
 
     // Récupère la dernière mesure disponible.
     // Retourne false si aucune nouvelle donnée n'est disponible.
-    bool readData(float &accelX,float &accelY,float &accelZ,
-                  float &gyroX,float &gyroY,float &gyroZ,
-                  float &heading,float &roll,float &pitch);
-
-    uint32_t getTime() const { return _lastReadTime; }
-    float getAcceleration(int axis); // 0 = X, 1 = Y, 2 = Z
-    float getGyroscope(int axis); // 0 = X, 1 = Y, 2 = Z
-    float getEulerAngle(int axis); // 0 = heading, 1 = roll, 2 = pitch
-    void clear(); // Efface le flag de disponibilité des données
+    bool readData();
+    MesuresBN0055 getMesures() const { return _mesures; }
 
     // Accès lecture seule au buffer brut
     const uint8_t* getDataBuffer() const;
@@ -103,6 +97,7 @@ private:
     CI2C::Handle _i2cHandle;
 
     uint8_t _dataBuffer[DATA_SIZE]; // Buffer I2C.
+    MesuresBN0055 _mesures;
 
     volatile bool _dataAvailable; // Vrai lorsque de nouvelles données sont disponibles
     volatile uint8_t _lastI2CStatus; // Dernière erreur I2C
@@ -111,7 +106,7 @@ private:
     uint32_t _lastDetectionTime;
     uint32_t _modeStartTime;
     uint8_t _mode;
-    uint32_t _lastReadTime = 0;
+    
 
     // Callbacks nI2C
     static BN0055 *_instance;

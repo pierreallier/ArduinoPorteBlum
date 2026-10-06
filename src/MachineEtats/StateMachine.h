@@ -2,10 +2,10 @@
 #define STATEMACHINE_H
 
 #include <Arduino.h>
-#include "Messages.h"
+#include "../Serial/Messages.h"
 
-#include "Motor.h"
-#include "Sensors.h"
+#include "../Outputs/Motor.h"
+#include "../Inputs/SensorsManager.h"
 #include "CalibrationManager.h"
 #include "PID.h"
 #include "ConsigneManager.h"
@@ -15,7 +15,7 @@
 
 class StateMachine {
     public:
-        enum class ETAT : byte {
+        enum class ETAT : uint8_t {
             INIT,
             REPOS,
             FONCTIONNEMENT,
@@ -31,7 +31,7 @@ class StateMachine {
         
         static const char* const ETAT_NAMES[static_cast<size_t>(ETAT::NB_ETATS)]; // Tableau des noms (même ordre que l'enum ETAT)
 
-        enum class MODE_PILOTAGE : byte {
+        enum class MODE_PILOTAGE : uint8_t {
             PWM,
             POSITION,
             VITESSE,
@@ -48,7 +48,7 @@ class StateMachine {
         PID pidPosition;
         PID pidVitesse;
 
-        StateMachine(Motor& m, Sensors& s, CalibrationManager& c);
+        StateMachine(Motor& m, SensorsManager& s);
         void init();
         void changerEtat(StateMachine::ETAT etat_demande);
         void setMode(StateMachine::MODE_PILOTAGE mode);
@@ -67,12 +67,13 @@ class StateMachine {
 
         void suspendre();   // Stoppe le fonctionnement avant le test
         void reprendre();   // Restaure le fonctionnement après le test
+
+        CalibrationManager calibration;
     
     private:
         Motor& moteur;
-        Sensors& capteurs;
+        SensorsManager& capteurs;
         ConsigneManager consigne;
-        CalibrationManager& calibration;
  
         bool etatOuverture(uint16_t speed);
         bool etatFermeture(uint16_t speed);

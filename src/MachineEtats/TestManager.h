@@ -2,11 +2,11 @@
 #define TESTMANAGER_H
 
 #include <Arduino.h>
-#include "Constantes.h"
-#include "Messages.h"
-#include "Buzzer.h"
-#include "BN0055.h"
-#include "MT6701.h"
+#include "../Config/Constantes.h"
+#include "../Serial/Messages.h"
+#include "../Outputs/Buzzer.h"
+#include "../Inputs/BN0055.h"
+#include "../Inputs/MT6701.h"
 
 class TestManager {
     // Teste les entrées et sorties du système, en mode bloquant (pas de multitâche)

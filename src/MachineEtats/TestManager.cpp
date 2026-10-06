@@ -1,8 +1,5 @@
 #include "TestManager.h"
 
-// TODO : 
-// - ne pas utiliser la librairie de message mais Serial.print() directement
-
 namespace {
     struct Broche { const char* nom; uint8_t pin; };
     
@@ -46,13 +43,13 @@ void TestManager::run() {
         etatBoutons[i] = (digitalRead(BOUTONS[i].pin) == LOW);
     tEntrees = millis();
 
-    sendInfo("Debut du mode test (DO STOP pour quitter)");
+    sendDirect('I', "Debut du mode test (DO STOP pour quitter)");
 
     testSorties();
     if (!quitter) testCapteurs();
     if (!quitter) testI2C();
     if (!quitter) {
-        sendInfo("Sequence terminee, entrees toujours surveillees (DO STOP pour quitter)");
+        sendDirect('I', "Sequence test terminée, entrées toujours surveillées (DO STOP pour quitter)");
         while (!quitter) service();
     }
 
@@ -60,12 +57,7 @@ void TestManager::run() {
     for (uint8_t i = 0; i < NB_LEDS; i++)
         digitalWrite(LEDS[i].pin, LOW);
     buzzer.stop();
-    sendInfo("Fin du mode test");
-
-    // Vide le buffer TX avant de rendre la main
-    uint32_t t = millis();
-    while (!SerialTxBuffer::instance().isEmpty() && millis() - t < 500)
-        SerialTxBuffer::instance().send(Serial);
+    sendDirect('I', "Fin du mode test");
 }
 
 void TestManager::testSorties() {
@@ -102,7 +94,6 @@ void TestManager::service() {
     buzzer.task();
     surveillerEntrees();
     lireCommande();
-    SerialTxBuffer::instance().send(Serial);
 }
 
 void TestManager::surveillerEntrees() {
@@ -130,7 +121,7 @@ void TestManager::lireCommande() {
     if (c.indexOf("STOP") >= 0 || c.indexOf("FIN_TEST") >= 0)
         quitter = true;
     else if (c.length() > 0)
-        sendWarning("Mode test actif : DO STOP pour quitter");
+        sendDirect('W', "Mode test actif : DO STOP pour quitter");
 }
 
 void TestManager::testI2C() {

@@ -2,8 +2,8 @@
 #define MOTOR_H
 
 #include <Arduino.h>
-#include "Sensors.h"
-#include "Constantes.h"
+#include "../Inputs/SensorsManager.h"
+#include "../Config/Constantes.h"
 
 class Motor {
     public:
@@ -12,7 +12,7 @@ class Motor {
             FERMETURE = false
         };
 
-        Motor(Sensors& c);
+        Motor(SensorsManager& c);
         void init(); // Initialisation du moteur et du driver
         void setDirection(Motor::DIR dir); // Définit la direction du moteur
         void update(); // Met à jour l'état du moteur en fonction de la consigne et des capteurs
@@ -36,7 +36,7 @@ class Motor {
         int pwm = 0; // valeur PWM pour la vitesse du moteur (0-255)
         bool enabled = false; // état du moteur (activé ou désactivé)
         DIR direction ; // direction du moteur (OUVERTURE ou FERMETURE)
-        Sensors& capteurs;
+        SensorsManager& capteurs;
 };
 
 #endif

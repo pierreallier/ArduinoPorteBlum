@@ -1,6 +1,6 @@
 #include "CalibrationManager.h"
-#include "Messages.h"
-#include "Constantes.h"
+#include "../Serial/Messages.h"
+#include "../Config/Constantes.h"
 
 const char* const CalibrationManager::ETAT_NAMES[] = {
   "CALIBRATION_DEBUT",
@@ -14,7 +14,7 @@ const char* const CalibrationManager::ETAT_NAMES[] = {
   "CALIBRATION_NONE"
 };
 
-CalibrationManager::CalibrationManager(Motor& m, Sensors& c)
+CalibrationManager::CalibrationManager(Motor& m, SensorsManager& c)
   : moteur(m), capteurs(c) {
 }
 
@@ -128,32 +128,6 @@ bool CalibrationManager::getCalibration(CalibrationManager::Config config, int& 
   return true;
 }
 
-String CalibrationManager::getCalibrationString() {
-  String message;
-
-  message = "Mémorisation EEPROM : ";
-  message += eepromActive ? "ON" : "OFF";
-
-  message += " ; Monté sur meuble : ";
-  message += "limite haute=";
-  message += String(calibrationData[ON_FURNITURE].highLimit);
-  message += ", limite basse=";
-  message += String(calibrationData[ON_FURNITURE].lowLimit);
-  message += ", offset=";
-  message += String(calibrationData[ON_FURNITURE].offset);
-
-  message += " ; Démonté du meuble : ";
-  message += "limite haute=";
-  message += String(calibrationData[OFF_FURNITURE].highLimit);
-  message += ", limite basse=";
-  message += String(calibrationData[OFF_FURNITURE].lowLimit);
-  message += ", offset=";
-  message += String(calibrationData[OFF_FURNITURE].offset);
-
-  return message;
-}
-
-
 bool CalibrationManager::isCalibrationUninitialized(CalibrationManager::Config config) {
   return (calibrationData[config].highLimit > 1024 || calibrationData[config].lowLimit > 1024 || calibrationData[config].offset > 1024);
 }
@@ -184,9 +158,9 @@ bool CalibrationManager::fermeture(uint16_t speed) {
 
 
 void CalibrationManager::changerEtat(CalibrationManager::ETAT nouvelle_etape) {
-  sendEtat(ETAT_NAMES[static_cast<size_t>(etat)]);
   time_etat = millis();
   etat = nouvelle_etape;
+  sendEtat((uint8_t)etat);
 }
 
 bool CalibrationManager::exec() {
@@ -206,7 +180,7 @@ bool CalibrationManager::exec() {
   switch (etat) {
     case CalibrationManager::ETAT::DEBUT:
       {
-        sendInfo("Debut de calibration");
+        sendInfo(MSG::INFO_CALIBRATION_DEBUT);
         ledState = HIGH;
         digitalWrite(LED_CALIBRATION_PIN, HIGH);
         angle_butee_basse = 0;
@@ -237,8 +211,6 @@ bool CalibrationManager::exec() {
         if (blocage) {
           moteur.stop();
           angle_butee_basse = analogRead(CODEUR_PORTE);
-          Serial.print("Angle Bas : ");
-          Serial.println(angle_butee_basse);
           changerEtat(CalibrationManager::ETAT::ATTENTE_BAS);
         }
         break;
@@ -256,8 +228,6 @@ bool CalibrationManager::exec() {
         if (blocage) {
           moteur.stop();
           angle_butee_haute = analogRead(CODEUR_PORTE);
-          Serial.print("Angle Haut : ");
-          Serial.println(angle_butee_haute);
           changerEtat(CalibrationManager::ETAT::ENREGISTREMENT);
         }
         break;
@@ -270,8 +240,8 @@ bool CalibrationManager::exec() {
             changerEtat(CalibrationManager::ETAT::ERREUR);
             break;
           }
-          sendReponseOK("DO", "CALIBRATION", "Fin de calibration : limite haute=" + String(angle_butee_haute) + " ; limite basse=" + String(angle_butee_basse));
-          setCalibration(getConfig(), course-5, 0, angle_butee_basse-2);
+          sendReponseOK(MSG::INFO_CALIBRATION_ACHEVEE);
+          setCalibration(getConfig(), course-2, 0, angle_butee_basse);
           changerEtat(CalibrationManager::ETAT::NONE);
         }
         break;
@@ -279,7 +249,7 @@ bool CalibrationManager::exec() {
     case CalibrationManager::ETAT::ERREUR:
       {
         if (millis() - time_etat >= 1000) {
-          sendReponseNOK("DO", "CALIBRATION", "Calibration échouée");
+          sendReponseNOK(MSG::INFO_CALIBRATION_ECHEC);
           changerEtat(CalibrationManager::ETAT::NONE);
         }
         break;

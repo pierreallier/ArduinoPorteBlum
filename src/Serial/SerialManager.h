@@ -3,12 +3,12 @@
 
 #include <Arduino.h>
 #include <EEPROM.h>
-#include "SerialTxBuffer.h"
 #include "Messages.h"
+#include "../Config/Codes.h"
 
-#include "Sensors.h"
-#include "Motor.h"
-#include "StateMachine.h"
+#include "../Inputs/SensorsManager.h"
+#include "../Outputs/Motor.h"
+#include "../MachineEtats/StateMachine.h"
 
 #define EEPROM_ADDR_TENVOIS 15
 
@@ -17,29 +17,28 @@ constexpr float RAD_TO_TURN = 1.0f / (2.0f * PI);
 
 class SerialManager {
     public:
-        SerialManager(Motor& m, Sensors& s, StateMachine& ma, CalibrationManager& c);
+        SerialManager(SensorsManager& s, StateMachine& ma);
         void init();
         void task();
 
         inline void printStart() { 
             Serial.println(F("\n==== Pilotage Porte Blum ====\n"));
-            Serial.flush();
-            delay(500);
+        }
+        inline void printFinInit() { 
+            Serial.println(F("\n== Initialisation terminée ==\n"));
         }
 
         //void printMesures();
         void readSerial();
 
-        uint16_t getMesurePeriode();
+        uint32_t getMesurePeriode();
 
         bool demandeTest = false;                          // Levé par DO TEST, consommé par loop()
         inline void resync() { time_precedent = millis(); } // Resynchronise le timer après le test
     
     private:
-        Motor& moteur;
-        Sensors& capteurs;
+        SensorsManager& capteurs;
         StateMachine& machine;
-        CalibrationManager& calibration;
 
         uint32_t time_precedent = 0;    
         uint16_t periode_echantillonnage_mesures = 25;

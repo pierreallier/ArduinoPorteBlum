@@ -8,7 +8,7 @@ void resetArduino() {
     }
 }
 
-SerialManager::SerialManager(Motor& m, Sensors& s, StateMachine& ma, CalibrationManager& c) : moteur(m),capteurs(s),machine(ma),calibration(c) {
+SerialManager::SerialManager(SensorsManager& s, StateMachine& ma) : capteurs(s),machine(ma) {
 }
 
 void SerialManager::init() {
@@ -22,7 +22,7 @@ void SerialManager::task() {
     if (millis() - time_precedent >= 100) {
         time_precedent += 100;
         readSerial(); // Traitement des données reçues
-        SerialTxBuffer::instance().send(Serial); // Envoi des données en attente
+        sendEvents();
     }
 }
 
@@ -38,7 +38,7 @@ void SerialManager::readSerial() {
         } else if (command.startsWith("DO")) {
             _DO(command.substring(2));
         } else {
-            sendError("Commande inconnue {SET,GET,DO}.");
+            sendError(MSG::ERR_CMD_INCONNUE);
         }
     }
 }
@@ -60,14 +60,14 @@ void SerialManager::_SET(String commande) {
             active = false;
         }
         else if (valeurs == "EFFACER") {
-            calibration.clearEeprom();
+            machine.calibration.clearEeprom();
         }
         else {
-            sendReponseNOK("SET","CALIBRATION","Valeur attendue : ON / OFF / EFFACER");
+            sendReponseNOK(MSG::ERR_CALIBRATION_SET);
             return;
         }
-        calibration.setEepromActive(active);
-        sendReponseOK("SET", "CALIBRATION", calibration.getCalibrationString());
+        machine.calibration.setEepromActive(active);
+        sendReponseOK(MSG::INFO_CALIBRATION_SET);
         return;
     }
     else if (commande.startsWith("COURANT") && machine.etat == StateMachine::ETAT::REPOS) {
@@ -75,9 +75,9 @@ void SerialManager::_SET(String commande) {
         valeurs.trim();
         float limite = valeurs.substring(0).toFloat();
         if (capteurs.setLimitCourant(limite))
-            sendReponseOK("SET","COURANT","Limite de courant modifiée à la valeur " + String(capteurs.getLimitCourant(), 2));
+            sendReponseOK(MSG::INFO_COURANT_SET);
         else
-            sendReponseNOK("SET","COURANT","Limite de courant incompatible (entre 0 et 2.0). Valeur non modifiée");
+            sendReponseNOK(MSG::ERR_COURANT_SET);
     }
     // Configuration du mode de pilotage
     else if (commande.startsWith("MODE") && machine.etat != StateMachine::ETAT::PILOTAGE) {
@@ -92,7 +92,7 @@ void SerialManager::_SET(String commande) {
         else if (valeur == "POSITION_VITESSE")
             machine.setModePilotage(StateMachine::MODE_PILOTAGE::POSITION_VITESSE);
         else  {
-            sendReponseNOK("SET","MODE","Mode de pilotage inconnu : " + valeur);
+            sendReponseNOK(MSG::ERR_PILOTAGE_SET);
             return;
         }
         // C'est le stateMachine qui renvoie le message de la bonne execution du changement
@@ -102,11 +102,11 @@ void SerialManager::_SET(String commande) {
         String items[10];
         int nbItems = splitCommande(commande, items, 10);
         if (nbItems < 2) {
-            sendReponseNOK("SET","CONSIGNE","Type de consigne manquant {POTENTIOMETRE,ECHELON,RAMPE,TRAPEZE,SINUS}");
+            sendReponseNOK(MSG::ERR_CONSIGNE_SET);
             return;
         }
         if (machine.setConsigne(items[1], &items[2], nbItems - 2)) {
-            sendReponseOK("SET","CONSIGNE","Consigne mise à jour");
+            sendReponseOK(MSG::INFO_CONSIGNE_SET);
         }
     }
     // Configuration des PID
@@ -118,7 +118,7 @@ void SerialManager::_SET(String commande) {
         int sep2 = parametres.indexOf(' ', sep1 + 1);
         int sep3 = parametres.indexOf(' ', sep2 + 1);
         if (sep1 == -1 || sep2 == -1 || sep3 == -1) {
-            sendReponseNOK("SET","PID","TYPE [VITESSE|POSITION] KP KI KD attendus");
+            sendReponseNOK(MSG::ERR_PID_SET);
             return;
         }
         String type_pid = parametres.substring(0, sep1);
@@ -130,10 +130,10 @@ void SerialManager::_SET(String commande) {
         else if (type_pid == "POSITION")
             machine.setPIDPosition(kp, ki, kd);
         else {
-            sendReponseNOK("SET","PID","inconnu : " + type_pid);
+            sendReponseNOK(MSG::ERR_PID_TYPE_SET);
             return;
         }
-        sendReponseOK("SET","PID","Configuration du PID effectuée");
+        sendReponseOK(MSG::INFO_PID_SET);
     }
     // Gestion de la fréquence d'envoie des mesures
     else if (commande.startsWith("MESURES")) {
@@ -141,32 +141,32 @@ void SerialManager::_SET(String commande) {
         valeur.trim();
         // Vérification : chaîne non vide
         if (valeur.length() == 0) {
-            sendReponseNOK("SET","MESURES","periode manquante");
+            sendReponseNOK(MSG::ERR_FREQ_MESURES_SET);
             return;
         }
         // Vérification : uniquement des chiffres
         for (unsigned int i = 0; i < valeur.length(); i++) {
             if (!isDigit(valeur[i])) {
-                sendReponseNOK("SET","MESURES","periode invalide");
+                sendReponseNOK(MSG::ERR_FREQ_MESURES_SET);
                 return;
             }
         }
         uint16_t periode = valeur.toInt();
         periode = (periode / 5)*5;
         if (periode > 1275) {
-            sendReponseNOK("SET","MESURES","Periode trop grande " + String(periode));
+            sendReponseNOK(MSG::ERR_FREQ_MESURES_SET);
             return;
         }
         if (periode >= 5) {
             setMesurePeriode(periode);
-            sendReponseOK("SET","MESURES","Envoi des mesures toutes les " + String(periode) + " ms");
+            sendReponseOK(MSG::INFO_FREQ_MESURES,periode);
         } else {
             setMesurePeriode(1275);
-            sendReponseOK("SET","MESURES","Envoi des mesures désactivé");
+            sendReponseOK(MSG::INFO_MESURES_DESACTIVE);
         }
     }
     else {
-        sendError("Commande SET inconnue {LIMITES,COURANT,MODE,CONSIGNE,PID,MESURES}");
+        sendError(MSG::ERR_CMD_SET_INCONNUE);
         return;
     }
 
@@ -177,70 +177,82 @@ void SerialManager::_GET(String commande) {
     commande.toUpperCase(); // Convertit la commande
 
     if (commande.startsWith("CALIBRATION")) {
-        if (calibration.isCalibrated())
-            sendReponseOK("GET","CALIBRATION","Système calibré;" + calibration.getCalibrationString());
+        if (machine.calibration.isCalibrated()) {
+            sendMessage(MSG::INFO_CALIBRE);
+            sendMessage(MSG::INFO_COURSE, machine.calibration.getCourse());
+            sendReponseOK(MSG::INFO_OFFSET, machine.calibration.getOffset());
+        }
         else 
-            sendReponseNOK("GET","CALIBRATION","Système non calibré;" + calibration.getCalibrationString());
+            sendReponseNOK(MSG::ERR_NON_CALIBRE);
     }
     else if (commande.startsWith("LIMITS")) {
-        if (calibration.isCalibrated())
-            sendReponseOK("GET","LIMITS","Système calibré : limite basse=" + String(capteurs.getLimiteBasse()) + " limite haute=" + String(capteurs.getLimiteHaute()));
-        else 
-            sendReponseNOK("GET","LIMITS","Système non calibré : limite basse=" + String(capteurs.getLimiteBasse()) + " limite haute=" + String(capteurs.getLimiteHaute()));
-
+        sendMessage(MSG::INFO_LIMITE_BASSE,capteurs.getLimiteBasse());
+        sendReponseOK(MSG::INFO_LIMITE_HAUTE,capteurs.getLimiteHaute());
     }
     else if (commande.startsWith("MESURES")) {
         String valeur = commande.substring(7);
         valeur.trim();
         // Vérification : chaîne non vide
         if (valeur.length() == 0) {
-            sendReponseNOK("GET","MESURES","nom du capteur manquant");
+            sendReponseNOK(MSG::ERR_MESURE_GET);
             return;
         }
         if (valeur == "PERIODE") {
             if (getMesurePeriode() > 1000) {
-                sendReponseOK("GET","MESURES PERIODE","Désactivé");
+                sendReponseOK(MSG::INFO_MESURES_DESACTIVE);
             } else {
-                sendReponseOK("GET","MESURES PERIODE",String(getMesurePeriode()));
+                sendReponseOK(MSG::INFO_FREQ_MESURES,getMesurePeriode());
             }
         }
         if (valeur == "MEUBLE") {
-            sendReponseOK("GET","MESURES MEUBLE",calibration.getEtat() ? "Sur meuble": "Hors meuble");
+            if (machine.calibration.getEtat()) 
+                sendReponseOK(MSG::INFO_SUR_MEUBLE);
+            else
+                sendReponseOK(MSG::INFO_DEMONTE);
         }
         if (valeur == "PORTE") {
-            sendReponseOK("GET","MESURES PORTE",String(capteurs.getRawCodeurPorte()) + " Brut, " + String(capteurs.angle_porte) + "CAN et " + String(capteurs.getCodeurPorte()) + "°");
+            sendReponseOK(MSG::INFO_ANGLE_PORTE, capteurs.getAnglePorte()*100);
         }
     }
     else if (commande.startsWith("MODE")) {
         switch (machine.modePilotage) {
             case StateMachine::MODE_PILOTAGE::PWM: {
-                sendReponseOK("GET","MODE","PWM");
+                sendReponseOK(MSG::DATA_MODE_PWM);
                 break;
             }
             case StateMachine::MODE_PILOTAGE::VITESSE: {
-                sendReponseOK("GET","MODE","VITESSE");
+                sendReponseOK(MSG::DATA_MODE_VITESSE);
                 break;
             }
             case StateMachine::MODE_PILOTAGE::POSITION: {
-                sendReponseOK("GET","MODE","POSITION");
+                sendReponseOK(MSG::DATA_MODE_POSITION);
                 break;
             }
             case StateMachine::MODE_PILOTAGE::POSITION_VITESSE: {
-                sendReponseOK("GET","MODE","POSITION_VITESSE");
+                sendReponseOK(MSG::DATA_MODE_PV);
                 break;
             }
             default: {
-                sendReponseNOK("GET","MODE","Invalide");
+                sendReponseNOK(MSG::ERR_MODE);
                 break;
             }
         }
     }
     else if (commande.startsWith("PID")) {
-        sendReponseOK("GET","PID VITESSE",(String)machine.pidVitesse.kp + ";" + (String)machine.pidVitesse.ki + ";" + (String)machine.pidVitesse.kd);
-        sendReponseOK("GET","PID POSITION",(String)machine.pidPosition.kp + ";" + (String)machine.pidPosition.ki + ";" + (String)machine.pidPosition.kd);
+        sendMessage(MSG::DATA_PID_VITESSE_KP);
+        sendMessage(MSG::DATA_PID_VITESSE_KI);
+        sendMessage(MSG::DATA_PID_VITESSE_KD);
+        sendMessage(MSG::DATA_PID_POSITION_KP);
+        sendMessage(MSG::DATA_PID_POSITION_KI);
+        sendReponseOK(MSG::DATA_PID_POSITION_KD);
+    }
+    else if (commande.startsWith("VERSION")) {
+        sendMessage(MSG::INFO_VERSION_CARTE,VERSION_CARTE);
+        sendMessage(MSG::INFO_VERSION_SOFT,VERSION_SOFT);
+        sendReponseOK(MSG::INFO_VERSION_DEV,VERSION_DEV);
     }
     else
-        sendError("Commande GET inconnue {CALIBRATION,MODE,PID}.");
+        sendError(MSG::ERR_CMD_GET_INCONNUE);
 }
 
 void SerialManager::_DO(String commande) {
@@ -248,7 +260,7 @@ void SerialManager::_DO(String commande) {
     commande.toUpperCase(); // Convertit la commande
 
     if (commande.startsWith("RESET")) {
-        sendReponseOK("DO","RESET","Effectuée");
+        sendDirect('I',"DO RESET Effectuée");
         resetArduino();
         return;
     }
@@ -256,35 +268,45 @@ void SerialManager::_DO(String commande) {
         if (machine.etat == StateMachine::ETAT::REPOS ||
             machine.etat == StateMachine::ETAT::CALIBRATION) {
             demandeTest = true;
-            sendReponseOK("DO", "TEST", "Demandée");
+            sendDirect('I',"TEST Demandée");
         } else {
-            sendReponseNOK("DO", "TEST", "Possible uniquement au repos ou en calibration");
+            sendReponseNOK(MSG::ERR_TEST_IMPOSSIBLE);
         }
         return;
     }
-    if (commande.startsWith("INIT"))
+    if (commande.startsWith("INIT")) {
         machine.changerEtat(StateMachine::ETAT::INIT);
-    else if (commande.startsWith("OUVRIR"))
+        sendReponseOK(MSG::INFO_DO_INIT);
+    }
+    else if (commande.startsWith("OUVRIR")) {
         machine.changerEtat(StateMachine::ETAT::OUVERTURE);
-    else if (commande.startsWith("FERMER"))
+        sendReponseOK(MSG::INFO_DO_OUVRIR);
+    }
+    else if (commande.startsWith("FERMER")) {
         machine.changerEtat(StateMachine::ETAT::FERMETURE);
-    else if (commande.startsWith("STOP"))
+        sendReponseOK(MSG::INFO_DO_FERMER);
+    }
+    else if (commande.startsWith("STOP")) {
         machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
-    else if (commande.startsWith("PILOTER"))
+        sendReponseOK(MSG::INFO_DO_STOP);
+    }
+    else if (commande.startsWith("PILOTER")) {
         machine.changerEtat(StateMachine::ETAT::PILOTAGE);
+        sendReponseOK(MSG::INFO_DO_PILOTER);
+    }
     else if (commande.startsWith("CALIBRATION")) {
         machine.changerEtat(StateMachine::ETAT::CALIBRATION);
-        return;
+        sendReponseOK(MSG::INFO_DO_CALIBRATION);
     }
     else {
-        sendError("Commande DO inconnue {RESET,INIT,OUVRIR,FERMER,STOP,PILOTER,CALIBRATION,TEST}.");
+        sendError(MSG::ERR_CMD_DO_INCONNUE);
         return;
     }
-    sendReponseOK("DO",commande.c_str(),"Effectuée");
+    
 }
 
 void SerialManager::loadMesurePeriode() {
-    periode_echantillonnage_mesures = static_cast<uint16_t>(EEPROM.read(EEPROM_ADDR_TENVOIS))*5;
+    periode_echantillonnage_mesures = static_cast<uint32_t>(EEPROM.read(EEPROM_ADDR_TENVOIS))*5;
 }
 
 void SerialManager::setMesurePeriode(uint16_t periode) {
@@ -293,7 +315,7 @@ void SerialManager::setMesurePeriode(uint16_t periode) {
     periode_echantillonnage_mesures = periode_eeprom * 5;
 }
 
-uint16_t SerialManager::getMesurePeriode() {
+uint32_t SerialManager::getMesurePeriode() {
     return periode_echantillonnage_mesures;
 }
 
