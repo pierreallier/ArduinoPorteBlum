@@ -6,7 +6,7 @@
 #include "Messages.h"
 #include "../Config/Codes.h"
 
-#include "../Inputs/Sensors.h"
+#include "../Inputs/SensorsManager.h"
 #include "../Outputs/Motor.h"
 #include "../MachineEtats/StateMachine.h"
 
@@ -17,7 +17,7 @@ constexpr float RAD_TO_TURN = 1.0f / (2.0f * PI);
 
 class SerialManager {
     public:
-        SerialManager(Motor& m, Sensors& s, StateMachine& ma, CalibrationManager& c);
+        SerialManager(Motor& m, SensorsManager& s, StateMachine& ma, CalibrationManager& c);
         void init();
         void task();
 
@@ -38,7 +38,7 @@ class SerialManager {
     
     private:
         Motor& moteur;
-        Sensors& capteurs;
+        SensorsManager& capteurs;
         StateMachine& machine;
         CalibrationManager& calibration;
 

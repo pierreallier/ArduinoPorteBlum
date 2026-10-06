@@ -14,7 +14,7 @@ const char* const CalibrationManager::ETAT_NAMES[] = {
   "CALIBRATION_NONE"
 };
 
-CalibrationManager::CalibrationManager(Motor& m, Sensors& c)
+CalibrationManager::CalibrationManager(Motor& m, SensorsManager& c)
   : moteur(m), capteurs(c) {
 }
 
@@ -127,32 +127,6 @@ bool CalibrationManager::getCalibration(CalibrationManager::Config config, int& 
   offset = calibrationData[config].offset;
   return true;
 }
-
-String CalibrationManager::getCalibrationString() {
-  String message;
-
-  message = "Mémorisation EEPROM : ";
-  message += eepromActive ? "ON" : "OFF";
-
-  message += " ; Monté sur meuble : ";
-  message += "limite haute=";
-  message += String(calibrationData[ON_FURNITURE].highLimit);
-  message += ", limite basse=";
-  message += String(calibrationData[ON_FURNITURE].lowLimit);
-  message += ", offset=";
-  message += String(calibrationData[ON_FURNITURE].offset);
-
-  message += " ; Démonté du meuble : ";
-  message += "limite haute=";
-  message += String(calibrationData[OFF_FURNITURE].highLimit);
-  message += ", limite basse=";
-  message += String(calibrationData[OFF_FURNITURE].lowLimit);
-  message += ", offset=";
-  message += String(calibrationData[OFF_FURNITURE].offset);
-
-  return message;
-}
-
 
 bool CalibrationManager::isCalibrationUninitialized(CalibrationManager::Config config) {
   return (calibrationData[config].highLimit > 1024 || calibrationData[config].lowLimit > 1024 || calibrationData[config].offset > 1024);

@@ -8,7 +8,7 @@ void resetArduino() {
     }
 }
 
-SerialManager::SerialManager(Motor& m, Sensors& s, StateMachine& ma, CalibrationManager& c) : moteur(m),capteurs(s),machine(ma),calibration(c) {
+SerialManager::SerialManager(Motor& m, SensorsManager& s, StateMachine& ma, CalibrationManager& c) : moteur(m),capteurs(s),machine(ma),calibration(c) {
 }
 
 void SerialManager::init() {

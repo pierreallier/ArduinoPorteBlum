@@ -7,7 +7,7 @@
 #include "MachineEtats/TestManager.h"
 
 #include "MachineEtats/StateMachine.h"
-#include "Inputs/Sensors.h"
+#include "Inputs/SensorsManager.h"
 #include "Serial/SerialManager.h"
 #include "Outputs/Motor.h"
 
@@ -18,7 +18,7 @@ Bounce2::Button btWireless;
 Bounce2::Button btCalibration;
 Bounce2::Button btPilotage;
 
-Sensors capteurs;
+SensorsManager capteurs;
 BN0055 bno;
 MT6701 codeurPorte;
 Buzzer buzzer;

@@ -14,7 +14,7 @@ const char* const StateMachine::ETAT_NAMES[] ={
 };
 
 
-StateMachine::StateMachine(Motor& m, Sensors& s, CalibrationManager& c) : moteur(m), capteurs(s), consigne(), calibration(c) {
+StateMachine::StateMachine(Motor& m, SensorsManager& s, CalibrationManager& c) : moteur(m), capteurs(s), consigne(), calibration(c) {
 }
 
 void StateMachine::init() {
@@ -164,7 +164,7 @@ bool StateMachine::etatOuverture(uint16_t speed) {
     moteur.setDirection(Motor::DIR::OUVERTURE);
     moteur.setSpeed(speed);
     capteurs.setConsigne(speed);
-    if (capteurs.limite_haute) {
+    if (capteurs.isLimiteHaute()) {
         moteur.stop();
         return true;
     }
@@ -176,7 +176,7 @@ bool StateMachine::etatFermeture(uint16_t speed) {
     moteur.setDirection(Motor::DIR::FERMETURE);
     moteur.setSpeed(speed);
     capteurs.setConsigne(speed);
-    if (capteurs.limite_basse) {
+    if (capteurs.isLimiteBasse()) {
         moteur.stop();
         return true;
     }
@@ -186,7 +186,7 @@ bool StateMachine::etatFermeture(uint16_t speed) {
 bool StateMachine::etatDebrayage() {
     /* Gestion du debrayage du moteur */
     int32_t delta_angle = abs(capteurs.getAngleMoteur() - moteur.codeur_avant_debrayage);
-    //float delta_courant = abs(1 - moteur.courant_avant_debrayage/capteurs.courant_moyen);
+    //float delta_courant = abs(1 - moteur.courant_avant_debrayage/capteurs.getCourant());
     if (millis() - time_etat >= 200 || delta_angle > 100 ) { //|| delta_courant > 0.5) {
         moteur.stop();
         return true;

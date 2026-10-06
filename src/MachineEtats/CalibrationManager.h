@@ -4,7 +4,7 @@
 #include <EEPROM.h>
 #include "../Config/Types.h"
 #include "../Outputs/Motor.h"
-#include "../Inputs/Sensors.h"
+#include "../Inputs/SensorsManager.h"
 #include "../Inputs/AnalogStateDetector.h"
 
 // Adresses EEPROM
@@ -44,7 +44,7 @@ public:
     static const char* const ETAT_NAMES[static_cast<size_t>(ETAT::NB_ETATS)]; // Tableau des noms (même ordre que l'enum ETAT)
 
     
-    CalibrationManager(Motor& m, Sensors& c); // Constructeur
+    CalibrationManager(Motor& m, SensorsManager& c); // Constructeur
 
     void init(); // Initialise les données
     void task(); // Execute les taches périodiques
@@ -71,8 +71,6 @@ public:
         }
         return false;
     }
-
-    String getCalibrationString();
     
     void updateCapteurs(CalibrationManager::Config config) { capteurs.setLimits(calibrationData[config]);}
     void updateCapteurs() { capteurs.setLimits(calibrationData[getConfig()]);}
@@ -100,7 +98,7 @@ private:
     CalibrationData calibrationData[2]; // 0: ON_FURNITURE, 1: OFF_FURNITURE
 
     Motor& moteur;
-    Sensors& capteurs;
+    SensorsManager& capteurs;
     AnalogStateDetector meuble = AnalogStateDetector(DETECTEUR_MEUBLE, 100, 50, 500);
 
     bool ledState = false;
