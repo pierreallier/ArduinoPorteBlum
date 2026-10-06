@@ -14,7 +14,7 @@ const char* const StateMachine::ETAT_NAMES[] ={
 };
 
 
-StateMachine::StateMachine(Motor& m, SensorsManager& s, CalibrationManager& c) : moteur(m), capteurs(s), consigne(), calibration(c) {
+StateMachine::StateMachine(Motor& m, SensorsManager& s) : moteur(m), capteurs(s), consigne(), calibration(m,s) {
 }
 
 void StateMachine::init() {
@@ -22,9 +22,10 @@ void StateMachine::init() {
     modePilotage = StateMachine::MODE_PILOTAGE::PWM;
     time_etat = millis();
 
-    //pinMode(LED_CALIBRATION_PIN, OUTPUT);
     pinMode(LED_PILOTAGE_PIN, OUTPUT);
     pinMode(LED_ERROR_PIN, OUTPUT);
+
+    calibration.init();
 }
 
 void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
@@ -157,6 +158,7 @@ void StateMachine::exec() {
         }
     }
     moteur.update();
+    calibration.task();
 }
 
 bool StateMachine::etatOuverture(uint16_t speed) {

@@ -21,13 +21,12 @@ Bounce2::Button btPilotage;
 SensorsManager capteurs;
 BN0055 bno;
 MT6701 codeurPorte;
-Buzzer buzzer;
 
-TestManager testeur(buzzer, codeurPorte, bno);
+Buzzer buzzer;
 Motor moteur(capteurs);
-CalibrationManager calibration(moteur, capteurs);
-StateMachine machine(moteur, capteurs, calibration);
-SerialManager portserie(moteur, capteurs, machine, calibration);
+
+StateMachine machine(moteur, capteurs);
+SerialManager portserie(capteurs, machine);
 
 uint32_t tVerif = 0;
 uint32_t tBt = 0;
@@ -60,7 +59,6 @@ void setup() {
     bno.init(); // Initialisation du capteur BN0055
     capteurs.init(); // Initialisation des capteurs
     machine.init(); // Initialisation de la machine à états
-    calibration.init(); // Initialisation de la calibration
 
     // Vérification codeur porte I2C
     bool send_error = false;  // Flag pour éviter d'afficher plusieurs fois l'erreur
@@ -76,12 +74,12 @@ void setup() {
     digitalWrite(LED_ERROR_PIN, LOW);
 
     // Vérification type de montage et calibration
-    if (calibration.getEtat()) {
+    if (machine.calibration.getEtat()) { // TODO : Utiliser plutôt le capteur
         sendDirect('I', "servodrive monté sur le meuble");
     } else {
         sendDirect('I', "servodrive non monté sur le meuble");
     }
-    if (calibration.isNotCalibrated()) {
+    if (machine.calibration.isNotCalibrated()) { // TODO : fonction depuis la statemachine
         sendDirect('W', "calibration requise");
     }
 
@@ -101,12 +99,11 @@ void setup() {
 
 void loop() {
     portserie.task();
-    machine.exec();
     if (portserie.demandeTest) {
         portserie.demandeTest = false;
         lancerTest();
     } else {
-        calibration.task();
+        machine.exec();
         bno.update();
         ordonnanceur();
     }
@@ -115,7 +112,7 @@ void loop() {
 
 void lancerTest() {
     machine.suspendre();
-    testeur.run();                    // Bloquant jusqu'à DO STOP
+    TestManager(buzzer, codeurPorte, bno).run();    // Bloquant jusqu'à DO STOP
     machine.reprendre();
 
     // Resynchronisation des timers pour éviter le rattrapage des cycles manqués
@@ -184,13 +181,13 @@ void ordonnanceur() {
                     machine.changerEtat(StateMachine::ETAT::ERREUR);
                     buzzer.sequenceErreur();
                 }
-                if (calibration.hasChanged()) {
-                    if (calibration.getEtat()) {
+                if (machine.calibration.hasChanged()) { //TODO : à partir du capteur
+                    if (machine.calibration.getEtat()) { // TODO : à partir du capteur
                         sendWarning(MSG::INFO_SUR_MEUBLE);
                     } else {
                         sendWarning(MSG::INFO_DEMONTE);
                     }
-                    if (calibration.isNotCalibrated()) {
+                    if (machine.calibration.isNotCalibrated()) { // TODO : fonction dans StateMachine
                         sendWarning(MSG::ERR_CALIBRATION_REQUISE);
                     }
                     if (machine.etat != StateMachine::ETAT::REPOS) {

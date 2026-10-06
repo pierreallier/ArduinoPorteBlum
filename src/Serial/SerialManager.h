@@ -17,7 +17,7 @@ constexpr float RAD_TO_TURN = 1.0f / (2.0f * PI);
 
 class SerialManager {
     public:
-        SerialManager(Motor& m, SensorsManager& s, StateMachine& ma, CalibrationManager& c);
+        SerialManager(SensorsManager& s, StateMachine& ma);
         void init();
         void task();
 
@@ -37,10 +37,8 @@ class SerialManager {
         inline void resync() { time_precedent = millis(); } // Resynchronise le timer après le test
     
     private:
-        Motor& moteur;
         SensorsManager& capteurs;
         StateMachine& machine;
-        CalibrationManager& calibration;
 
         uint32_t time_precedent = 0;    
         uint16_t periode_echantillonnage_mesures = 25;

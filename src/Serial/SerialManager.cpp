@@ -8,7 +8,7 @@ void resetArduino() {
     }
 }
 
-SerialManager::SerialManager(Motor& m, SensorsManager& s, StateMachine& ma, CalibrationManager& c) : moteur(m),capteurs(s),machine(ma),calibration(c) {
+SerialManager::SerialManager(SensorsManager& s, StateMachine& ma) : capteurs(s),machine(ma) {
 }
 
 void SerialManager::init() {
@@ -60,13 +60,13 @@ void SerialManager::_SET(String commande) {
             active = false;
         }
         else if (valeurs == "EFFACER") {
-            calibration.clearEeprom();
+            machine.calibration.clearEeprom();
         }
         else {
             sendReponseNOK(MSG::ERR_CALIBRATION_SET);
             return;
         }
-        calibration.setEepromActive(active);
+        machine.calibration.setEepromActive(active);
         sendReponseOK(MSG::INFO_CALIBRATION_SET);
         return;
     }
@@ -177,10 +177,10 @@ void SerialManager::_GET(String commande) {
     commande.toUpperCase(); // Convertit la commande
 
     if (commande.startsWith("CALIBRATION")) {
-        if (calibration.isCalibrated()) {
+        if (machine.calibration.isCalibrated()) {
             sendMessage(MSG::INFO_CALIBRE);
-            sendMessage(MSG::INFO_COURSE, calibration.getCourse());
-            sendReponseOK(MSG::INFO_OFFSET, calibration.getOffset());
+            sendMessage(MSG::INFO_COURSE, machine.calibration.getCourse());
+            sendReponseOK(MSG::INFO_OFFSET, machine.calibration.getOffset());
         }
         else 
             sendReponseNOK(MSG::ERR_NON_CALIBRE);
@@ -205,7 +205,7 @@ void SerialManager::_GET(String commande) {
             }
         }
         if (valeur == "MEUBLE") {
-            if (calibration.getEtat()) 
+            if (machine.calibration.getEtat()) 
                 sendReponseOK(MSG::INFO_SUR_MEUBLE);
             else
                 sendReponseOK(MSG::INFO_DEMONTE);

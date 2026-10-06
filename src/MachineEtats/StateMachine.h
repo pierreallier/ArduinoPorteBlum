@@ -48,7 +48,7 @@ class StateMachine {
         PID pidPosition;
         PID pidVitesse;
 
-        StateMachine(Motor& m, SensorsManager& s, CalibrationManager& c);
+        StateMachine(Motor& m, SensorsManager& s);
         void init();
         void changerEtat(StateMachine::ETAT etat_demande);
         void setMode(StateMachine::MODE_PILOTAGE mode);
@@ -67,12 +67,13 @@ class StateMachine {
 
         void suspendre();   // Stoppe le fonctionnement avant le test
         void reprendre();   // Restaure le fonctionnement après le test
+
+        CalibrationManager calibration;
     
     private:
         Motor& moteur;
         SensorsManager& capteurs;
         ConsigneManager consigne;
-        CalibrationManager& calibration;
  
         bool etatOuverture(uint16_t speed);
         bool etatFermeture(uint16_t speed);
