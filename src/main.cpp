@@ -74,7 +74,7 @@ void setup() {
     digitalWrite(LED_ERROR_PIN, LOW);
 
     // Vérification type de montage et calibration
-    if (machine.calibration.getEtat()) { // TODO : Utiliser plutôt le capteur
+    if (capteurs.onMeuble()) {
         sendDirect('I', "servodrive monté sur le meuble");
     } else {
         sendDirect('I', "servodrive non monté sur le meuble");
@@ -181,12 +181,8 @@ void ordonnanceur() {
                     machine.changerEtat(StateMachine::ETAT::ERREUR);
                     buzzer.sequenceErreur();
                 }
-                if (machine.calibration.hasChanged()) { //TODO : à partir du capteur
-                    if (machine.calibration.getEtat()) { // TODO : à partir du capteur
-                        sendWarning(MSG::INFO_SUR_MEUBLE);
-                    } else {
-                        sendWarning(MSG::INFO_DEMONTE);
-                    }
+                if (capteurs.meubleChanged()) {
+                        sendWarning(capteurs.onMeuble() ? MSG::INFO_SUR_MEUBLE : MSG::INFO_DEMONTE);
                     if (machine.calibration.isNotCalibrated()) { // TODO : fonction dans StateMachine
                         sendWarning(MSG::ERR_CALIBRATION_REQUISE);
                     }

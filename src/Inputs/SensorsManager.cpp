@@ -13,6 +13,9 @@ void SensorsManager::init() {
     pinMode(DRIVER_CURRENT, INPUT);
     pinMode(POTENTIOMETRE, INPUT);
 
+    // Initialisation du détecteur de meuble
+    meuble.init();
+
     // Initialisation des limites
     limite_courant = LIMITE_COURANT;
 
@@ -113,6 +116,7 @@ void SensorsManager::mesures(int p) {
     readTension();
     readPotentiometre();
     _mesures.pwm = p * 100;
+    meuble.update();
 }
 
 float SensorsManager::addCourant(float current) {

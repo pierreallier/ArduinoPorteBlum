@@ -19,14 +19,13 @@ CalibrationManager::CalibrationManager(Motor& m, SensorsManager& c)
 }
 
 void CalibrationManager::init() {
-  meuble.init();
-
+  
   pinMode(LED_CALIBRATION_PIN, OUTPUT);
   digitalWrite(LED_CALIBRATION_PIN, LOW);
 
   etat = CalibrationManager::ETAT::NONE;
   loadFromEeprom(false);  // Initialiser les données à partir de la RAM
-  updateCapteurs(getConfig());
+  updateCapteursLimits(getConfig());
 
   time_etat = millis();
   time_capteur = time_etat;
@@ -35,11 +34,6 @@ void CalibrationManager::init() {
 
 void CalibrationManager::task() {
   const uint32_t now = millis();
-  // Vérification du détecteur de meuble: toutes les 100 ms
-  if (now - time_capteur >= 100) {
-    time_capteur += 100;
-    meuble.update();
-  }
   // Clignotement LED toutes les 1s si calibration requise
   if (isNotCalibrated() && (etat == CalibrationManager::ETAT::NONE) && (now - time_led >= 1000)) {
     time_led += 1000;
@@ -64,7 +58,7 @@ void CalibrationManager::clearEeprom() {  // Efface les valeurs stockées dans l
   EEPROM.put(EEPROM_ADDR_ON_FURNITURE, calibrationData[ON_FURNITURE]);
   setDefaultValues(OFF_FURNITURE);
   EEPROM.put(EEPROM_ADDR_OFF_FURNITURE, calibrationData[OFF_FURNITURE]);
-  updateCapteurs(getConfig());
+  updateCapteursLimits(getConfig());
 }
 
 void CalibrationManager::loadFromEeprom(bool forced = true) {  // Charger toutes les données depuis l'EEPROM (si faux, ne charge pas)
@@ -107,7 +101,7 @@ void CalibrationManager::setCalibration(CalibrationManager::Config config, uint1
   calibrationData[config].highLimit = highLimit;
   calibrationData[config].lowLimit = lowLimit;
   calibrationData[config].offset = offset;
-  updateCapteurs(config);
+  updateCapteursLimits(config);
   if (eepromActive) {
     if (config == ON_FURNITURE) {
       EEPROM.put(EEPROM_ADDR_ON_FURNITURE, calibrationData[ON_FURNITURE]);

@@ -5,7 +5,6 @@
 #include "../Config/Types.h"
 #include "../Outputs/Motor.h"
 #include "../Inputs/SensorsManager.h"
-#include "../Inputs/AnalogStateDetector.h"
 
 // Adresses EEPROM
 #define EEPROM_ADDR_ACTIVE_FLAG   0   // 1 octet (bool)
@@ -59,21 +58,21 @@ public:
     bool isEepromActive() const {  return eepromActive;} // Vérifier si l'EEPROM est active
 
     Config getConfig() {
-        return meuble.etat() ? CalibrationManager::Config::ON_FURNITURE : CalibrationManager::Config::OFF_FURNITURE;
+        return capteurs.onMeuble() ? CalibrationManager::Config::ON_FURNITURE : CalibrationManager::Config::OFF_FURNITURE;
     }
     bool getEtat() const {
-        return meuble.etat();
+        return capteurs.onMeuble();
     }
     bool hasChanged() {
-        if (meuble.changed()) {
-            updateCapteurs();
+        if (capteurs.meubleChanged()) {
+            updateCapteursLimits();
             return true;
         }
         return false;
     }
     
-    void updateCapteurs(CalibrationManager::Config config) { capteurs.setLimits(calibrationData[config]);}
-    void updateCapteurs() { capteurs.setLimits(calibrationData[getConfig()]);}
+    void updateCapteursLimits(CalibrationManager::Config config) { capteurs.setLimits(calibrationData[config]);}
+    void updateCapteursLimits() { capteurs.setLimits(calibrationData[getConfig()]);}
 
     // Gestion machine à état
     void changerEtat(CalibrationManager::ETAT nouvelle_etape); // Changer d'état 
@@ -99,7 +98,6 @@ private:
 
     Motor& moteur;
     SensorsManager& capteurs;
-    AnalogStateDetector meuble = AnalogStateDetector(DETECTEUR_MEUBLE, 100, 50, 500);
 
     bool ledState = false;
 

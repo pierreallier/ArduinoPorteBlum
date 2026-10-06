@@ -2,6 +2,7 @@
 #define SENSORS_H
 
 #include <Arduino.h>
+#include "AnalogStateDetector.h"
 #include "../Config/Constantes.h"
 #include "../Config/Types.h"
 
@@ -37,6 +38,8 @@ class SensorsManager {
         inline bool isLimiteHaute() {return limite_haute;}
         inline bool isLimiteBasse() {return limite_basse;}
         bool resetSecurities();
+        inline bool onMeuble() const {return meuble.etat();}
+        inline bool meubleChanged() {return meuble.changed();}
 
         inline Mesures getMesures() const { return _mesures;}
         inline float getTension() const { return _mesures.tension / 100.0f;}
@@ -55,6 +58,7 @@ class SensorsManager {
 
     private:
         Mesures _mesures;
+        AnalogStateDetector meuble = AnalogStateDetector(DETECTEUR_MEUBLE, 100, 50, 500);
 
         bool limite_haute = false;
         bool limite_basse = false;
