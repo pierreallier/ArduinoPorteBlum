@@ -10,6 +10,7 @@
 #include "Inputs/Sensors.h"
 #include "Serial/SerialManager.h"
 #include "Outputs/Motor.h"
+
 #include "Config/Constantes.h"
 
 Bounce2::Button btTest;
@@ -44,6 +45,7 @@ void setup() {
     buzzer.init(); // Initialiation du buzzer
     buzzer.disable();
 
+    // Configuration des boutons avec résistance de pull-up interne et état actif à LOW
     btTest.attach(TEST_BT,INPUT_PULLUP);
     btTest.setPressedState(LOW); 
     btWireless.attach(WIRELESS_BT,INPUT_PULLUP);
@@ -64,41 +66,36 @@ void setup() {
     bool send_error = false;  // Flag pour éviter d'afficher plusieurs fois l'erreur
     while (!codeurPorte.checkPresence()) {
         if (!send_error) {
-            sendError("Erreur sur le capteur I2C de la porte");
-            digitalWrite(LED_ERROR_PIN, HIGH);
-            portserie.task();  
+            sendDirect('E', "codeur absolu de la porte non détecté");
+            digitalWrite(LED_ERROR_PIN, HIGH);  
             send_error = true;         
         }
         delay(1000);  // Petite pause pour éviter de saturer le CPU
     }
-    sendInfo("Capteur I2C de la porte fonctionnel");
+    sendDirect('I', "codeur absolu de la porte détecté");
     digitalWrite(LED_ERROR_PIN, LOW);
 
     // Vérification type de montage et calibration
     if (calibration.getEtat()) {
-        sendInfo("Système monté sur un meuble");
+        sendDirect('I', "servodrive monté sur le meuble");
     } else {
-        sendInfo("Système non monté");
+        sendDirect('I', "servodrive non monté sur le meuble");
     }
-    sendInfo(calibration.getCalibrationString().c_str());
     if (calibration.isNotCalibrated()) {
-        sendWarning("Calibration requise");
+        sendDirect('W', "calibration requise");
     }
 
     // Vérification capteur BN0055
     bno.setEnabled(true);
     if (!bno.checkPresence()) {
-        sendWarning("Capteur BN0055 non détecté");
+        sendDirect('I', "capteur BN0055 non détecté");
         bno.setEnabled(false);  // Désactivation du capteur pour éviter les erreurs de lecture
     } else {
-        sendInfo("Capteur BN0055 détecté");
+        sendDirect('I', "capteur BN0055 détecté");
         bno.requestData(0);  // Demande de lecture initiale
     }
-    portserie.task();
-
-    sendInfo("Initialisation terminée");
+    portserie.printFinInit();
     buzzer.sequenceInit();
-    portserie.task();
     delay(1000);
 }
 
@@ -153,15 +150,12 @@ void ordonnanceur() {
     // Envoies des mesures sur le port série
     if (PERIODE_ENVOI <= 1000 && maintenant - tEnvoi >= PERIODE_ENVOI) {
         tEnvoi += PERIODE_ENVOI;
-        if (maintenant - tBno >= 5 * PERIODE_ENVOI) {
+        sendMesures(capteurs.getMesures());
+        if (bno.isEnabled() && maintenant - tBno >= 5 * PERIODE_ENVOI) {
             tBno += 5 * PERIODE_ENVOI;
-            sendMesures(bno.getTime(),bno.getAcceleration(0),bno.getAcceleration(1), bno.getAcceleration(2), 
-                        bno.getGyroscope(0), bno.getGyroscope(1), bno.getGyroscope(2), 
-                        bno.getEulerAngle(0), bno.getEulerAngle(1), bno.getEulerAngle(2));
+            bno.readData();
+            sendMesures(bno.getMesures());
             bno.requestData(maintenant);
-        } else {
-            sendMesures(capteurs.time_mesures, capteurs.tension, capteurs.pwm, capteurs.courant_moyen, capteurs.angle_moteur, 
-                        capteurs.vitesse_moteur, capteurs.getCodeurPorte(), capteurs.consigne);
         }
     } 
 
@@ -171,33 +165,33 @@ void ordonnanceur() {
         if (machine.etat != StateMachine::ETAT::CALIBRATION) {
             if (capteurs.isLimiteAngle() && (machine.etat != StateMachine::ETAT::DEBRAYAGE && machine.etat != StateMachine::ETAT::REPOS)) {
                 if (machine.etat == StateMachine::ETAT::PILOTAGE) {
-                    sendError("Limite de la porte atteinte");
+                    sendError(MSG::ERR_LIMITE_PORTE, capteurs.getAnglePorte());
                     machine.changerEtat(StateMachine::ETAT::ERREUR);
                     buzzer.sequenceErreur();
                 } else {
-                    sendInfo(("Limite de la porte atteinte " + String(capteurs.getCodeurPorte())).c_str());
+                    sendInfo(MSG::ERR_LIMITE_PORTE, capteurs.getAnglePorte());
                     machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
                 }
                 capteurs.resetSecurities();
             } else {
                 if (capteurs.isLimiteCourant()) {
-                    sendError("Limite de courant atteinte");
+                    sendError(MSG::ERR_COURANT);
                     machine.changerEtat(StateMachine::ETAT::ERREUR);
                     buzzer.sequenceErreur();
                 }
                 if (capteurs.isBlocage()){
-                    sendError("Blocage détecté");
+                    sendError(MSG::ERR_BLOCAGE);
                     machine.changerEtat(StateMachine::ETAT::ERREUR);
                     buzzer.sequenceErreur();
                 }
                 if (calibration.hasChanged()) {
                     if (calibration.getEtat()) {
-                        sendWarning("ServoDrive monté sur un meuble");
+                        sendWarning(MSG::INFO_SUR_MEUBLE);
                     } else {
-                        sendWarning("ServoDrive démonté du meuble");
+                        sendWarning(MSG::INFO_DEMONTE);
                     }
                     if (calibration.isNotCalibrated()) {
-                        sendWarning("Calibration requise");
+                        sendWarning(MSG::ERR_CALIBRATION_REQUISE);
                     }
                     if (machine.etat != StateMachine::ETAT::REPOS) {
                         machine.changerEtat(StateMachine::ETAT::ERREUR);
@@ -207,9 +201,10 @@ void ordonnanceur() {
         }
     }
 
+    // Vérification des boutons de commande (50ms)
     if (maintenant - tBt >= 50) {
         tBt += 50;
-        // Vérification des boutons de commande
+        
         btTest.update();
         btWireless.update();
         btCalibration.update();

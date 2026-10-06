@@ -54,8 +54,8 @@ void Motor::disable() {
 
 void Motor::debrayage() {
     // Arrête le moteur en enregistrant quelques mesures
-    codeur_avant_debrayage = capteurs.angle_moteur;
-    courant_avant_debrayage = capteurs.courant_moyen;
+    codeur_avant_debrayage = capteurs.getAngleMoteur();
+    courant_avant_debrayage = capteurs.getCourant();
     if (direction == Motor::DIR::OUVERTURE) {
        setSpeedDir(-150); // Apply a small reverse speed to stop the motor
     } else if (direction == Motor::DIR::FERMETURE) {

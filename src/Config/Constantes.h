@@ -1,6 +1,8 @@
 #pragma once
 
-#define VERSION 3
+#define VERSION_CARTE 3
+#define VERSION_SOFT 0
+#define VERSION_DEV true
 
 // Moteur et driver
 #define PWM_REV_PIN  7 // Pin de commande PWM pour la rotation inverse du moteur
@@ -11,7 +13,7 @@
 #define CODEUR_A_PIN 19
 #define CODEUR_B_PIN 18
 
-#if VERSION == 2
+#if VERSION_CARTE == 2
     // Capteurs
     #define MOTOR_VOLTAGE A0 // Driver du moteur : mesure de la tension
     #define DRIVER_CURRENT A1 // Driver du moteur : mesure du courant
@@ -35,7 +37,7 @@
     #define LED_PILOTAGE_PIN 43
     #define LED_ERROR_PIN 53
 
-#elif VERSION == 3
+#elif VERSION_CARTE == 3
     // Capteurs
     #define MOTOR_VOLTAGE A1 // Driver du moteur : mesure de la tension
     #define DRIVER_CURRENT A0 // Driver du moteur : mesure du courant
@@ -60,7 +62,7 @@
     #define LED_ERROR_PIN 45 // à configurer entre 43,45,47 selon la couleur
 
 #else
-    #error "VERSION non définie ou incorrecte. Veuillez définir VERSION à 2 ou 3."
+    #error "VERSION_CARTE non définie ou incorrecte. Veuillez définir VERSION_CARTE à 2 ou 3."
 #endif
 
 // Capteur MT6701

@@ -1,240 +1,203 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
-#include "SerialTxBuffer.h"
+#include "EventQueue.h"
+#include "../Config/Constantes.h"
+#include "../Config/Codes.h"
+#include "../Config/Types.h"
+
+#if DEV == true
+    constexpr uint8_t TAILLE_MESSAGE = 20;
+#else
+    constexpr uint8_t TAILLE_MESSAGE = sizeof(Event);
+#endif
+
+constexpr uint8_t TAILLE_MESURES = sizeof(Mesures);
+constexpr uint8_t TAILLE_MESURES_BN0055 = sizeof(MesuresBN0055);
+
+
+/*
+ * Principe :
+ *  - Les messages (hors mesures) sont mis dans buffer circulaire EventQueue (jamais bloquant).
+ *  - Chaque mesure est formatée au moment de l'envoi et écrite directement sur
+ *    Serial, SEULEMENT si la ligne entière tient dans le buffer TX matériel
+ *    (sinon elle est abandonnée : jamais de blocage, jamais de ligne coupée).
+ *  - Une mesure envoyée est suivie d'UN message de la file, s'il y en a un.
+ *  - Secours : si aucune mesure n'est partie depuis DELAI_SECOURS_MS (mesures
+ *    désactivées par SET MESURES, mesures refusées faute de place...),
+ *    serviceEvents() vide la file.
+ *  - Setup et mode test : pas de mesures, envoi direct avec sendDirect().
+ *
+ * Contrainte : le buffer TX matériel (SERIAL_TX_BUFFER_SIZE, 64 octets par défaut)
+ * doit contenir une ligne. Une ligne plus longue n'est écrite que si le buffer est
+ * entièrement libre, et bloque alors quelques ms (voir ecrireLigne).
+ */
 
 /**
- * @brief Envoie un message
- *
- * Format :
- *     R;MESSAGE
- *
- * @param message Message associé à la réponse.
+ * @brief Envoie un message au format TYPE;CODE;VAL.
+ 
+ * @param code Code du message (voir Codes.h)
+ * @param val Valeur associée au message (0 si sans objet)
  *
  * @return true si le message a été ajouté au buffer.
  * @return false si l'espace disponible est insuffisant.
  */
-inline bool sendMessage(const char* message) {
-    return SerialTxBuffer::instance().push('R',  message);
+inline bool sendMessage(MSG code, int32_t val = 0) { 
+    return EventQueue::instance().push('R', code, val); 
+}
+
+inline bool sendReponseOK(MSG code, int32_t val = 0) {
+    return EventQueue::instance().push('O', code, val);
+}
+inline bool sendReponseNOK(MSG code, int32_t val = 0) {
+    return EventQueue::instance().push('N', code, val);
+}
+
+inline bool sendInfo(MSG code, int32_t val = 0) { 
+    return EventQueue::instance().push('I', code, val); 
+}
+
+inline bool sendWarning(MSG code, int32_t val = 0) { 
+    return EventQueue::instance().push('W', code, val); 
+}
+
+inline bool sendError(MSG code, int32_t val = 0) { 
+    return EventQueue::instance().push('E', code, val); 
+}
+
+inline bool sendEtat(int32_t val = 0) { 
+    return EventQueue::instance().push('S', MSG::NONE, val); 
+}
+
+/** 
+ * @brief Envoie un message directement sur le port série.
+ * Format : TYPE;MESSAGE
+ */
+inline void sendDirect(char type, const char* message) {
+    Serial.write(type);
+    Serial.write(';');
+    Serial.println(message);
 }
 
 /**
- * @brief Envoie une réponse positive à une commande associée à une cible.
- *
- * Format :
- *     O;COMMANDE;CIBLE;MESSAGE
- *
- * Exemple :
- *     O;SET;COURANT;Limite modifiee
- *
- * @param commande Commande exécutée (SET, GET ou DO).
- * @param cible Cible de la commande.
- * @param message Message associé à la réponse.
- *
- * @return true si le message a été ajouté au buffer.
- * @return false si l'espace disponible est insuffisant.
+ * @brief Envoie un message du mode test (directement sur le port série).
+ * Format : T;CIBLE;VALEUR
  */
-inline bool sendReponseOK(const char* commande, const char* cible, const char* message) {
-    return SerialTxBuffer::instance().push('O', commande, cible, message);
+inline void sendTest(const char* cible, const char* valeur) {
+    Serial.print(F("T;"));
+    Serial.print(cible);
+    Serial.write(';');
+    Serial.println(valeur);
 }
-inline bool sendReponseOK(const char* commande, const char* cible, const String& message){
-    return sendReponseOK(commande, cible, message.c_str());
-}
-
-
-/**
- * @brief Envoie une réponse négative à une commande associée à une cible.
- *
- * Format :
- *     N;COMMANDE;CIBLE;MESSAGE
- *
- * Exemple :
- *     N;SET;COURANT;Valeur invalide
- *
- * @param commande Commande exécutée (SET, GET ou DO).
- * @param cible Cible de la commande.
- * @param message Message associé à la réponse.
- *
- * @return true si le message a été ajouté au buffer.
- * @return false si l'espace disponible est insuffisant.
- */
-inline bool sendReponseNOK(const char* commande, const char* cible, const char* message){
-    return SerialTxBuffer::instance().push('N', commande, cible, message);
-}
-inline bool sendReponseNOK(const char* commande, const char* cible, const String& message){
-    return sendReponseNOK(commande, cible, message.c_str());
-}
-
-/**
- * @brief Envoie un message d'information.
- *
- * Format :
- *     I;MESSAGE
- *
- * @param value Message à transmettre.
- *
- * @return true si le message a été ajouté au buffer.
- * @return false si l'espace disponible est insuffisant.
- */
-inline bool sendInfo(const char* value) {
-    return SerialTxBuffer::instance().push('I', value);
-}
-
-/**
- * @brief Envoie un message d'avertissement.
- *
- * Format :
- *     W;MESSAGE
- *
- * @param value Message à transmettre.
- *
- * @return true si le message a été ajouté au buffer.
- * @return false si l'espace disponible est insuffisant.
- */
-inline bool sendWarning(const char* value) {
-    return SerialTxBuffer::instance().push('W', value);
-}
-
-/**
- * @brief Envoie un message d'erreur.
- *
- * Format :
- *     E;MESSAGE
- *
- * @param value Message à transmettre.
- *
- * @return true si le message a été ajouté au buffer.
- * @return false si l'espace disponible est insuffisant.
- */
-inline bool sendError(const char* value){
-    return SerialTxBuffer::instance().push('E', value);
-}
-
-
-
-/**
- * @brief Envoie un changement d'état.
- *
- * Format :
- *     S;ETAT;message (optionnel)
- *
- * @param value Nouvel état à transmettre.
- *
- * @return true si le message a été ajouté au buffer.
- * @return false si l'espace disponible est insuffisant.
- */
-inline bool sendEtat(const char* value, const char* message=nullptr) {
-    return SerialTxBuffer::instance().push('S', value, message);
+inline void sendTest(const char* cible, long valeur) {
+    Serial.print(F("T;"));
+    Serial.print(cible);
+    Serial.write(';');
+    Serial.println(valeur);
 }
 
 /**
  * @brief Envoie les mesures.
  *
- * @param time le temps de la mesure (en ms)
- * @param tension la tension d'alimentation du système
- * @param pwm la commande moteur
- * @param courant le courant consommée par le moteur
- * @param angle_mooteur l'angle du moteur
- * @param vitesse_moteur la vitesse du moteur (rad/s)
- * @param angle_porte l'angle de la porte (°)
- * @param consigne la consigne du système
+ * @param Mesures via SensorsManager::getMesures() 
  *
  * @return true si le message a été envoyé.
  * @return false si non.
  */
-inline bool sendMesures(uint32_t time, float tension, int pwm, float courant, float angle_moteur, 
-                        float vitesse_moteur, float angle_porte, float consigne) {
-    Serial.print(F("M;"));
-    Serial.print(time);
-    Serial.write(';');
-    Serial.print(tension);
-    Serial.write(';');
-    Serial.print(pwm);
-    Serial.write(';');
-    Serial.print(courant);
-    Serial.write(';');
-    Serial.print(angle_moteur);
-    Serial.write(';');
-    Serial.print(vitesse_moteur);
-    Serial.write(';');
-    Serial.print(angle_porte);
-    Serial.write(';');
-    Serial.println(consigne);
-    return true;
-    // Crée une chaîne pour les valeurs principales
-    // char values[128];
-    // snprintf(values, sizeof(values),
-    //         "%lu;%.2f;%d;%.2f;%.2f;%.2f;%.2f;%.2f",  // Tous les champs en %d (int32_t)
-    //         time,
-    //         tension,
-    //         pwm,
-    //         courant,
-    //         angle_moteur,
-    //         vitesse_moteur,
-    //         angle_porte,
-    //         consigne
-    //         );
-
-    // Envoie via le buffer
-    //return SerialTxBuffer::instance().push('M', values);
+inline bool sendMesures(Mesures message) {
+    if (Serial.availableForWrite() >= TAILLE_MESURES) {
+        #if VERSION_DEV == true
+        Serial.print(F("M;"));
+        Serial.print(message.time);
+        Serial.print(";");
+        Serial.print(message.tension / 100.0f);
+        Serial.print(";");
+        Serial.print(message.courant_moyen / 100.0f);
+        Serial.print(";");
+        Serial.print(message.angle_porte / 100.0f);
+        Serial.print(";");
+        Serial.print(message.angle_moteur / 100.0f);
+        Serial.print(";");
+        Serial.print(message.vitesse_moteur / 100.0f);
+        Serial.print(";");
+        Serial.print(message.pwm / 100.0f);
+        Serial.print(";");
+        Serial.println(message.consigne / 100.0f);
+        #else
+        Serial.write((uint8_t*)&message, TAILLE_MESURES);
+        #endif
+        return true;
+    }
+    return false;
 }
 
 
 /** 
  * @brief Envoie les mesures du capteur BN0055.
- * Format :
- *     M;time;accelX;accelY;accelZ;gyroX;gyroY;gyroZ;heading;roll;pitch
- * @param time le temps de la mesure (en ms)
- * @param accelX l'accélération sur l'axe X (m/s²) 
- * @param accelY l'accélération sur l'axe Y (m/s²)
- * @param accelZ l'accélération sur l'axe Z (m/s²)
- * @param gyroX la vitesse angulaire sur l'axe X (°/s)
- * @param gyroY la vitesse angulaire sur l'axe Y (°/s)
- * @param gyroZ la vitesse angulaire sur l'axe Z (°/s)
- * @param heading l'angle de lacet (°)
- * @param roll l'angle de roulis (°)
- * @param pitch l'angle de tangage (°)
- *
+ * 
+ * @param MesuresBN0055 via BN0055::getMesures() 
+ * 
  * @return true si le message a été envoyé.
  * @return false si non.
  */
-inline bool sendMesures(uint32_t time, float acceleration_x, float acceleration_y, float acceleration_z,
-                        float gyro_x, float gyro_y, float gyro_z,
-                        float euler_angle_x, float euler_angle_y, float euler_angle_z) {
-    Serial.print(F("M;"));
-    Serial.print(time);
-    Serial.write(';');
-    Serial.print(acceleration_x);
-    Serial.write(';');
-    Serial.print(acceleration_y);
-    Serial.write(';');
-    Serial.print(acceleration_z);
-    Serial.write(';');
-    Serial.print(gyro_x);
-    Serial.write(';');
-    Serial.print(gyro_y);
-    Serial.write(';');
-    Serial.print(gyro_z);
-    Serial.write(';');
-    Serial.print(euler_angle_x);
-    Serial.write(';');
-    Serial.print(euler_angle_y);
-    Serial.write(';');
-    Serial.println(euler_angle_z);
-    return true;
+inline bool sendMesures(MesuresBN0055 message) {
+    if (Serial.availableForWrite() >= TAILLE_MESURES_BN0055) {
+        #if VERSION_DEV == true
+        Serial.print(F("A;"));
+        Serial.println(message.time);
+        #else
+        Serial.write((uint8_t*)&message, TAILLE_MESURES_BN0055);
+        #endif
+        return true;
+    } 
+    return false;
 }
 
 /**
- * @brief Envoie un message du mode test.
- * Format : T;CIBLE;VALEUR
+ * @brief Envoi un ou plusieurs messages (si buffer disponible)
+ * 
+ * @return true si le message a été envoyé.
+ * @return false si non.
  */
-inline bool sendTest(const char* cible, const char* valeur) {
-    return SerialTxBuffer::instance().push('T', cible, valeur);
-}
-inline bool sendTest(const char* cible, long valeur) {
-    char buf[12];
-    snprintf(buf, sizeof(buf), "%ld", valeur);
-    return sendTest(cible, buf);
+inline bool sendEvents() {
+    auto& queue = EventQueue::instance();
+
+    int dispo = Serial.availableForWrite() / TAILLE_MESSAGE;
+    if (dispo > queue.size())
+        dispo = queue.size();
+    if (queue.perdus() > 0) {
+        dispo -= 1;
+        #if VERSION_DEV == true
+            Serial.print(F("W;"));
+            Serial.print((uint8_t)MSG::ERR_MESSAGE_PERDU);
+            Serial.print(";");
+            Serial.println(queue.perdus());
+        #else
+            Event e ; 
+            e.type = 'W';
+            e.code = MSG::ERR_MESSAGE_PERDU;
+            e.val  = queue.perdus();
+            Serial.write((uint8_t*)&e,TAILLE_MESSAGE);
+        #endif
+        queue.clearPerdu();
+    }
+    if (dispo > 0) {
+        for (int i=0;i<dispo;i++) {
+            #if VERSION_DEV == true
+                Event data = queue.peek();
+                Serial.print(data.type);
+                Serial.print(";");
+                Serial.print((uint8_t)data.code);
+                Serial.print(";");
+                Serial.println(data.val);
+            #else
+                Serial.write((uint8_t*)&queue.peek(),TAILLE_MESSAGE);
+            #endif
+            queue.pop();
+        }
+        return true;
+    }
+    return false;
 }
 
 #endif

@@ -64,7 +64,7 @@ public:
     bool getEtat() const {
         return meuble.etat();
     }
-    bool hasChanged() const {
+    bool hasChanged() {
         if (meuble.changed()) {
             updateCapteurs();
             return true;
@@ -80,6 +80,9 @@ public:
     // Gestion machine à état
     void changerEtat(CalibrationManager::ETAT nouvelle_etape); // Changer d'état 
     bool exec(); // Execution de la machine à états
+
+    uint16_t getCourse() { return calibrationData[getConfig()].highLimit;}
+    uint16_t getOffset() { return calibrationData[getConfig()].offset;}
 
 private:
     // Gestion EEPROM

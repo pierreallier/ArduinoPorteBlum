@@ -184,9 +184,9 @@ bool CalibrationManager::fermeture(uint16_t speed) {
 
 
 void CalibrationManager::changerEtat(CalibrationManager::ETAT nouvelle_etape) {
-  sendEtat(ETAT_NAMES[static_cast<size_t>(etat)]);
   time_etat = millis();
   etat = nouvelle_etape;
+  sendEtat((uint8_t)etat);
 }
 
 bool CalibrationManager::exec() {
@@ -206,7 +206,7 @@ bool CalibrationManager::exec() {
   switch (etat) {
     case CalibrationManager::ETAT::DEBUT:
       {
-        sendInfo("Debut de calibration");
+        sendInfo(MSG::INFO_CALIBRATION_DEBUT);
         ledState = HIGH;
         digitalWrite(LED_CALIBRATION_PIN, HIGH);
         angle_butee_basse = 0;
@@ -237,8 +237,6 @@ bool CalibrationManager::exec() {
         if (blocage) {
           moteur.stop();
           angle_butee_basse = analogRead(CODEUR_PORTE);
-          Serial.print("Angle Bas : ");
-          Serial.println(angle_butee_basse);
           changerEtat(CalibrationManager::ETAT::ATTENTE_BAS);
         }
         break;
@@ -256,8 +254,6 @@ bool CalibrationManager::exec() {
         if (blocage) {
           moteur.stop();
           angle_butee_haute = analogRead(CODEUR_PORTE);
-          Serial.print("Angle Haut : ");
-          Serial.println(angle_butee_haute);
           changerEtat(CalibrationManager::ETAT::ENREGISTREMENT);
         }
         break;
@@ -270,7 +266,7 @@ bool CalibrationManager::exec() {
             changerEtat(CalibrationManager::ETAT::ERREUR);
             break;
           }
-          sendReponseOK("DO", "CALIBRATION", "Fin de calibration : limite haute=" + String(angle_butee_haute) + " ; limite basse=" + String(angle_butee_basse));
+          sendReponseOK(MSG::INFO_CALIBRATION_ACHEVEE);
           setCalibration(getConfig(), course-2, 0, angle_butee_basse);
           changerEtat(CalibrationManager::ETAT::NONE);
         }
@@ -279,7 +275,7 @@ bool CalibrationManager::exec() {
     case CalibrationManager::ETAT::ERREUR:
       {
         if (millis() - time_etat >= 1000) {
-          sendReponseNOK("DO", "CALIBRATION", "Calibration échouée");
+          sendReponseNOK(MSG::INFO_CALIBRATION_ECHEC);
           changerEtat(CalibrationManager::ETAT::NONE);
         }
         break;

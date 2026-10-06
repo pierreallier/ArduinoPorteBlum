@@ -3,8 +3,8 @@
 
 #include <Arduino.h>
 #include <EEPROM.h>
-#include "SerialTxBuffer.h"
 #include "Messages.h"
+#include "../Config/Codes.h"
 
 #include "../Inputs/Sensors.h"
 #include "../Outputs/Motor.h"
@@ -23,8 +23,9 @@ class SerialManager {
 
         inline void printStart() { 
             Serial.println(F("\n==== Pilotage Porte Blum ====\n"));
-            Serial.flush();
-            delay(500);
+        }
+        inline void printFinInit() { 
+            Serial.println(F("\n== Initialisation terminée ==\n"));
         }
 
         //void printMesures();

@@ -17,7 +17,7 @@ void Sensors::init() {
     limite_courant = LIMITE_COURANT;
 
     // Initialisation du tableau du courant
-    courant_moyen = 0.0f;
+    _mesures.courant_moyen = 0;
     courant_idx = 0;
     courantSomme = 0.0f;
     for (int i=0; i < NB_MOY_COURANT; i++) {
@@ -36,7 +36,7 @@ void Sensors::init() {
     pinMode(CODEUR_B_PIN, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(CODEUR_A_PIN), isr_Codeur, RISING);
 
-    time_mesures = millis();
+    _mesures.time = millis();
 }
 
 void Sensors::updateSecurities(int pwm) {
@@ -46,13 +46,14 @@ void Sensors::updateSecurities(int pwm) {
     //  - Vérifie les blocages
 
     // Détection des limites extrémales de la porte
-    mesureCodeurPorte();
-    limite_haute = (angle_porte >= calibrationData.highLimit);
-    limite_basse = (angle_porte <= calibrationData.lowLimit);
+    readCodeurPorte();
+    float angle = getAnglePorte();
+    limite_haute = (angle >= calibrationData.highLimit);
+    limite_basse = (angle <= calibrationData.lowLimit);
 
     // Limite de courant
-    getCourant();
-    limite_courant_atteinte = (courant_moyen >= limite_courant);
+    readCourant();
+    limite_courant_atteinte = (getCourant() >= limite_courant);
 
     // Détection blocage
     uint8_t pwm_abs = abs(pwm);
@@ -69,7 +70,6 @@ void Sensors::updateSecurities(int pwm) {
     compteur_blocage++;
     uint8_t seuil = (pwm_abs >= PWM_RAPIDE) ? NB_CYCLES_BLOCAGE_RAPIDE : NB_CYCLES_BLOCAGE_LENT;
     blocage_detecte = (compteur_blocage >= seuil);
-
 }
 
 bool Sensors::isBlocage() {
@@ -110,10 +110,10 @@ bool Sensors::resetSecurities() {
 
 
 void Sensors::mesures(int p) {
-    getCodeurMoteur();
-    getTension();
-    getPotentiometre();
-    pwm = p;
+    readCodeurMoteur();
+    readTension();
+    readPotentiometre();
+    _mesures.pwm = p * 100;
 }
 
 float Sensors::addCourant(float current) {
@@ -127,40 +127,35 @@ float Sensors::addCourant(float current) {
     return courantSomme / NB_MOY_COURANT;
 }
 
-void Sensors::mesureCodeurPorte() {
-    // Lecture du codeur
-    angle_porte = ((int32_t)ADC_MAX + calibrationData.offset - analogRead(CODEUR_PORTE)) % ADC_MAX;
-}
 
-int Sensors::getRawCodeurPorte() {
-    return analogRead(CODEUR_PORTE);
-}
-
-float Sensors::getCodeurPorte() {
-    return angle_porte * (360.0f / ADC_MAX);
-}
-
-void Sensors::getTension() {
-    tension = analogRead(MOTOR_VOLTAGE)*VOLTAGE_COEF; // en V
-}
-
-void Sensors::getCourant() {
+void Sensors::readCourant() {
     int adc = analogRead(MOTOR_CURRENT);
     int diff = adc - courant_offset;
     float current = diff * CURRENT_COEF;
 
-    courant_moyen = addCourant(current);
+    _mesures.courant_moyen = addCourant(current);
 }
 
 
-void Sensors::getCodeurMoteur() {
+void Sensors::readCodeurPorte() {
+    // Lecture du codeur
+    _mesures.angle_porte = ((int32_t)ADC_MAX + calibrationData.offset - analogRead(CODEUR_PORTE)) % ADC_MAX * CODEURPORTE_COEF;
+}
+
+
+void Sensors::readTension() {
+    _mesures.tension = analogRead(MOTOR_VOLTAGE)*VOLTAGE_COEF; // en V*100
+}
+
+
+void Sensors::readCodeurMoteur() {
     codeur_Delta_Pos = encoderGetTicks();
     encoderResetTicks();
 
     float current_time = millis();
-    vitesse_moteur = K_VITESSE * codeur_Delta_Pos / (millis() - time_mesures);   // rad/s en 128
-    angle_moteur += RAD_PER_TICK * codeur_Delta_Pos; // en rad
-    time_mesures = current_time;
+    _mesures.vitesse_moteur = K_VITESSE * codeur_Delta_Pos / (millis() - _mesures.time);   // rad/s en 128
+    _mesures.angle_moteur += RAD_PER_TICK * codeur_Delta_Pos; // en rad
+    _mesures.time = current_time;
 }
 
 int32_t Sensors::encoderGetTicks() {
@@ -177,12 +172,12 @@ void Sensors::encoderResetTicks() {
     interrupts();
 }
 
-void Sensors::getPotentiometre() {
+void Sensors::readPotentiometre() {
     potentiometre = (analogRead(POTENTIOMETRE)-500)*0.5;
 }
 
 void Sensors::setConsigne(int c) {
-    consigne = c;
+    _mesures.consigne = c * 100;
 }
 
 void Sensors::setLimits(CalibrationData c) {
@@ -190,7 +185,7 @@ void Sensors::setLimits(CalibrationData c) {
 }
 
 
-bool Sensors::setLimitCourant(int limite) {
+bool Sensors::setLimitCourant(float limite) {
     if (limite > 0.0f && limite < 2.5f) {
         limite_courant = limite;
         return true;
