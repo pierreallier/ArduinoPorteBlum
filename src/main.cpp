@@ -104,6 +104,7 @@ void loop() {
         lancerTest();
     } else {
         machine.exec();
+        moteur.update();
         bno.update();
         ordonnanceur();
     }

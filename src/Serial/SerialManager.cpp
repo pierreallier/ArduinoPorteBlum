@@ -61,6 +61,7 @@ void SerialManager::_SET(String commande) {
         }
         else if (valeurs == "EFFACER") {
             machine.calibration.clearEeprom();
+            active = machine.calibration.isEepromActive();
         }
         else {
             sendReponseNOK(MSG::ERR_CALIBRATION_SET);
@@ -84,17 +85,13 @@ void SerialManager::_SET(String commande) {
         String valeur = commande.substring(5);
         valeur.trim();
         if (valeur == "PWM")
-            machine.setModePilotage(StateMachine::MODE_PILOTAGE::PWM);
+            machine.setMode(StateMachine::MODE_PILOTAGE::PWM);
         else if (valeur == "VITESSE")
-            machine.setModePilotage(StateMachine::MODE_PILOTAGE::VITESSE);
+            machine.setMode(StateMachine::MODE_PILOTAGE::VITESSE);
         else if (valeur == "POSITION")
-            machine.setModePilotage(StateMachine::MODE_PILOTAGE::POSITION);
+            machine.setMode(StateMachine::MODE_PILOTAGE::POSITION);
         else if (valeur == "POSITION_VITESSE")
-            machine.setModePilotage(StateMachine::MODE_PILOTAGE::POSITION_VITESSE);
-        else  {
-            sendReponseNOK(MSG::ERR_PILOTAGE_SET);
-            return;
-        }
+            machine.setMode(StateMachine::MODE_PILOTAGE::POSITION_VITESSE);
         // C'est le stateMachine qui renvoie le message de la bonne execution du changement
     }
     // Configuration des Consignes
@@ -107,6 +104,8 @@ void SerialManager::_SET(String commande) {
         }
         if (machine.setConsigne(items[1], &items[2], nbItems - 2)) {
             sendReponseOK(MSG::INFO_CONSIGNE_SET);
+        } else {
+            sendReponseNOK(MSG::ERR_CONSIGNE_SET);
         }
     }
     // Configuration des PID

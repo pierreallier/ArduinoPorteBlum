@@ -157,15 +157,12 @@ void StateMachine::exec() {
             break;
         }
     }
-    moteur.update();
     calibration.task();
 }
 
 bool StateMachine::etatOuverture(uint16_t speed) {
     /* Gestion de l'ouverture de la porte en BO, retourne false si en cours, true si fini */
-    moteur.setDirection(Motor::DIR::OUVERTURE);
-    moteur.setSpeed(speed);
-    capteurs.setConsigne(speed);
+    moteur.ouvrir(speed);
     if (capteurs.isLimiteHaute()) {
         moteur.stop();
         return true;
@@ -175,9 +172,7 @@ bool StateMachine::etatOuverture(uint16_t speed) {
 
 bool StateMachine::etatFermeture(uint16_t speed) {
     /* Gestion de la fermeture de la porte en BO, retourne false si en cours, true si fini */
-    moteur.setDirection(Motor::DIR::FERMETURE);
-    moteur.setSpeed(speed);
-    capteurs.setConsigne(speed);
+    moteur.fermer(speed);
     if (capteurs.isLimiteBasse()) {
         moteur.stop();
         return true;

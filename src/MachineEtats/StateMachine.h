@@ -60,9 +60,6 @@ class StateMachine {
         void setPIDVitesse(float kp, float ki, float kd) {
             pidVitesse.setGains(kp, ki, kd);
         };
-        void setModePilotage(StateMachine::MODE_PILOTAGE mode) {
-            modePilotage = mode;
-        }
         bool setConsigne(const String& type, const String* params, int nbParams);
 
         void suspendre();   // Stoppe le fonctionnement avant le test

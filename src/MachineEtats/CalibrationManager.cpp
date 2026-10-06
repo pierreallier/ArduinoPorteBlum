@@ -134,22 +134,6 @@ void CalibrationManager::setDefaultValues(CalibrationManager::Config config) {
   calibrationData[config].offset = 0;
 }
 
-bool CalibrationManager::ouverture(uint16_t speed) {
-  /* Gestion de l'ouverture de la porte en BO, retourne false si en cours, true si fini */
-  moteur.setDirection(Motor::DIR::OUVERTURE);
-  moteur.setSpeed(speed);
-  capteurs.setConsigne(speed);
-  return false;
-}
-
-bool CalibrationManager::fermeture(uint16_t speed) {
-  /* Gestion de la fermeture de la porte en BO, retourne false si en cours, true si fini */
-  moteur.setDirection(Motor::DIR::FERMETURE);
-  moteur.setSpeed(speed);
-  capteurs.setConsigne(speed);
-  return false;
-}
-
 
 void CalibrationManager::changerEtat(CalibrationManager::ETAT nouvelle_etape) {
   time_etat = millis();
@@ -181,7 +165,7 @@ bool CalibrationManager::exec() {
         angle_butee_haute = 0;
         moteur.enable();
         changerEtat(CalibrationManager::ETAT::OUVERTURE);
-        ouverture(PWM_CALIBRATION);
+        moteur.ouvrir(PWM_CALIBRATION);
         break;
       }
     case CalibrationManager::ETAT::OUVERTURE:
@@ -196,7 +180,7 @@ bool CalibrationManager::exec() {
       {
         if (millis() - time_etat >= 1000) {
           changerEtat(CalibrationManager::ETAT::BUTEE_BASSE);
-          fermeture(PWM_CALIBRATION);
+          moteur.fermer(PWM_CALIBRATION);
         }
         break;
       }
@@ -213,7 +197,7 @@ bool CalibrationManager::exec() {
       {
         if (millis() - time_etat >= 1000) {
           changerEtat(CalibrationManager::ETAT::BUTEE_HAUTE);
-          ouverture(PWM_CALIBRATION);
+          moteur.ouvrir(PWM_CALIBRATION);
         }
         break;
       }

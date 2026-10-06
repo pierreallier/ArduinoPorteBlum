@@ -68,6 +68,18 @@ void Motor::stop(){
     setSpeed(0);
 }
 
+void Motor::ouvrir(uint16_t speed) {
+    setDirection(DIR::OUVERTURE);
+    setSpeed(speed);
+    capteurs.setConsigne(speed);
+}
+
+void Motor::fermer(uint16_t speed) {
+    setDirection(DIR::FERMETURE);
+    setSpeed(speed);
+    capteurs.setConsigne(speed);
+}
+
 void Motor::update() {
     // Met à jour l'état du moteur en fonction de la consigne et des capteurs
     if (enabled == true) {

@@ -88,9 +88,6 @@ private:
 
     bool isCalibrationUninitialized(CalibrationManager::Config config); // Vérifier si une configuration est non initialisée
     void setDefaultValues(CalibrationManager::Config config); // Définir des valeurs par défaut pour une configuration
-    
-    bool ouverture(uint16_t speed);
-    bool fermeture(uint16_t speed);
 
     // Données de calibrations
     bool eepromActive;

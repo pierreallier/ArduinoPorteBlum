@@ -18,11 +18,14 @@ class Motor {
         void update(); // Met à jour l'état du moteur en fonction de la consigne et des capteurs
         void setSpeed(int speed); // Définit la vitesse du moteur (0-255)
         void setSpeedDir(int speed); // Définit la vitesse et la direction du moteur (-255 à 255)
+        
         void enable(); // Active le moteur
         void disable(); // Désactive le moteur
         void start(); // Démarre le moteur
         void debrayage(); // Arrête le moteur en appliquant une petite vitesse inverse pour le débrayer
         void stop(); // Arrête le moteur
+        void ouvrir(uint16_t speed);
+        void fermer(uint16_t speed);
 
         // Accesseurs si besoin
         bool isEnabled() const { return enabled; }
