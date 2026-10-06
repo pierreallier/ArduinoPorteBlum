@@ -58,7 +58,7 @@
     // Led
     #define LED_MOTOR_PIN 39
     #define LED_CALIBRATION_PIN 31
-    #define LED_PILOTAGE_PIN 47
+    #define LED_PILOTAGE_PIN 43
     #define LED_ERROR_PIN 45 // à configurer entre 43,45,47 selon la couleur
 
 #else

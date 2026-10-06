@@ -1,7 +1,6 @@
 #ifndef CALIBRATIONMANAGER_H
 #define CALIBRATIONMANAGER_H
 
-#include <EEPROM.h>
 #include "../Config/Types.h"
 #include "../Outputs/Motor.h"
 #include "../Inputs/SensorsManager.h"
@@ -36,13 +35,9 @@ public:
         BUTEE_HAUTE,
         ENREGISTREMENT,
         ERREUR,
-        NONE,
-        NB_ETATS
+        NONE
     };
 
-    static const char* const ETAT_NAMES[static_cast<size_t>(ETAT::NB_ETATS)]; // Tableau des noms (même ordre que l'enum ETAT)
-
-    
     CalibrationManager(Motor& m, SensorsManager& c); // Constructeur
 
     void init(); // Initialise les données

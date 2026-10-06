@@ -1,20 +1,6 @@
 #include "StateMachine.h"
 
-const char* const StateMachine::ETAT_NAMES[] ={
-    "INIT",
-    "REPOS",
-    "FONCTIONNEMENT",
-    "OUVERTURE",
-    "FERMETURE",
-    "PILOTAGE",
-    "CALIBRATION",
-    "DEBRAYAGE",
-    "ERREUR",
-    "STOP"
-};
-
-
-StateMachine::StateMachine(Motor& m, SensorsManager& s) : moteur(m), capteurs(s), consigne(), calibration(m,s) {
+StateMachine::StateMachine(Motor& m, SensorsManager& s) : moteur(m), capteurs(s), calibration(m,s), consigne() {
 }
 
 void StateMachine::init() {
@@ -41,7 +27,7 @@ void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
     }
     etat = etat_demande;
     time_etat = millis();
-    sendEtat((uint32_t)etat);
+    sendEtat(MSG::ETAT_PROD,(uint32_t)etat);
 
     // Initiliations des états
     switch (etat) {
@@ -63,6 +49,7 @@ void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
             consigne.init(time_etat);
             moteur.enable();
             digitalWrite(LED_ERROR_PIN, LOW);
+            digitalWrite(LED_PILOTAGE_PIN, HIGH);
             butee_desactivated = true;
             break;
         }
@@ -252,7 +239,7 @@ void StateMachine::reprendre() {
         calibration.changerEtat(CalibrationManager::ETAT::DEBUT);
         digitalWrite(LED_CALIBRATION_PIN, LOW);
         time_etat = millis();
-        sendEtat((uint32_t)etat);
+        sendEtat(MSG::ETAT_PROD,(uint32_t)etat);
         sendInfo(MSG::ERR_CALIBRATION_ANNULEE);
         return;
     }

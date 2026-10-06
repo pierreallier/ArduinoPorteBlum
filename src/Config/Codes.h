@@ -13,12 +13,17 @@
  *   VAL  : entier signé 32 bits, 0 si sans objet.
  *          Les grandeurs décimales sont multipliées (x100 ou x1000, voir commentaires).
  *
- * Plages : erreurs 1..99  | infos 100..199 
- *          données 200..254 
+ * Plages : erreurs 1..99  | infos 100..199 | données 200..249 | etats 250..254
  *
  * Hors protocole codé (envoyés en texte avec sendDirect(), voir Messages.h) :
  *   - les messages du setup (capteurs I2C, BNO055, fin d'initialisation...)
  *   - les messages du mode test (type T)
+ */
+
+ /*
+ * Liste des codes.
+ * Cette liste permet de générer l'enum MSG et, en mode DEV,
+ * le nom correspondant à chaque valeur.
  */
 
  enum class MSG : uint8_t {
@@ -91,6 +96,10 @@
     DATA_MODE_POSITION = 207,   // "mode de pilotage en position"
     DATA_MODE_VITESSE = 208,    // "mode de pilotage en vitesse"
     DATA_MODE_PV = 209,         // "mode de pilotage en vitesse et position"
+
+    // ------------------ Etats (S) -----------------
+    ETAT_PROD = 250,
+    ETAT_CALIBRATION = 251
     
 };
 

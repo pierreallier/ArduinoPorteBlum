@@ -25,12 +25,9 @@ class StateMachine {
             CALIBRATION,
             DEBRAYAGE,
             ERREUR,
-            STOP,
-            NB_ETATS
+            STOP
         };
         
-        static const char* const ETAT_NAMES[static_cast<size_t>(ETAT::NB_ETATS)]; // Tableau des noms (même ordre que l'enum ETAT)
-
         enum class MODE_PILOTAGE : uint8_t {
             PWM,
             POSITION,

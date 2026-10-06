@@ -1,18 +1,7 @@
 #include "CalibrationManager.h"
+#include <EEPROM.h>
 #include "../Serial/Messages.h"
 #include "../Config/Constantes.h"
-
-const char* const CalibrationManager::ETAT_NAMES[] = {
-  "CALIBRATION_DEBUT",
-  "CALIBRATION_OUVERTURE",
-  "CALIBRATION_PAUSEHAUT",
-  "CALIBRATION_BUTEEBASSES",
-  "CALIBRATION_PAUSEBAS",
-  "CALIBRATION_BUTEEHAUTES",
-  "CALIBRATION_ENREGISTREMENT",
-  "CALIBRATION_ERREUR",
-  "CALIBRATION_NONE"
-};
 
 CalibrationManager::CalibrationManager(Motor& m, SensorsManager& c)
   : moteur(m), capteurs(c) {
@@ -61,7 +50,7 @@ void CalibrationManager::clearEeprom() {  // Efface les valeurs stockées dans l
   updateCapteursLimits(getConfig());
 }
 
-void CalibrationManager::loadFromEeprom(bool forced = true) {  // Charger toutes les données depuis l'EEPROM (si faux, ne charge pas)
+void CalibrationManager::loadFromEeprom(bool forced) {  // Charger toutes les données depuis l'EEPROM (si faux, ne charge pas)
   // Charger le flag d'activation
   uint8_t storedActiveFlag;
   EEPROM.get(EEPROM_ADDR_ACTIVE_FLAG, storedActiveFlag);
@@ -138,7 +127,7 @@ void CalibrationManager::setDefaultValues(CalibrationManager::Config config) {
 void CalibrationManager::changerEtat(CalibrationManager::ETAT nouvelle_etape) {
   time_etat = millis();
   etat = nouvelle_etape;
-  sendEtat((uint8_t)etat);
+  sendEtat(MSG::ETAT_CALIBRATION,(uint8_t)etat);
 }
 
 bool CalibrationManager::exec() {

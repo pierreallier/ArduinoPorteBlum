@@ -6,8 +6,33 @@
 #include "../Config/Codes.h"
 #include "../Config/Types.h"
 
-#if DEV == true
+#if VERSION_DEV == true
     constexpr uint8_t TAILLE_MESSAGE = 20;
+
+    const char* const CALIBRATION_NAMES[] = {
+        "CALIBRATION_DEBUT",
+        "CALIBRATION_OUVERTURE",
+        "CALIBRATION_PAUSEHAUT",
+        "CALIBRATION_BUTEEBASSES",
+        "CALIBRATION_PAUSEBAS",
+        "CALIBRATION_BUTEEHAUTES",
+        "CALIBRATION_ENREGISTREMENT",
+        "CALIBRATION_ERREUR",
+        "CALIBRATION_NONE"
+    };
+
+    const char* const ETAT_NAMES[] ={
+        "INIT",
+        "REPOS",
+        "FONCTIONNEMENT",
+        "OUVERTURE",
+        "FERMETURE",
+        "PILOTAGE",
+        "CALIBRATION",
+        "DEBRAYAGE",
+        "ERREUR",
+        "STOP"
+    };
 #else
     constexpr uint8_t TAILLE_MESSAGE = sizeof(Event);
 #endif
@@ -65,8 +90,8 @@ inline bool sendError(MSG code, int32_t val = 0) {
     return EventQueue::instance().push('E', code, val); 
 }
 
-inline bool sendEtat(int32_t val = 0) { 
-    return EventQueue::instance().push('S', MSG::NONE, val); 
+inline bool sendEtat(MSG code,int32_t val = 0) { 
+    return EventQueue::instance().push('S', code, val); 
 }
 
 /** 
@@ -185,11 +210,21 @@ inline bool sendEvents() {
         for (int i=0;i<dispo;i++) {
             #if VERSION_DEV == true
                 Event data = queue.peek();
-                Serial.print(data.type);
-                Serial.print(";");
-                Serial.print((uint8_t)data.code);
-                Serial.print(";");
-                Serial.println(data.val);
+                if (data.type == 'S') {
+                    if (data.code == MSG::ETAT_CALIBRATION) {
+                        Serial.print(F("S;CALIBRATION;"));
+                        Serial.println(CALIBRATION_NAMES[data.val]);
+                    } else if (data.code == MSG::ETAT_PROD) {
+                        Serial.print(F("S;ETAT;"));
+                        Serial.println(ETAT_NAMES[data.val]);
+                    }
+                } else {
+                    Serial.print(data.type);
+                    Serial.print(";");
+                    Serial.print((uint8_t)data.code);
+                    Serial.print(";");
+                    Serial.println(data.val);
+                }
             #else
                 Serial.write((uint8_t*)&queue.peek(),TAILLE_MESSAGE);
             #endif

@@ -148,8 +148,8 @@ class AnalogStateDetector {
     private:
         uint8_t _pin;
 
-        int _seuilActivation;
-        int _seuilDesactivation;
+        uint16_t _seuilActivation;
+        uint16_t _seuilDesactivation;
 
         uint16_t _temporisation;
         uint16_t _instantDebut;

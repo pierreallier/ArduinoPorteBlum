@@ -2,7 +2,6 @@
 #define SERIALMANAGER_H
 
 #include <Arduino.h>
-#include <EEPROM.h>
 #include "Messages.h"
 #include "../Config/Codes.h"
 

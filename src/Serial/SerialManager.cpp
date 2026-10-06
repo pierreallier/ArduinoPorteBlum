@@ -1,4 +1,5 @@
 #include "SerialManager.h"
+#include <EEPROM.h>
 #include <avr/wdt.h>
 
 void resetArduino() {
@@ -321,7 +322,7 @@ uint32_t SerialManager::getMesurePeriode() {
 int SerialManager::splitCommande(const String& commande, String items[], int maxItems) {
     // Découpe un string de commande sur l'espace et renvoi un tableau contenant chaque items
     int nbItems = 0;
-    int debut = 0;
+    unsigned int debut = 0;
 
     while (debut < commande.length() && nbItems < maxItems) {
         // Ignorer les espaces
