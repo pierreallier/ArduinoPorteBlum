@@ -34,7 +34,7 @@ public:
         NONE
     };
 
-    CalibrationManager(Motor& m, SensorsManager& c); // Constructeur
+    CalibrationManager(SensorsManager& c, Motor& m); // Constructeur
 
     void init(); // Initialise les données
     void task(); // Execute les taches périodiques
@@ -62,8 +62,8 @@ public:
         return false;
     }
     
-    void updateCapteursLimits(CalibrationManager::Config config) { capteurs.setLimits(calibrationData[config]);}
-    void updateCapteursLimits() { capteurs.setLimits(calibrationData[getConfig()]);}
+    void updateCapteursLimits(CalibrationManager::Config config) { capteurs.setCalibration(calibrationData[config]);}
+    void updateCapteursLimits() { capteurs.setCalibration(calibrationData[getConfig()]);}
 
     // Gestion machine à état
     void changerEtat(CalibrationManager::ETAT nouvelle_etape); // Changer d'état 
@@ -84,8 +84,8 @@ private:
     bool eepromActive;
     CalibrationData calibrationData[2]; // 0: ON_FURNITURE, 1: OFF_FURNITURE
 
-    Motor& moteur;
     SensorsManager& capteurs;
+    Motor& moteur;
 
     bool ledState = false;
 

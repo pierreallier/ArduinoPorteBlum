@@ -1,7 +1,7 @@
 #include "StateMachine.h"
 
 StateMachine::StateMachine(SensorsManager& s, Motor& m, Buzzer& b) : capteurs(s), moteur(m), buzzer(b),
-                                                                     calibration(m,s), consigne() {
+                                                                     calibration(s,m), consigne() {
 }
 
 void StateMachine::init() {

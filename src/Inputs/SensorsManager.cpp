@@ -184,7 +184,7 @@ void SensorsManager::setConsigne(int c) {
     _mesures.consigne = c * 100;
 }
 
-void SensorsManager::setLimits(CalibrationData c) {
+void SensorsManager::setCalibration(CalibrationData c) {
     calibrationData = c;
 }
 

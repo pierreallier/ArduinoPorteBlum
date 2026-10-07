@@ -61,14 +61,14 @@ void SerialManager::_SET(String commande) {
             active = false;
         }
         else if (valeurs == "EFFACER") {
-            machine.calibration.clearEeprom();
-            active = machine.calibration.isEepromActive();
+            machine.calibrationMachine().clearEeprom();
+            active = machine.calibrationMachine().isEepromActive();
         }
         else {
             sendReponseNOK(MSG::ERR_CALIBRATION_SET);
             return;
         }
-        machine.calibration.setEepromActive(active);
+        machine.calibrationMachine().setEepromActive(active);
         sendReponseOK(MSG::INFO_CALIBRATION_SET);
         return;
     }
@@ -217,9 +217,9 @@ void SerialManager::_GET(String commande) {
     commande.toUpperCase(); // Convertit la commande
 
     if (commande.startsWith("CALIBRATION")) {
-        if (machine.calibration.isCalibrated()) {
-            sendMessage(MSG::DATA_COURSE, machine.calibration.getCourse());
-            sendMessage(MSG::DATA_OFFSET, machine.calibration.getOffset());
+        if (machine.isCalibrated()) {
+            sendMessage(MSG::DATA_COURSE, capteurs.getCalibration().highLimit);
+            sendMessage(MSG::DATA_OFFSET, capteurs.getCalibration().offset);
             sendReponseOK(MSG::INFO_CALIBRE);
         }
         else 
@@ -246,7 +246,7 @@ void SerialManager::_GET(String commande) {
             }
         }
         if (valeur == "MEUBLE") {
-            if (machine.calibration.getEtat()) 
+            if (machine.calibrationMachine().getEtat()) 
                 sendReponseOK(MSG::INFO_SUR_MEUBLE);
             else
                 sendReponseOK(MSG::INFO_DEMONTE);

@@ -77,7 +77,7 @@ void setup() {
     // Vérification type de montage 
     capteurs.onMeuble() ? sendDirect('I', "servodrive monté sur le meuble") : sendDirect('I', "servodrive non monté sur le meuble");
     // Vérification système calibré
-    if (machine.calibration.isNotCalibrated()) { // TODO : fonction depuis la statemachine
+    if (!machine.isCalibrated()) {
         sendDirect('W', "calibration requise");
     }
 
@@ -181,7 +181,7 @@ void ordonnanceur() {
                 }
                 if (capteurs.meubleChanged()) {
                         sendWarning(capteurs.onMeuble() ? MSG::INFO_SUR_MEUBLE : MSG::INFO_DEMONTE);
-                    if (machine.calibration.isNotCalibrated()) { // TODO : fonction dans StateMachine
+                    if (!machine.isCalibrated()) {
                         sendWarning(MSG::ERR_CALIBRATION_REQUISE);
                     }
                     if (machine.etat != StateMachine::ETAT::REPOS) {

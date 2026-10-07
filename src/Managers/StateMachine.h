@@ -63,12 +63,14 @@ class StateMachine {
         void suspendre();   // Stoppe le fonctionnement avant le test
         void reprendre();   // Restaure le fonctionnement après le test
 
-        CalibrationManager calibration;
+        inline bool isCalibrated() {return calibration.isCalibrated();}
+        CalibrationManager& calibrationMachine() {return calibration;}
     
     private:
-        Motor& moteur;
         SensorsManager& capteurs;
+        Motor& moteur;
         Buzzer& buzzer;
+        CalibrationManager calibration;
         ConsigneManager consigne;
  
         bool etatOuverture(uint16_t speed);

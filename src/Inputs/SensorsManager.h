@@ -57,7 +57,8 @@ class SensorsManager {
         void setConsigne(int consigne);
         inline float getLimitCourant() const { return limite_courant;}
         bool setLimitCourant(float limite);
-        void setLimits(CalibrationData c);
+        void setCalibration(CalibrationData c);
+        CalibrationData& getCalibration() {return calibrationData;}
 
         inline BN0055& bno()          { return _bno; }
         inline MT6701& codeurPorte()  { return _codeurPorte; }

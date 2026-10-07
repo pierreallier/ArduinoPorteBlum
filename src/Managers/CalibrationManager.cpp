@@ -3,8 +3,8 @@
 #include "../Serial/Messages.h"
 #include "../Config/Constantes.h"
 
-CalibrationManager::CalibrationManager(Motor& m, SensorsManager& c)
-  : moteur(m), capteurs(c) {
+CalibrationManager::CalibrationManager(SensorsManager& c, Motor& m)
+  : capteurs(c), moteur(m) {
 }
 
 void CalibrationManager::init() {
