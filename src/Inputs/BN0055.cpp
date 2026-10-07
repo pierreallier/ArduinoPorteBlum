@@ -199,6 +199,7 @@ void BN0055::onData(uint8_t status) {
         handleDisconnection(status);
         return;
     }
+    _mesures.time = millis();
     _dataAvailable = true;
     _state = READY;
 }
