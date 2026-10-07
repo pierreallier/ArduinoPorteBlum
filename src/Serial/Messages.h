@@ -6,7 +6,7 @@
 #include "../Config/Codes.h"
 #include "../Config/Types.h"
 
-#if VERSION_DEV == true
+#if VERSION_DEV
     constexpr uint8_t TAILLE_MESSAGE = 20;
 
     const char* const CALIBRATION_NAMES[] = {
@@ -104,6 +104,18 @@ inline void sendDirect(char type, const char* message) {
     Serial.println(message);
 }
 
+/** 
+ * @brief Envoie un message directement sur le port série.
+ * Format : TYPE;MESSAGE
+ */
+inline void sendDirect(char type, MSG code,int32_t val = 0) {
+    Serial.write(type);
+    Serial.write(';');
+    Serial.print(msgName(code));
+    Serial.write(';');
+    Serial.println(val);
+}
+
 /**
  * @brief Envoie un message du mode test (directement sur le port série).
  * Format : T;CIBLE;VALEUR
@@ -131,7 +143,7 @@ inline void sendTest(const char* cible, long valeur) {
  */
 inline bool sendMesures(Mesures message) {
     if (Serial.availableForWrite() >= TAILLE_MESURES) {
-        #if VERSION_DEV == true
+        #if VERSION_DEV
         Serial.print(F("M;"));
         Serial.print(message.time);
         Serial.print(";");
@@ -167,9 +179,11 @@ inline bool sendMesures(Mesures message) {
  */
 inline bool sendMesures(MesuresBN0055 message) {
     if (Serial.availableForWrite() >= TAILLE_MESURES_BN0055) {
-        #if VERSION_DEV == true
+        #if VERSION_DEV
         Serial.print(F("A;"));
-        Serial.println(message.time);
+        Serial.print(message.time);
+        Serial.print(";");
+        Serial.println(message.accelX);
         #else
         Serial.write((uint8_t*)&message, TAILLE_MESURES_BN0055);
         #endif
@@ -192,9 +206,9 @@ inline bool sendEvents() {
         dispo = queue.size();
     if (queue.perdus() > 0) {
         dispo -= 1;
-        #if VERSION_DEV == true
+        #if VERSION_DEV
             Serial.print(F("W;"));
-            Serial.print((uint8_t)MSG::ERR_MESSAGE_PERDU);
+            Serial.print(msgName(MSG::ERR_MESSAGE_PERDU));
             Serial.print(";");
             Serial.println(queue.perdus());
         #else
@@ -208,7 +222,7 @@ inline bool sendEvents() {
     }
     if (dispo > 0) {
         for (int i=0;i<dispo;i++) {
-            #if VERSION_DEV == true
+            #if VERSION_DEV
                 Event data = queue.peek();
                 if (data.type == 'S') {
                     if (data.code == MSG::ETAT_CALIBRATION) {
@@ -221,7 +235,7 @@ inline bool sendEvents() {
                 } else {
                     Serial.print(data.type);
                     Serial.print(";");
-                    Serial.print((uint8_t)data.code);
+                    Serial.print(msgName(data.code));
                     Serial.print(";");
                     Serial.println(data.val);
                 }

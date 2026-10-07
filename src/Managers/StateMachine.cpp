@@ -73,15 +73,22 @@ void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
 void StateMachine::setMode(StateMachine::MODE_PILOTAGE mode) {
     switch (mode) {
         case StateMachine::MODE_PILOTAGE::PWM:
+            sendReponseOK(MSG::DATA_MODE_PWM);
+            break;
         case StateMachine::MODE_PILOTAGE::VITESSE:
+            sendReponseOK(MSG::DATA_MODE_VITESSE);
+            break;
         case StateMachine::MODE_PILOTAGE::POSITION:
+            sendReponseOK(MSG::DATA_MODE_POSITION);
+            break;
         case StateMachine::MODE_PILOTAGE::POSITION_VITESSE:
-            modePilotage = mode;
-            sendReponseOK(MSG::INFO_MODE,(uint32_t)mode);
+            sendReponseOK(MSG::DATA_MODE_PV);
             break;
         default:
-            sendReponseNOK(MSG::ERR_CMD_SETMODE_ICONNU);
+            sendReponseNOK(MSG::ERR_PILOTAGE_SET);
+            return;
     }
+    modePilotage = mode;
 }
 
 void StateMachine::exec() {

@@ -1,106 +1,158 @@
 #ifndef CODES_H
 #define CODES_H
- 
+
 #include <stdint.h>
+#include "Constantes.h"
 
 /*
- * Protocole des messages hors mesures : une ligne  TYPE;CODE;VAL\n
+ * Fichier généré automatiquement.
+ * Ne pas modifier manuellement.
  *
- *   TYPE : I info | W warning | E erreur | S état | O réponse OK | N réponse NOK | R donnée
- *   CODE : valeur de l'enum Msg ci-dessous.
- *          NE JAMAIS RENUMÉROTER : le programme PC utilise les mêmes valeurs.
- *          Pour ajouter un message, prendre un numéro libre de sa plage.
- *   VAL  : entier signé 32 bits, 0 si sans objet.
- *          Les grandeurs décimales sont multipliées (x100 ou x1000, voir commentaires).
- *
- * Plages : erreurs 1..99  | infos 100..199 | données 200..249 | etats 250..254
- *
- * Hors protocole codé (envoyés en texte avec sendDirect(), voir Messages.h) :
- *   - les messages du setup (capteurs I2C, BNO055, fin d'initialisation...)
- *   - les messages du mode test (type T)
+ * Source : protocol.csv
  */
 
- /*
- * Liste des codes.
- * Cette liste permet de générer l'enum MSG et, en mode DEV,
- * le nom correspondant à chaque valeur.
- */
-
- enum class MSG : uint8_t {
-    NONE = 0,
-
-    // ---------------- Erreurs (E) ----------------
-    ERR_COURANT = 1,                    // "limite de courant atteinte"
-    ERR_COURANT_SET = 2,                // "limite de courant incompatible (entre 0 et 2.5). Valeur non modifiée "
-    ERR_BLOCAGE = 3,                    // "blocage mécanique détecté"
-    ERR_LIMITE_PORTE = 4,               // "limite de la porte atteinte $.2°"      val : angle de la porte x100 (°)
-    ERR_CALIBRATION_REQUISE = 5,        // "calibration requise"
-    ERR_CALIBRATION_ANNULEE = 6,        // "calibration interrompue"
-    ERR_NON_CALIBRE = 7,                // "Système non calibré"
-    ERR_CALIBRATION_SET = 8,            // "commande set calibration inconnue : valeur attendue : ON / OFF / EFFACER"
-    ERR_CMD_SETMODE_ICONNU = 9,         // "commande set mode inconnue"
-    ERR_CMD_INCONNUE = 10,              // "commande inconnue (ou mal formée)"
-    ERR_CMD_SET_INCONNUE = 11,          // "Commande set inconnue : valeur possibles : LIMITES / COURANT / MODE / CONSIGNE / PID / MESURES"
-    ERR_CONSIGNE_EN_PILOTAGE = 12,      // "impossible de changer de consigne pendant le pilotage : le système doit être au repos"
-    ERR_PILOTAGE_SET = 13,              // "Mode de pilotage inconnu : valeur possibles : PWM / POSITION / VITESSE / POSITIOB_VITESSE"
-    ERR_PID_SET = 14,                   // "Réglage PID erronné : TYPE [VITESSE|POSITION] KP KI KD attendus"
-    ERR_PID_TYPE_SET = 15,              // "Type de PID inconnu : valeur possibles VITESSE / POSITION"
-    ERR_CONSIGNE_SET = 16,              // "Type de consigne inconnu : valeur possibles : POTENTIOMETRE / ECHELON / RAMPE / TRAPEZE / SINUS"
-    ERR_FREQ_MESURES_SET = 17,          // "réglage de la fréquence de mesures : période manquante ou invalide (0 à 1000)"
-    ERR_MESURE_GET = 18,                // "commande get mesures : capteur inconnu"
-    ERR_CMD_GET_INCONNUE = 19,          // "commande get inconnue : valeurs possibles : CALIBRATION / MODE / PID"
-    ERR_CMD_DO_INCONNUE = 20,           // "commande do inconnue : valeurs possibles : RESET / INIT / OUVRIR / FERMER / STOP / PILOTER / CALIBRATION / TEST"
-    ERR_MODE = 21,                      // "mode de pilotage erroné"
-    ERR_TEST_IMPOSSIBLE = 22,           // "demande de test impossible : uniquement au repos ou en calibration"
-    ERR_MESSAGE_PERDU = 23,             // "$ message(s) perdu(s)"
-    
-    // ---------------- Infos (I) ----------------
-    INFO_CALIBRATION_DEBUT = 100,        // "début de la calibration"
-    INFO_CALIBRATION_ACHEVEE = 101,      // "fin de calibration"
-    INFO_CALIBRATION_ECHEC = 102,        // "calibration échouée"
-    INFO_CALIBRE = 103,                  // "système calibré"
-    INFO_COURSE = 104,                   // "Course du capteur $"
-    INFO_OFFSET = 105,                   // "Offset du capteur $"
-    INFO_LIMITE_BASSE = 106,             // "Limite basse de sécurité $"
-    INFO_LIMITE_HAUTE = 107,             // "Limite haute de sécurité $"
-    INFO_CALIBRATION_SET = 108,          // "commande set calibration faite"
-    INFO_ANGLE_PORTE = 109,              // "Angle de la porte $.2"
-    INFO_SUR_MEUBLE = 110,               // "servodrive monté sur le meuble"
-    INFO_DEMONTE = 111,                  // "servodrive non monté sur le meuble"
-    INFO_BN0055_ABSENT = 112,            // "capteur BN0055 absent"
-    INFO_BN0055_PRESENT = 113,           // "capteur BN0055 détecté"
-    INFO_MODE = 114,                     // "Mode de pilotage : ${PWM|POSITION|VITESSE|POSITION_VITESSE}"
-    INFO_PID_SET = 115,                  // "Configuration du PID effectuée"
-    INFO_CONSIGNE_SET = 116,             // "Consigne mise à jour"
-    INFO_COURANT_SET = 117,              // "Limite de courant modifiée"
-    INFO_MESURES_DESACTIVE = 118,        // "Envoi des mesures désactivé"
-    INFO_FREQ_MESURES = 119,             // "Envoi des mesures toutes les $ ms"
-    INFO_DO_INIT = 120,                  // "Demande état INIT"
-    INFO_DO_OUVRIR = 121,                // "Demande état OUVRIR"
-    INFO_DO_FERMER = 122,                // "Demande état FERMER"
-    INFO_DO_STOP = 123,                  // "Demande état STOP"
-    INFO_DO_PILOTER = 124,               // "Demande état PILOTER"
-    INFO_DO_CALIBRATION = 125,           // "Demande état CALIBRATION"
-    INFO_VERSION_DEV = 126,              // "Mode ${DEV|PROD}"
-    INFO_VERSION_CARTE = 127,            // "Version de la carte $"
-    INFO_VERSION_SOFT = 128,             // "Version du soft $"
-  
-    // ---------------- Données (R) ----------------
-    DATA_PID_VITESSE_KP = 200,  // "PID vitesse : Kp=$.3"
-    DATA_PID_VITESSE_KI = 201,  // "PID vitesse : Ki=$.3"
-    DATA_PID_VITESSE_KD = 202,  // "PID vitesse : Kd=$.3"
-    DATA_PID_POSITION_KP = 203, // "PID position : Kp=$.3"
-    DATA_PID_POSITION_KI = 204, // "PID position : Ki=$.3"
-    DATA_PID_POSITION_KD = 205, // "PID position : Kd=$.3"
-    DATA_MODE_PWM = 206,        // "mode de pilotage PWM"
-    DATA_MODE_POSITION = 207,   // "mode de pilotage en position"
-    DATA_MODE_VITESSE = 208,    // "mode de pilotage en vitesse"
-    DATA_MODE_PV = 209,         // "mode de pilotage en vitesse et position"
-
-    // ------------------ Etats (S) -----------------
-    ETAT_PROD = 250,
-    ETAT_CALIBRATION = 251
-    
+enum class MSG : uint8_t {
+    NONE = 0,    // "none"
+    ERR_CMD_INCONNUE = 1,    // "commande inconnue (ou mal formée)"
+    INFO_VERSION_DEV = 2,    // "mode ${DEV|PROD}"
+    INFO_VERSION_CARTE = 3,    // "version de la carte $"
+    INFO_VERSION_SOFT = 4,    // "version du soft $"
+    ERR_MESSAGE_PERDU = 5,    // "$ message(s) perdu(s)"
+    ERR_COURANT = 10,    // "limite de courant atteinte"
+    ERR_BLOCAGE = 11,    // "blocage mécanique détecté"
+    ERR_LIMITE_PORTE = 12,    // "limite de la porte atteinte $.2°"
+    DATA_LIMITE_BASSE = 13,    // "limite basse de sécurité $"
+    DATA_LIMITE_HAUTE = 14,    // "limite haute de sécurité $"
+    ERR_CALIBRATION_REQUISE = 20,    // "calibration requise"
+    ERR_CALIBRATION_ANNULEE = 21,    // "calibration interrompue"
+    ERR_NON_CALIBRE = 22,    // "système non calibré"
+    INFO_CALIBRATION_DEBUT = 23,    // "début de la calibration"
+    INFO_CALIBRATION_ACHEVEE = 24,    // "fin de calibration"
+    INFO_CALIBRATION_ECHEC = 25,    // "calibration échouée"
+    INFO_CALIBRE = 26,    // "système calibré"
+    DATA_COURSE = 27,    // "course du capteur $"
+    DATA_OFFSET = 28,    // "offset du capteur $"
+    ERR_CMD_SET_INCONNUE = 30,    // "commande set inconnue : valeur possibles : LIMITES / COURANT / CALIBRATION / MODE / CONSIGNE / PID / MESURES"
+    ERR_COURANT_SET = 31,    // "limite de courant incompatible (entre 0 et 2.5A) : valeur non modifiée "
+    ERR_CALIBRATION_SET = 32,    // "commande set calibration inconnue : valeur attendue : ON / OFF / EFFACER"
+    ERR_PILOTAGE_SET = 33,    // "mode de pilotage inconnu : valeur possibles : PWM / POSITION / VITESSE / POSITIOB_VITESSE"
+    ERR_CONSIGNE_SET = 34,    // "type de consigne inconnu : valeur possibles : POTENTIOMETRE / ECHELON / RAMPE / TRAPEZE / SINUS"
+    ERR_PID_TYPE_SET = 35,    // "type de PID inconnu : valeur possibles VITESSE / POSITION"
+    ERR_PID_SET = 36,    // "réglage PID erronné : TYPE [VITESSE|POSITION] KP KI KD attendus"
+    INFO_COURANT_SET = 40,    // "limite de courant modifiée"
+    INFO_CALIBRATION_SET = 41,    // "commande set calibration faite"
+    INFO_CONSIGNE_SET = 42,    // "consigne mise à jour"
+    INFO_PID_SET = 43,    // "configuration du PID effectuée"
+    ERR_FREQ_MESURES_SET = 50,    // "réglage de la fréquence de mesures : période manquante ou invalide (0 à 1000)"
+    ERR_CMD_GET_INCONNUE = 60,    // "commande get inconnue : valeurs possibles : CALIBRATION / MODE / PID / MESURES"
+    ERR_MODE_GET = 61,    // "mode de pilotage erroné"
+    ERR_MESURE_GET = 62,    // "commande get mesures : capteur inconnu"
+    ERR_CMD_DO_INCONNUE = 70,    // "commande do inconnue : valeurs possibles : RESET / INIT / OUVRIR / FERMER / STOP / PILOTER / CALIBRATION / TEST"
+    INFO_DO_RESET = 71,    // "demande reset carte"
+    INFO_DO_INIT = 72,    // "demande état INIT"
+    INFO_DO_OUVRIR = 73,    // "demande état OUVRIR"
+    INFO_DO_FERMER = 74,    // "demande état FERMER"
+    INFO_DO_STOP = 75,    // "demande état STOP"
+    INFO_DO_PILOTER = 76,    // "demande état PILOTER"
+    INFO_DO_CALIBRATION = 77,    // "demande état CALIBRATION"
+    ERR_TEST_IMPOSSIBLE = 78,    // "demande de test impossible : uniquement au repos ou en calibration"
+    ERR_CONSIGNE_EN_PILOTAGE = 80,    // "impossible de changer de consigne pendant le pilotage : le système doit être au repos"
+    DATA_MODE_PWM = 81,    // "mode de pilotage PWM"
+    DATA_MODE_POSITION = 82,    // "mode de pilotage en position"
+    DATA_MODE_VITESSE = 83,    // "mode de pilotage en vitesse"
+    DATA_MODE_PV = 84,    // "mode de pilotage en vitesse et position"
+    DATA_PID_VITESSE_KP = 90,    // "PID vitesse : Kp  =$.3"
+    DATA_PID_VITESSE_KI = 91,    // "PID vitesse : Ki  =$.3"
+    DATA_PID_VITESSE_KD = 92,    // "PID vitesse : Kd  =$.3"
+    DATA_PID_POSITION_KP = 93,    // "PID position : Kp =$.3"
+    DATA_PID_POSITION_KI = 94,    // "PID position : Ki =$.3"
+    DATA_PID_POSITION_KD = 95,    // "PID position : Kd =$.3"
+    INFO_MESURES_DESACTIVE = 100,    // "envoi des mesures désactivé"
+    INFO_FREQ_MESURES = 101,    // "envoi des mesures toutes les $ ms"
+    INFO_ANGLE_PORTE = 102,    // "angle de la porte $.2"
+    INFO_SUR_MEUBLE = 103,    // "servodrive monté sur le meuble"
+    INFO_DEMONTE = 104,    // "servodrive non monté sur le meuble"
+    INFO_BN0055_ABSENT = 105,    // "capteur BN0055 absent"
+    INFO_BN0055_PRESENT = 106,    // "capteur BN0055 détecté"
+    ETAT_PROD = 250,    // "etat en prod"
+    ETAT_CALIBRATION = 251,    // "etat de calibration"
 };
+
+#if VERSION_DEV
+
+inline const __FlashStringHelper* msgName(MSG msg)
+{
+    switch (msg) {
+        case MSG::NONE: return F("NONE");
+        case MSG::ERR_CMD_INCONNUE: return F("ERR_CMD_INCONNUE");
+        case MSG::INFO_VERSION_DEV: return F("INFO_VERSION_DEV");
+        case MSG::INFO_VERSION_CARTE: return F("INFO_VERSION_CARTE");
+        case MSG::INFO_VERSION_SOFT: return F("INFO_VERSION_SOFT");
+        case MSG::ERR_MESSAGE_PERDU: return F("ERR_MESSAGE_PERDU");
+        case MSG::ERR_COURANT: return F("ERR_COURANT");
+        case MSG::ERR_BLOCAGE: return F("ERR_BLOCAGE");
+        case MSG::ERR_LIMITE_PORTE: return F("ERR_LIMITE_PORTE");
+        case MSG::DATA_LIMITE_BASSE: return F("DATA_LIMITE_BASSE");
+        case MSG::DATA_LIMITE_HAUTE: return F("DATA_LIMITE_HAUTE");
+        case MSG::ERR_CALIBRATION_REQUISE: return F("ERR_CALIBRATION_REQUISE");
+        case MSG::ERR_CALIBRATION_ANNULEE: return F("ERR_CALIBRATION_ANNULEE");
+        case MSG::ERR_NON_CALIBRE: return F("ERR_NON_CALIBRE");
+        case MSG::INFO_CALIBRATION_DEBUT: return F("INFO_CALIBRATION_DEBUT");
+        case MSG::INFO_CALIBRATION_ACHEVEE: return F("INFO_CALIBRATION_ACHEVEE");
+        case MSG::INFO_CALIBRATION_ECHEC: return F("INFO_CALIBRATION_ECHEC");
+        case MSG::INFO_CALIBRE: return F("INFO_CALIBRE");
+        case MSG::DATA_COURSE: return F("DATA_COURSE");
+        case MSG::DATA_OFFSET: return F("DATA_OFFSET");
+        case MSG::ERR_CMD_SET_INCONNUE: return F("ERR_CMD_SET_INCONNUE");
+        case MSG::ERR_COURANT_SET: return F("ERR_COURANT_SET");
+        case MSG::ERR_CALIBRATION_SET: return F("ERR_CALIBRATION_SET");
+        case MSG::ERR_PILOTAGE_SET: return F("ERR_PILOTAGE_SET");
+        case MSG::ERR_CONSIGNE_SET: return F("ERR_CONSIGNE_SET");
+        case MSG::ERR_PID_TYPE_SET: return F("ERR_PID_TYPE_SET");
+        case MSG::ERR_PID_SET: return F("ERR_PID_SET");
+        case MSG::INFO_COURANT_SET: return F("INFO_COURANT_SET");
+        case MSG::INFO_CALIBRATION_SET: return F("INFO_CALIBRATION_SET");
+        case MSG::INFO_CONSIGNE_SET: return F("INFO_CONSIGNE_SET");
+        case MSG::INFO_PID_SET: return F("INFO_PID_SET");
+        case MSG::ERR_FREQ_MESURES_SET: return F("ERR_FREQ_MESURES_SET");
+        case MSG::ERR_CMD_GET_INCONNUE: return F("ERR_CMD_GET_INCONNUE");
+        case MSG::ERR_MODE_GET: return F("ERR_MODE_GET");
+        case MSG::ERR_MESURE_GET: return F("ERR_MESURE_GET");
+        case MSG::ERR_CMD_DO_INCONNUE: return F("ERR_CMD_DO_INCONNUE");
+        case MSG::INFO_DO_RESET: return F("INFO_DO_RESET");
+        case MSG::INFO_DO_INIT: return F("INFO_DO_INIT");
+        case MSG::INFO_DO_OUVRIR: return F("INFO_DO_OUVRIR");
+        case MSG::INFO_DO_FERMER: return F("INFO_DO_FERMER");
+        case MSG::INFO_DO_STOP: return F("INFO_DO_STOP");
+        case MSG::INFO_DO_PILOTER: return F("INFO_DO_PILOTER");
+        case MSG::INFO_DO_CALIBRATION: return F("INFO_DO_CALIBRATION");
+        case MSG::ERR_TEST_IMPOSSIBLE: return F("ERR_TEST_IMPOSSIBLE");
+        case MSG::ERR_CONSIGNE_EN_PILOTAGE: return F("ERR_CONSIGNE_EN_PILOTAGE");
+        case MSG::DATA_MODE_PWM: return F("DATA_MODE_PWM");
+        case MSG::DATA_MODE_POSITION: return F("DATA_MODE_POSITION");
+        case MSG::DATA_MODE_VITESSE: return F("DATA_MODE_VITESSE");
+        case MSG::DATA_MODE_PV: return F("DATA_MODE_PV");
+        case MSG::DATA_PID_VITESSE_KP: return F("DATA_PID_VITESSE_KP");
+        case MSG::DATA_PID_VITESSE_KI: return F("DATA_PID_VITESSE_KI");
+        case MSG::DATA_PID_VITESSE_KD: return F("DATA_PID_VITESSE_KD");
+        case MSG::DATA_PID_POSITION_KP: return F("DATA_PID_POSITION_KP");
+        case MSG::DATA_PID_POSITION_KI: return F("DATA_PID_POSITION_KI");
+        case MSG::DATA_PID_POSITION_KD: return F("DATA_PID_POSITION_KD");
+        case MSG::INFO_MESURES_DESACTIVE: return F("INFO_MESURES_DESACTIVE");
+        case MSG::INFO_FREQ_MESURES: return F("INFO_FREQ_MESURES");
+        case MSG::INFO_ANGLE_PORTE: return F("INFO_ANGLE_PORTE");
+        case MSG::INFO_SUR_MEUBLE: return F("INFO_SUR_MEUBLE");
+        case MSG::INFO_DEMONTE: return F("INFO_DEMONTE");
+        case MSG::INFO_BN0055_ABSENT: return F("INFO_BN0055_ABSENT");
+        case MSG::INFO_BN0055_PRESENT: return F("INFO_BN0055_PRESENT");
+        case MSG::ETAT_PROD: return F("ETAT_PROD");
+        case MSG::ETAT_CALIBRATION: return F("ETAT_CALIBRATION");
+
+        default:
+            return F("UNKNOWN");
+    }
+}
+
+#endif
 
 #endif

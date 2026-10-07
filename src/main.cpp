@@ -4,9 +4,9 @@
 #include "Outputs/Buzzer.h"
 #include "Inputs/BN0055.h"
 #include "Inputs/MT6701.h"
-#include "MachineEtats/TestManager.h"
+#include "Managers/TestManager.h"
 
-#include "MachineEtats/StateMachine.h"
+#include "Managers/StateMachine.h"
 #include "Inputs/SensorsManager.h"
 #include "Serial/SerialManager.h"
 #include "Outputs/Motor.h"
@@ -59,6 +59,11 @@ void setup() {
     bno.init(); // Initialisation du capteur BN0055
     capteurs.init(); // Initialisation des capteurs
     machine.init(); // Initialisation de la machine à états
+
+    // Mode
+    #if VERSION_DEV
+        sendDirect('W', "version de développement");
+    #endif
 
     // Vérification codeur porte I2C
     bool send_error = false;  // Flag pour éviter d'afficher plusieurs fois l'erreur

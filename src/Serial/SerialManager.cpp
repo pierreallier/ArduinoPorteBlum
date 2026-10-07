@@ -178,16 +178,17 @@ void SerialManager::_GET(String commande) {
 
     if (commande.startsWith("CALIBRATION")) {
         if (machine.calibration.isCalibrated()) {
-            sendMessage(MSG::INFO_CALIBRE);
-            sendMessage(MSG::INFO_COURSE, machine.calibration.getCourse());
-            sendReponseOK(MSG::INFO_OFFSET, machine.calibration.getOffset());
+            sendMessage(MSG::DATA_COURSE, machine.calibration.getCourse());
+            sendMessage(MSG::DATA_OFFSET, machine.calibration.getOffset());
+            sendReponseOK(MSG::INFO_CALIBRE);
         }
         else 
             sendReponseNOK(MSG::ERR_NON_CALIBRE);
     }
     else if (commande.startsWith("LIMITS")) {
-        sendMessage(MSG::INFO_LIMITE_BASSE,capteurs.getLimiteBasse());
-        sendReponseOK(MSG::INFO_LIMITE_HAUTE,capteurs.getLimiteHaute());
+        sendMessage(MSG::DATA_LIMITE_BASSE,capteurs.getLimiteBasse());
+        sendMessage(MSG::DATA_LIMITE_HAUTE,capteurs.getLimiteHaute());
+        sendReponseOK(MSG::INFO_CALIBRE);
     }
     else if (commande.startsWith("MESURES")) {
         String valeur = commande.substring(7);
@@ -233,7 +234,7 @@ void SerialManager::_GET(String commande) {
                 break;
             }
             default: {
-                sendReponseNOK(MSG::ERR_MODE);
+                sendReponseNOK(MSG::ERR_MODE_GET);
                 break;
             }
         }
@@ -260,7 +261,7 @@ void SerialManager::_DO(String commande) {
     commande.toUpperCase(); // Convertit la commande
 
     if (commande.startsWith("RESET")) {
-        sendDirect('I',"DO RESET Effectuée");
+        sendDirect('I',MSG::INFO_DO_RESET);
         resetArduino();
         return;
     }

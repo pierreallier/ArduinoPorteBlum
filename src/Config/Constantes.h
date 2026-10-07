@@ -2,7 +2,7 @@
 
 #define VERSION_CARTE 3
 #define VERSION_SOFT 0
-#define VERSION_DEV true
+#define VERSION_DEV 1
 
 // Moteur et driver
 #define PWM_REV_PIN  7 // Pin de commande PWM pour la rotation inverse du moteur
@@ -48,7 +48,7 @@
 
     // Boutons
     #define TEST_BT 37 // Bouton de test
-    #define WIRELESS_BT 29 // Bouton sans fil
+    #define WIRELESS_BT 25 // Bouton sans fil
     #define CALIBRATION_BT 33 // Bouton de calibration
     #define PILOTAGE_BT 41 // Bouton de mise en fonctionnement / arrêt
 

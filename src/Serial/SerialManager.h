@@ -7,7 +7,7 @@
 
 #include "../Inputs/SensorsManager.h"
 #include "../Outputs/Motor.h"
-#include "../MachineEtats/StateMachine.h"
+#include "../Managers/StateMachine.h"
 
 #define EEPROM_ADDR_TENVOIS 15
 
