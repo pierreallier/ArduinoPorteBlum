@@ -56,9 +56,11 @@ void setup() {
     moteur.init(); // Initialisation du moteur et du driver
     machine.init(); // Initialisation de la machine à états
 
-    // Mode
+    // Mode DEV (message et envoi des mesures) sinon on n'envoi pas les mesures (à activer via le SET)
     #if VERSION_DEV
         sendDirect('W', "version de développement");
+    #else
+        portserie.setMesurePeriode(0);
     #endif
 
     // Vérification codeur porte I2C

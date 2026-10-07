@@ -42,13 +42,13 @@ enum class MSG : uint8_t {
     ERR_PID_SET = 36,    // "réglage PID erronné : TYPE [VITESSE|POSITION] KP KI KD attendu"
     ERR_ACCEL_SET = 37,    // "commande set accéléromètre inconnue : valeur attendue : ON / OFF"
     ERR_BUZZER_SET = 38,    // "commande set buzzer inconnue : valeur attendue : ON / OFF"
-    INFO_COURANT_SET = 40,    // "limite de courant modifiée"
-    INFO_CALIBRATION_SET = 41,    // "commande set calibration faite"
-    INFO_CONSIGNE_SET = 42,    // "consigne mise à jour"
-    INFO_PID_SET = 43,    // "configuration du PID effectuée"
-    INFO_ACCEL_SET = 44,    // "${désactivation|activation} de l'accéléromètre"
-    INFO_BUZZER = 45,    // "Buzzer ${désactivé|activé}"
-    ERR_FREQ_MESURES_SET = 50,    // "réglage de la fréquence de mesures : période manquante ou invalide (0 à 1000)"
+    ERR_FREQ_MESURES_SET = 39,    // "réglage de la fréquence de mesures : période manquante ou invalide (0 à 1000)"
+    INFO_COURANT_SET = 50,    // "limite de courant modifiée"
+    INFO_CALIBRATION_SET = 51,    // "commande set calibration faite"
+    INFO_CONSIGNE_SET = 52,    // "consigne mise à jour"
+    INFO_PID_SET = 53,    // "configuration du PID effectuée"
+    INFO_ACCEL_SET = 54,    // "${désactivation|activation} de l'accéléromètre"
+    INFO_BUZZER = 55,    // "Buzzer ${désactivé|activé}"
     ERR_CMD_GET_INCONNUE = 60,    // "commande get inconnue : valeur attendue : CALIBRATION / MODE / PID / MESURES"
     ERR_MODE_GET = 61,    // "mode de pilotage erroné"
     ERR_MESURE_GET = 62,    // "commande get mesures : capteur inconnu"
@@ -76,12 +76,18 @@ enum class MSG : uint8_t {
     DATA_PID_POSITION_KI = 94,    // "PID position : Ki = $.3"
     DATA_PID_POSITION_KD = 95,    // "PID position : Kd = $.3"
     INFO_MESURES_DESACTIVE = 100,    // "envoi des mesures désactivé"
-    INFO_FREQ_MESURES = 101,    // "envoi des mesures toutes les $ ms"
-    INFO_ANGLE_PORTE = 102,    // "angle de la porte $.2"
-    INFO_SUR_MEUBLE = 103,    // "servodrive monté sur le meuble"
-    INFO_DEMONTE = 104,    // "servodrive non monté sur le meuble"
-    INFO_BN0055_ABSENT = 105,    // "capteur BN0055 absent"
-    INFO_BN0055_PRESENT = 106,    // "capteur BN0055 détecté"
+    DATA_FREQ_MESURES = 101,    // "envoi des mesures toutes les $ ms"
+    DATA_ANGLE_PORTE = 102,    // "angle de la porte $.2°"
+    DATA_TENSION = 103,    // "tension d'alimentation $.2V"
+    DATA_COURANT = 104,    // "courant consommé $.2A"
+    DATA_ANGLE_MOTEUR = 105,    // "angle moteur $.2°"
+    DATA_VITESSE_MOTEUR = 106,    // "vitesse moteur $.2 rad/s"
+    DATA_PWM = 107,    // "PWM moteur $.2"
+    DATA_CONSIGNE = 108,    // "consigne moteur $.2 (PWM,°,rad/s)"
+    INFO_SUR_MEUBLE = 109,    // "servodrive monté sur le meuble"
+    INFO_DEMONTE = 110,    // "servodrive non monté sur le meuble"
+    INFO_BN0055_ABSENT = 111,    // "capteur BN0055 absent"
+    INFO_BN0055_PRESENT = 112,    // "capteur BN0055 détecté"
     ETAT_PROD = 250,    // "etat en prod"
     ETAT_CALIBRATION = 251,    // "etat de calibration"
 };
@@ -121,13 +127,13 @@ inline const __FlashStringHelper* msgName(MSG msg)
         case MSG::ERR_PID_SET: return F("ERR_PID_SET");
         case MSG::ERR_ACCEL_SET: return F("ERR_ACCEL_SET");
         case MSG::ERR_BUZZER_SET: return F("ERR_BUZZER_SET");
+        case MSG::ERR_FREQ_MESURES_SET: return F("ERR_FREQ_MESURES_SET");
         case MSG::INFO_COURANT_SET: return F("INFO_COURANT_SET");
         case MSG::INFO_CALIBRATION_SET: return F("INFO_CALIBRATION_SET");
         case MSG::INFO_CONSIGNE_SET: return F("INFO_CONSIGNE_SET");
         case MSG::INFO_PID_SET: return F("INFO_PID_SET");
         case MSG::INFO_ACCEL_SET: return F("INFO_ACCEL_SET");
         case MSG::INFO_BUZZER: return F("INFO_BUZZER");
-        case MSG::ERR_FREQ_MESURES_SET: return F("ERR_FREQ_MESURES_SET");
         case MSG::ERR_CMD_GET_INCONNUE: return F("ERR_CMD_GET_INCONNUE");
         case MSG::ERR_MODE_GET: return F("ERR_MODE_GET");
         case MSG::ERR_MESURE_GET: return F("ERR_MESURE_GET");
@@ -155,8 +161,14 @@ inline const __FlashStringHelper* msgName(MSG msg)
         case MSG::DATA_PID_POSITION_KI: return F("DATA_PID_POSITION_KI");
         case MSG::DATA_PID_POSITION_KD: return F("DATA_PID_POSITION_KD");
         case MSG::INFO_MESURES_DESACTIVE: return F("INFO_MESURES_DESACTIVE");
-        case MSG::INFO_FREQ_MESURES: return F("INFO_FREQ_MESURES");
-        case MSG::INFO_ANGLE_PORTE: return F("INFO_ANGLE_PORTE");
+        case MSG::DATA_FREQ_MESURES: return F("DATA_FREQ_MESURES");
+        case MSG::DATA_ANGLE_PORTE: return F("DATA_ANGLE_PORTE");
+        case MSG::DATA_TENSION: return F("DATA_TENSION");
+        case MSG::DATA_COURANT: return F("DATA_COURANT");
+        case MSG::DATA_ANGLE_MOTEUR: return F("DATA_ANGLE_MOTEUR");
+        case MSG::DATA_VITESSE_MOTEUR: return F("DATA_VITESSE_MOTEUR");
+        case MSG::DATA_PWM: return F("DATA_PWM");
+        case MSG::DATA_CONSIGNE: return F("DATA_CONSIGNE");
         case MSG::INFO_SUR_MEUBLE: return F("INFO_SUR_MEUBLE");
         case MSG::INFO_DEMONTE: return F("INFO_DEMONTE");
         case MSG::INFO_BN0055_ABSENT: return F("INFO_BN0055_ABSENT");

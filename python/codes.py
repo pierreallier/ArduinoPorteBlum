@@ -39,13 +39,13 @@ class MSG(IntEnum):
     ERR_PID_SET = 36
     ERR_ACCEL_SET = 37
     ERR_BUZZER_SET = 38
-    INFO_COURANT_SET = 40
-    INFO_CALIBRATION_SET = 41
-    INFO_CONSIGNE_SET = 42
-    INFO_PID_SET = 43
-    INFO_ACCEL_SET = 44
-    INFO_BUZZER = 45
-    ERR_FREQ_MESURES_SET = 50
+    ERR_FREQ_MESURES_SET = 39
+    INFO_COURANT_SET = 50
+    INFO_CALIBRATION_SET = 51
+    INFO_CONSIGNE_SET = 52
+    INFO_PID_SET = 53
+    INFO_ACCEL_SET = 54
+    INFO_BUZZER = 55
     ERR_CMD_GET_INCONNUE = 60
     ERR_MODE_GET = 61
     ERR_MESURE_GET = 62
@@ -73,12 +73,18 @@ class MSG(IntEnum):
     DATA_PID_POSITION_KI = 94
     DATA_PID_POSITION_KD = 95
     INFO_MESURES_DESACTIVE = 100
-    INFO_FREQ_MESURES = 101
-    INFO_ANGLE_PORTE = 102
-    INFO_SUR_MEUBLE = 103
-    INFO_DEMONTE = 104
-    INFO_BN0055_ABSENT = 105
-    INFO_BN0055_PRESENT = 106
+    DATA_FREQ_MESURES = 101
+    DATA_ANGLE_PORTE = 102
+    DATA_TENSION = 103
+    DATA_COURANT = 104
+    DATA_ANGLE_MOTEUR = 105
+    DATA_VITESSE_MOTEUR = 106
+    DATA_PWM = 107
+    DATA_CONSIGNE = 108
+    INFO_SUR_MEUBLE = 109
+    INFO_DEMONTE = 110
+    INFO_BN0055_ABSENT = 111
+    INFO_BN0055_PRESENT = 112
     ETAT_PROD = 250
     ETAT_CALIBRATION = 251
 
@@ -114,13 +120,13 @@ MESSAGE_TEXT = {
     MSG.ERR_PID_SET: 'réglage PID erronné : TYPE [VITESSE|POSITION] KP KI KD attendu',
     MSG.ERR_ACCEL_SET: 'commande set accéléromètre inconnue : valeur attendue : ON / OFF',
     MSG.ERR_BUZZER_SET: 'commande set buzzer inconnue : valeur attendue : ON / OFF',
+    MSG.ERR_FREQ_MESURES_SET: 'réglage de la fréquence de mesures : période manquante ou invalide (0 à 1000)',
     MSG.INFO_COURANT_SET: 'limite de courant modifiée',
     MSG.INFO_CALIBRATION_SET: 'commande set calibration faite',
     MSG.INFO_CONSIGNE_SET: 'consigne mise à jour',
     MSG.INFO_PID_SET: 'configuration du PID effectuée',
     MSG.INFO_ACCEL_SET: "${désactivation|activation} de l'accéléromètre",
     MSG.INFO_BUZZER: 'Buzzer ${désactivé|activé}',
-    MSG.ERR_FREQ_MESURES_SET: 'réglage de la fréquence de mesures : période manquante ou invalide (0 à 1000)',
     MSG.ERR_CMD_GET_INCONNUE: 'commande get inconnue : valeur attendue : CALIBRATION / MODE / PID / MESURES',
     MSG.ERR_MODE_GET: 'mode de pilotage erroné',
     MSG.ERR_MESURE_GET: 'commande get mesures : capteur inconnu',
@@ -148,8 +154,14 @@ MESSAGE_TEXT = {
     MSG.DATA_PID_POSITION_KI: 'PID position : Ki = $.3',
     MSG.DATA_PID_POSITION_KD: 'PID position : Kd = $.3',
     MSG.INFO_MESURES_DESACTIVE: 'envoi des mesures désactivé',
-    MSG.INFO_FREQ_MESURES: 'envoi des mesures toutes les $ ms',
-    MSG.INFO_ANGLE_PORTE: 'angle de la porte $.2',
+    MSG.DATA_FREQ_MESURES: 'envoi des mesures toutes les $ ms',
+    MSG.DATA_ANGLE_PORTE: 'angle de la porte $.2°',
+    MSG.DATA_TENSION: "tension d'alimentation $.2V",
+    MSG.DATA_COURANT: 'courant consommé $.2A',
+    MSG.DATA_ANGLE_MOTEUR: 'angle moteur $.2°',
+    MSG.DATA_VITESSE_MOTEUR: 'vitesse moteur $.2 rad/s',
+    MSG.DATA_PWM: 'PWM moteur $.2',
+    MSG.DATA_CONSIGNE: 'consigne moteur $.2 (PWM,°,rad/s)',
     MSG.INFO_SUR_MEUBLE: 'servodrive monté sur le meuble',
     MSG.INFO_DEMONTE: 'servodrive non monté sur le meuble',
     MSG.INFO_BN0055_ABSENT: 'capteur BN0055 absent',

@@ -36,17 +36,15 @@
     ERR_PID_SET                 ; 36    ; "réglage PID erronné : TYPE [VITESSE|POSITION] KP KI KD attendu"
     ERR_ACCEL_SET               ; 37    ; "commande set accéléromètre inconnue : valeur attendue : ON / OFF"
     ERR_BUZZER_SET              ; 38    ; "commande set buzzer inconnue : valeur attendue : ON / OFF"
+    ERR_FREQ_MESURES_SET        ; 39    ; "réglage de la fréquence de mesures : période manquante ou invalide (0 à 1000)"
     
 # SET OK ------------------------------------------------------------------------------------------------------- 
-    INFO_COURANT_SET            ; 40    ; "limite de courant modifiée"
-    INFO_CALIBRATION_SET        ; 41    ; "commande set calibration faite"
-    INFO_CONSIGNE_SET           ; 42    ; "consigne mise à jour"
-    INFO_PID_SET                ; 43    ; "configuration du PID effectuée"
-    INFO_ACCEL_SET              ; 44    ; "${désactivation|activation} de l'accéléromètre"
-    INFO_BUZZER                 ; 45    ; "Buzzer ${désactivé|activé}"
-
-# SET MESURES --------------------------------------------------------------------------------------------------
-    ERR_FREQ_MESURES_SET        ; 50    ; "réglage de la fréquence de mesures : période manquante ou invalide (0 à 1000)"
+    INFO_COURANT_SET            ; 50    ; "limite de courant modifiée"
+    INFO_CALIBRATION_SET        ; 51    ; "commande set calibration faite"
+    INFO_CONSIGNE_SET           ; 52    ; "consigne mise à jour"
+    INFO_PID_SET                ; 53    ; "configuration du PID effectuée"
+    INFO_ACCEL_SET              ; 54    ; "${désactivation|activation} de l'accéléromètre"
+    INFO_BUZZER                 ; 55    ; "Buzzer ${désactivé|activé}"
 
 # GET ----------------------------------------------------------------------------------------------------------
     ERR_CMD_GET_INCONNUE        ; 60    ; "commande get inconnue : valeur attendue : CALIBRATION / MODE / PID / MESURES"
@@ -84,12 +82,18 @@
 
 #MESURES -------------------------------------------------------------------------------------------------------
     INFO_MESURES_DESACTIVE      ; 100   ; "envoi des mesures désactivé"
-    INFO_FREQ_MESURES           ; 101   ; "envoi des mesures toutes les $ ms"   # val : temps en ms
-    INFO_ANGLE_PORTE            ; 102   ; "angle de la porte $.2"               # val : angle (*100)°
-    INFO_SUR_MEUBLE             ; 103   ; "servodrive monté sur le meuble"
-    INFO_DEMONTE                ; 104   ; "servodrive non monté sur le meuble"
-    INFO_BN0055_ABSENT          ; 105   ; "capteur BN0055 absent"
-    INFO_BN0055_PRESENT         ; 106   ; "capteur BN0055 détecté"
+    DATA_FREQ_MESURES           ; 101   ; "envoi des mesures toutes les $ ms"   # val : temps en ms
+    DATA_ANGLE_PORTE            ; 102   ; "angle de la porte $.2°"              # val : angle (*100)°
+    DATA_TENSION                ; 103   ; "tension d'alimentation $.2V"         # val : tension (*100)V
+    DATA_COURANT                ; 104   ; "courant consommé $.2A"               # val : courant (*100)A
+    DATA_ANGLE_MOTEUR           ; 105   ; "angle moteur $.2°"                   # val : angle (*100)°
+    DATA_VITESSE_MOTEUR         ; 106   ; "vitesse moteur $.2 rad/s"            # val : vitesse (*100)rad/s
+    DATA_PWM                    ; 107   ; "PWM moteur $.2"                      # val : PWM (*100)
+    DATA_CONSIGNE               ; 108   ; "consigne moteur $.2 (PWM,°,rad/s)"   # val : (*100) PWM ou angle ou rad/s
+    INFO_SUR_MEUBLE             ; 109   ; "servodrive monté sur le meuble"
+    INFO_DEMONTE                ; 110   ; "servodrive non monté sur le meuble"
+    INFO_BN0055_ABSENT          ; 111   ; "capteur BN0055 absent"
+    INFO_BN0055_PRESENT         ; 112   ; "capteur BN0055 détecté"
 
 #ETATS ---------------------------------------------------------------------------------------------------------
     ETAT_PROD                   ; 250   ; "etat en prod"

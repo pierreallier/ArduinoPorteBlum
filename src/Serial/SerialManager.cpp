@@ -144,6 +144,18 @@ void SerialManager::_SET(String commande) {
             sendReponseNOK(MSG::ERR_FREQ_MESURES_SET);
             return;
         }
+        // Activation (sans sauvegarde valeur)
+        if (valeur == "ON") {
+            loadMesurePeriode();
+            sendReponseOK(MSG::DATA_FREQ_MESURES, periode_echantillonnage_mesures);
+            return;
+        }
+        // Désactivation (sans sauvegarde valeur)
+        if (valeur == "OFF") {
+            setMesurePeriode(0);
+            sendReponseOK(MSG::INFO_MESURES_DESACTIVE);
+            return;
+        }
         // Vérification : uniquement des chiffres
         for (unsigned int i = 0; i < valeur.length(); i++) {
             if (!isDigit(valeur[i])) {
@@ -158,12 +170,13 @@ void SerialManager::_SET(String commande) {
             return;
         }
         if (periode >= 5) {
-            setMesurePeriode(periode);
-            sendReponseOK(MSG::INFO_FREQ_MESURES,periode);
+            setMesurePeriode(periode, true);
+            sendReponseOK(MSG::DATA_FREQ_MESURES, periode_echantillonnage_mesures);
         } else {
-            setMesurePeriode(1275);
+            setMesurePeriode(0, true);
             sendReponseOK(MSG::INFO_MESURES_DESACTIVE);
         }
+
     }
     // Gestion de l'accéléromètre
     else if (commande.startsWith("ACCEL")) {
@@ -242,7 +255,7 @@ void SerialManager::_GET(String commande) {
             if (getMesurePeriode() > 1000) {
                 sendReponseOK(MSG::INFO_MESURES_DESACTIVE);
             } else {
-                sendReponseOK(MSG::INFO_FREQ_MESURES,getMesurePeriode());
+                sendReponseOK(MSG::DATA_FREQ_MESURES,getMesurePeriode());
             }
         }
         if (valeur == "MEUBLE") {
@@ -252,7 +265,23 @@ void SerialManager::_GET(String commande) {
                 sendReponseOK(MSG::INFO_DEMONTE);
         }
         if (valeur == "PORTE") {
-            sendReponseOK(MSG::INFO_ANGLE_PORTE, capteurs.getAnglePorte()*100);
+            sendReponseOK(MSG::DATA_ANGLE_PORTE, capteurs.getAnglePorte()*100);
+        }
+        if (valeur == "TENSION") {
+            sendReponseOK(MSG::DATA_TENSION, capteurs.getTension()*100);
+        }
+        if (valeur == "COURANT") {
+            sendReponseOK(MSG::DATA_COURANT, capteurs.getCourant()*100);
+        }
+        if (valeur == "MOTEUR") {
+            sendMessage(MSG::DATA_ANGLE_MOTEUR, capteurs.getAngleMoteur()*100);
+            sendReponseOK(MSG::DATA_VITESSE_MOTEUR, capteurs.getVitesseMoteur()*100);
+        }
+        if (valeur == "PWM") {
+            sendReponseOK(MSG::DATA_PWM, capteurs.getPWM()*100);
+        }
+        if (valeur == "CONSIGNE") {
+            sendReponseOK(MSG::DATA_CONSIGNE, capteurs.getConsigne()*100);
         }
     }
     else if (commande.startsWith("MODE")) {
@@ -357,9 +386,12 @@ void SerialManager::loadMesurePeriode() {
     periode_echantillonnage_mesures = static_cast<uint32_t>(EEPROM.read(EEPROM_ADDR_TENVOIS))*5;
 }
 
-void SerialManager::setMesurePeriode(uint16_t periode) {
+void SerialManager::setMesurePeriode(uint16_t periode, bool save) {
+    periode = (periode < 4) ? 1275 : periode;
     uint8_t periode_eeprom = periode / 5;
-    EEPROM.update(EEPROM_ADDR_TENVOIS, periode_eeprom);
+    if (save) {
+        EEPROM.update(EEPROM_ADDR_TENVOIS, periode_eeprom);
+    }
     periode_echantillonnage_mesures = periode_eeprom * 5;
 }
 

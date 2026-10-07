@@ -50,6 +50,8 @@ class SensorsManager {
         inline float getAnglePorte() const { return _mesures.angle_porte / 100.0f;}
         inline float getAngleMoteur() const { return _mesures.angle_moteur / 100.0f;}
         inline float getVitesseMoteur() const { return _mesures.vitesse_moteur / 100.0f;}
+        inline float getPWM() const { return _mesures.pwm / 100.0f;}
+        inline float getConsigne() const { return _mesures.consigne / 100.0f;}
         inline float getPotentiometre() const { return potentiometre;}
         inline float getLimiteBasse() const { return calibrationData.lowLimit;}
         inline float getLimiteHaute() const { return calibrationData.highLimit;}

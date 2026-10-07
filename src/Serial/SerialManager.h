@@ -28,13 +28,16 @@ class SerialManager {
             Serial.println(F("\n== Initialisation terminée ==\n"));
         }
 
-        //void printMesures();
         void readSerial();
 
         uint32_t getMesurePeriode();
+        void loadMesurePeriode();
+        void setMesurePeriode(uint16_t periode, bool save = false);
 
         bool demandeTest = false;                          // Levé par DO TEST, consommé par loop()
         inline void resync() { time_precedent = millis(); } // Resynchronise le timer après le test
+
+        
     
     private:
         SensorsManager& capteurs;
@@ -49,8 +52,7 @@ class SerialManager {
         void _DO(String commande);
         int splitCommande(const String& commande, String items[], int maxItems);
 
-        void loadMesurePeriode();
-        void setMesurePeriode(uint16_t);
+        
 };
 
 
