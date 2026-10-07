@@ -19,8 +19,6 @@ Bounce2::Button btCalibration;
 Bounce2::Button btPilotage;
 
 SensorsManager capteurs;
-BN0055 bno;
-MT6701 codeurPorte;
 
 Buzzer buzzer;
 Motor moteur(capteurs);
@@ -54,10 +52,8 @@ void setup() {
     btPilotage.attach(PILOTAGE_BT,INPUT_PULLUP);
     btPilotage.setPressedState(LOW);
 
-    moteur.init(); // Initialisation du moteur et du driver
-    codeurPorte.init(); // Initialisation du codeur absolu de la porte
-    bno.init(); // Initialisation du capteur BN0055
     capteurs.init(); // Initialisation des capteurs
+    moteur.init(); // Initialisation du moteur et du driver
     machine.init(); // Initialisation de la machine à états
 
     // Mode
@@ -67,7 +63,7 @@ void setup() {
 
     // Vérification codeur porte I2C
     bool send_error = false;  // Flag pour éviter d'afficher plusieurs fois l'erreur
-    while (!codeurPorte.checkPresence()) {
+    while (!capteurs.checkCodeurPorte()) {
         if (!send_error) {
             sendDirect('E', "codeur absolu de la porte non détecté");
             digitalWrite(LED_ERROR_PIN, HIGH);  
@@ -78,25 +74,16 @@ void setup() {
     sendDirect('I', "codeur absolu de la porte détecté");
     digitalWrite(LED_ERROR_PIN, LOW);
 
-    // Vérification type de montage et calibration
-    if (capteurs.onMeuble()) {
-        sendDirect('I', "servodrive monté sur le meuble");
-    } else {
-        sendDirect('I', "servodrive non monté sur le meuble");
-    }
+    // Vérification type de montage 
+    capteurs.onMeuble() ? sendDirect('I', "servodrive monté sur le meuble") : sendDirect('I', "servodrive non monté sur le meuble");
+    // Vérification système calibré
     if (machine.calibration.isNotCalibrated()) { // TODO : fonction depuis la statemachine
         sendDirect('W', "calibration requise");
     }
 
     // Vérification capteur BN0055
-    bno.setEnabled(true);
-    if (!bno.checkPresence()) {
-        sendDirect('I', "capteur BN0055 non détecté");
-        bno.setEnabled(false);  // Désactivation du capteur pour éviter les erreurs de lecture
-    } else {
-        sendDirect('I', "capteur BN0055 détecté");
-        bno.requestData(0);  // Demande de lecture initiale
-    }
+    capteurs.checkBNO() ? sendDirect('I', "capteur BN0055 détecté"): sendDirect('I', "capteur BN0055 non détecté");
+    
     portserie.printFinInit();
     buzzer.sequenceInit();
     delay(1000);
@@ -112,7 +99,7 @@ void loop() {
     } else {
         machine.exec();
         moteur.update();
-        bno.update();
+        capteurs.bno().update();
         ordonnanceur();
     }
     buzzer.task();
@@ -120,7 +107,7 @@ void loop() {
 
 void lancerTest() {
     machine.suspendre();
-    TestManager(buzzer, codeurPorte, bno).run();    // Bloquant jusqu'à DO STOP
+    TestManager(capteurs,buzzer).run();    // Bloquant jusqu'à DO STOP
     machine.reprendre();
 
     // Resynchronisation des timers pour éviter le rattrapage des cycles manqués
@@ -156,11 +143,11 @@ void ordonnanceur() {
     if (PERIODE_ENVOI <= 1000 && maintenant - tEnvoi >= PERIODE_ENVOI) {
         tEnvoi += PERIODE_ENVOI;
         sendMesures(capteurs.getMesures());
-        if (bno.isEnabled() && maintenant - tBno >= 5 * PERIODE_ENVOI) {
+        if (capteurs.bno().isEnabled() && maintenant - tBno >= 5 * PERIODE_ENVOI) {
             tBno += 5 * PERIODE_ENVOI;
-            bno.readData();
-            sendMesures(bno.getMesures());
-            bno.requestData(maintenant);
+            capteurs.bno().readData();
+            sendMesures(capteurs.bno().getMesures());
+            capteurs.bno().requestData(maintenant);
         }
     } 
 

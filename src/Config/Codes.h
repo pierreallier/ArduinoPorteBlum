@@ -23,7 +23,7 @@ enum class MSG : uint8_t {
     ERR_LIMITE_PORTE = 12,    // "limite de la porte atteinte $.2°"
     DATA_LIMITE_BASSE = 13,    // "limite basse de sécurité $"
     DATA_LIMITE_HAUTE = 14,    // "limite haute de sécurité $"
-    ERR_PUISSANCE = 15,    // "absence de puissance : vérifier l'alimentation électrique"
+    ERR_PUISSANCE = 15,    // "absence de puissance : vérifier l'alimentation électrique ($.2V)"
     ERR_CALIBRATION_REQUISE = 20,    // "calibration requise"
     ERR_CALIBRATION_ANNULEE = 21,    // "calibration interrompue"
     ERR_NON_CALIBRE = 22,    // "système non calibré"

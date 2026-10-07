@@ -13,8 +13,9 @@ void SensorsManager::init() {
     pinMode(DRIVER_CURRENT, INPUT);
     pinMode(POTENTIOMETRE, INPUT);
 
-    // Initialisation du détecteur de meuble
-    meuble.init();
+    _meuble.init(); // Initialisation du détecteur de meuble
+    _codeurPorte.init(); // Initialisation du codeur absolu de la porte
+    _bno.init(); // Initialisation du capteur BN0055
 
     // Initialisation des limites
     limite_courant = LIMITE_COURANT;
@@ -116,7 +117,7 @@ void SensorsManager::mesures(int p) {
     readTension();
     readPotentiometre();
     _mesures.pwm = p * 100;
-    meuble.update();
+    _meuble.update();
 }
 
 float SensorsManager::addCourant(float current) {
@@ -194,4 +195,15 @@ bool SensorsManager::setLimitCourant(float limite) {
         return true;
     }
     return false;
+}
+
+bool SensorsManager::checkBNO() {
+    _bno.setEnabled(true);
+    if (!_bno.checkPresence()) {
+        _bno.setEnabled(false);  // Désactivation du capteur pour éviter les erreurs de lecture
+        return false;
+    } else {
+        _bno.requestData(0);  // Demande de lecture initiale
+        return true;
+    }
 }

@@ -145,24 +145,24 @@ void TestManager::testI2C() {
 }
 
 bool TestManager::verifierBNO() {
-    if (!bno.isEnabled())
+    if (!capteurs.bno().isEnabled())
         return false;
-    bno.update();
-    if (!bno.isConnected())
-        return bno.checkPresence();
+    capteurs.bno().update();
+    if (!capteurs.bno().isConnected())
+        return capteurs.bno().checkPresence();
 
     uint32_t t0 = millis();
     bool demande = false;
     while ((uint32_t)(millis() - t0) < 50) {
-        bno.update();
+        capteurs.bno().update();
         if (!demande)
-            demande = bno.requestData(millis());   // réessaie tant qu'une lecture précédente est en cours
-        else if (bno.available())
+            demande = capteurs.bno().requestData(millis());   // réessaie tant qu'une lecture précédente est en cours
+        else if (capteurs.bno().available())
             break;
     }
-    return demande && bno.available() && bno.isConnected();
+    return demande && capteurs.bno().available() && capteurs.bno().isConnected();
 }
 
 bool TestManager::verifierCodeur() {
-    return codeurPorte.checkPresence(100);
+    return capteurs.codeurPorte().checkPresence(100);
 }

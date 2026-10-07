@@ -65,9 +65,9 @@
     #error "VERSION_CARTE non définie ou incorrecte. Veuillez définir VERSION_CARTE à 2 ou 3."
 #endif
 
-// Capteur MT6701
-#define MT6701_ADDRESS   0x06
-#define MT6701_ANGLE_REG 0x03
+// Adresses I2C 
+#define MT6701_ADDRESS  0x06
+#define BN0055_ADDRESS  0x28
 
 // Arduino - constantes
 #define ADC_MAX 1024 // Résolution du CAN

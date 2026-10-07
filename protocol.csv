@@ -11,9 +11,9 @@
     ERR_COURANT                 ; 10    ; "limite de courant atteinte"
     ERR_BLOCAGE                 ; 11    ; "blocage mécanique détecté"
     ERR_LIMITE_PORTE            ; 12    ; "limite de la porte atteinte $.2°"    # val : angle de la porte x100 (°)
-    DATA_LIMITE_BASSE           ; 13    ; "limite basse de sécurité $"
-    DATA_LIMITE_HAUTE           ; 14    ; "limite haute de sécurité $"
-    ERR_PUISSANCE               ; 15    ; "absence de puissance : vérifier l'alimentation électrique"
+    DATA_LIMITE_BASSE           ; 13    ; "limite basse de sécurité $"          # val : valeur BRUTE du capteur étalonné
+    DATA_LIMITE_HAUTE           ; 14    ; "limite haute de sécurité $"          # val : valeur BRUTE du capteur étalonné
+    ERR_PUISSANCE               ; 15    ; "absence de puissance : vérifier l'alimentation électrique ($.2V)" # val : tension mesurée x100 (V)
 
 # CALIBRATION ---------------------------------------------------------------------------------------------------
     ERR_CALIBRATION_REQUISE     ; 20    ; "calibration requise"

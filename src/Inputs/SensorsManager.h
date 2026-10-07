@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 #include "AnalogStateDetector.h"
+#include "MT6701.h"
+#include "BN0055.h"
 #include "../Config/Constantes.h"
 #include "../Config/Types.h"
 
@@ -38,8 +40,8 @@ class SensorsManager {
         inline bool isLimiteHaute() {return limite_haute;}
         inline bool isLimiteBasse() {return limite_basse;}
         bool resetSecurities();
-        inline bool onMeuble() const {return meuble.etat();}
-        inline bool meubleChanged() {return meuble.changed();}
+        inline bool onMeuble() const {return _meuble.etat();}
+        inline bool meubleChanged() {return _meuble.changed();}
         inline bool hasPower() { return _mesures.tension > 500;}
 
         inline Mesures getMesures() const { return _mesures;}
@@ -52,15 +54,21 @@ class SensorsManager {
         inline float getLimiteBasse() const { return calibrationData.lowLimit;}
         inline float getLimiteHaute() const { return calibrationData.highLimit;}
         
-
         void setConsigne(int consigne);
         inline float getLimitCourant() const { return limite_courant;}
         bool setLimitCourant(float limite);
         void setLimits(CalibrationData c);
 
+        inline BN0055& bno()          { return _bno; }
+        inline MT6701& codeurPorte()  { return _codeurPorte; }
+        inline bool checkCodeurPorte() { return _codeurPorte.checkPresence();}
+        bool checkBNO();
+
     private:
+        AnalogStateDetector _meuble = AnalogStateDetector(DETECTEUR_MEUBLE, 100, 50, 500);
+        MT6701 _codeurPorte = MT6701(MT6701_ADDRESS);
+        BN0055 _bno = BN0055(BN0055_ADDRESS);
         Mesures _mesures;
-        AnalogStateDetector meuble = AnalogStateDetector(DETECTEUR_MEUBLE, 100, 50, 500);
 
         bool limite_haute = false;
         bool limite_basse = false;

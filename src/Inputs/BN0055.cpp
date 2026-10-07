@@ -3,7 +3,7 @@
 // Instance utilisée par les callbacks statiques de nI2C.
 BN0055 *BN0055::_instance = nullptr;
 
-BN0055::BN0055() {
+BN0055::BN0055(uint8_t address) : _address(address) {
     _enabled = false;
     _connected = false;
     _state = DISABLED;
@@ -14,7 +14,7 @@ BN0055::BN0055() {
 }
 
 void BN0055::init() {
-    _i2cHandle = nI2C->RegisterDevice(ADDRESS,1,CI2C::Speed::FAST);
+    _i2cHandle = nI2C->RegisterDevice(_address,1,CI2C::Speed::FAST);
     _instance = this;
 }
 

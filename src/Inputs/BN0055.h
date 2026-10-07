@@ -20,7 +20,7 @@
 class BN0055 {
 public:
 
-    explicit BN0055();
+    explicit BN0055(uint8_t address = 0x28);
     void init(); // À appeler une seule fois dans setup() pour initialiser le capteur.
 
     // Active/désactive complètement le capteur. Quand disabled :
@@ -64,6 +64,7 @@ public:
     uint8_t getLastStatus() const { return _lastI2CStatus; }
 
 private:
+     uint8_t _address;
 
     // Registres BNO055
     static const uint8_t REG_CHIP_ID = 0x00;
@@ -72,8 +73,6 @@ private:
     static const uint8_t REG_LINEAR_ACCEL = 0x28;
     static const uint8_t CHIP_ID = 0xA0;
     static const uint8_t OPERATION_MODE_NDOF = 0x0C;
-    static const uint8_t ADDRESS = 0x28;
-
     static const uint8_t DATA_SIZE = 26;
 
     // Temporisations

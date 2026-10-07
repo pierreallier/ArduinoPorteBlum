@@ -2,7 +2,7 @@
 
 MT6701 *MT6701::_instance = nullptr;
 
-MT6701::MT6701() {
+MT6701::MT6701(uint8_t address) : _address(address) {
     _connected = false;
     _busy = false;
     _dataAvailable = false;
@@ -13,7 +13,7 @@ MT6701::MT6701() {
 
 
 void MT6701::init() {
-    _i2cHandle = nI2C->RegisterDevice(ADDRESS, 1, CI2C::Speed::FAST);
+    _i2cHandle = nI2C->RegisterDevice(_address, 1, CI2C::Speed::FAST);
     _instance = this;
 }
 

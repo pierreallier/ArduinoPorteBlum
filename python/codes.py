@@ -88,7 +88,7 @@ MESSAGE_TEXT = {
     MSG.ERR_LIMITE_PORTE: 'limite de la porte atteinte $.2°',
     MSG.DATA_LIMITE_BASSE: 'limite basse de sécurité $',
     MSG.DATA_LIMITE_HAUTE: 'limite haute de sécurité $',
-    MSG.ERR_PUISSANCE: "absence de puissance : vérifier l'alimentation électrique",
+    MSG.ERR_PUISSANCE: "absence de puissance : vérifier l'alimentation électrique ($.2V)",
     MSG.ERR_CALIBRATION_REQUISE: 'calibration requise',
     MSG.ERR_CALIBRATION_ANNULEE: 'calibration interrompue',
     MSG.ERR_NON_CALIBRE: 'système non calibré',

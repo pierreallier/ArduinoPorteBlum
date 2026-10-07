@@ -5,21 +5,19 @@
 #include "../Config/Constantes.h"
 #include "../Serial/Messages.h"
 #include "../Outputs/Buzzer.h"
-#include "../Inputs/BN0055.h"
-#include "../Inputs/MT6701.h"
+#include "../Inputs/SensorsManager.h"
 
 class TestManager {
     // Teste les entrées et sorties du système, en mode bloquant (pas de multitâche)
     // Le test est interrompu si un message "DO STOP" ou "DO FIN_TEST" est reçu
     // Le test est lancé par un message "DO TEST" 
     public:
-        TestManager(Buzzer& b, MT6701& codeurPorte, BN0055& bno) : buzzer(b), codeurPorte(codeurPorte), bno(bno) {}
+        TestManager(SensorsManager& s, Buzzer& b) : capteurs(s), buzzer(b) {}
         void run();   // Bloquant : retourne quand "DO STOP" (ou "DO FIN_TEST") est reçu
 
     private:
+        SensorsManager& capteurs;
         Buzzer& buzzer;
-        MT6701& codeurPorte;
-        BN0055& bno;
 
         bool quitter = false;
         bool etatBoutons[4] = {false, false, false, false};
