@@ -14,7 +14,7 @@
 enum class MSG : uint8_t {
     NONE = 0,    // "none"
     ERR_CMD_INCONNUE = 1,    // "commande inconnue (ou mal formée)"
-    INFO_VERSION_DEV = 2,    // "mode ${DEV|PROD}"
+    INFO_VERSION_DEV = 2,    // "mode ${PROD|DEV}"
     INFO_VERSION_CARTE = 3,    // "version de la carte $"
     INFO_VERSION_SOFT = 4,    // "version du soft $"
     ERR_MESSAGE_PERDU = 5,    // "$ message(s) perdu(s)"
@@ -33,22 +33,29 @@ enum class MSG : uint8_t {
     INFO_CALIBRE = 26,    // "système calibré"
     DATA_COURSE = 27,    // "course du capteur $"
     DATA_OFFSET = 28,    // "offset du capteur $"
-    ERR_CMD_SET_INCONNUE = 30,    // "commande set inconnue : valeur possibles : LIMITES / COURANT / CALIBRATION / MODE / CONSIGNE / PID / MESURES"
+    ERR_CMD_SET_INCONNUE = 30,    // "commande set inconnue : valeur attendue : LIMITES / COURANT / CALIBRATION / MODE / CONSIGNE / PID / MESURES / ACCEL"
     ERR_COURANT_SET = 31,    // "limite de courant incompatible (entre 0 et 2.5A) : valeur non modifiée "
     ERR_CALIBRATION_SET = 32,    // "commande set calibration inconnue : valeur attendue : ON / OFF / EFFACER"
-    ERR_PILOTAGE_SET = 33,    // "mode de pilotage inconnu : valeur possibles : PWM / POSITION / VITESSE / POSITIOB_VITESSE"
-    ERR_CONSIGNE_SET = 34,    // "type de consigne inconnu : valeur possibles : POTENTIOMETRE / ECHELON / RAMPE / TRAPEZE / SINUS"
-    ERR_PID_TYPE_SET = 35,    // "type de PID inconnu : valeur possibles VITESSE / POSITION"
-    ERR_PID_SET = 36,    // "réglage PID erronné : TYPE [VITESSE|POSITION] KP KI KD attendus"
+    ERR_PILOTAGE_SET = 33,    // "mode de pilotage inconnu : valeur attendue : PWM / POSITION / VITESSE / POSITIOB_VITESSE"
+    ERR_CONSIGNE_SET = 34,    // "type de consigne inconnu : valeur attendue : POTENTIOMETRE / ECHELON / RAMPE / TRAPEZE / SINUS"
+    ERR_PID_TYPE_SET = 35,    // "type de PID inconnu : valeur attendue VITESSE / POSITION"
+    ERR_PID_SET = 36,    // "réglage PID erronné : TYPE [VITESSE|POSITION] KP KI KD attendu"
+    ERR_ACCEL_SET = 37,    // "commande set accéléromètre inconnue : valeur attendue : ON / OFF"
+    ERR_BUZZER_SET = 38,    // "commande set buzzer inconnue : valeur attendue : ON / OFF"
     INFO_COURANT_SET = 40,    // "limite de courant modifiée"
     INFO_CALIBRATION_SET = 41,    // "commande set calibration faite"
     INFO_CONSIGNE_SET = 42,    // "consigne mise à jour"
     INFO_PID_SET = 43,    // "configuration du PID effectuée"
+    INFO_ACCEL_SET = 44,    // "${désactivation|activation} de l'accéléromètre"
+    INFO_BUZZER = 45,    // "Buzzer ${désactivé|activé}"
     ERR_FREQ_MESURES_SET = 50,    // "réglage de la fréquence de mesures : période manquante ou invalide (0 à 1000)"
-    ERR_CMD_GET_INCONNUE = 60,    // "commande get inconnue : valeurs possibles : CALIBRATION / MODE / PID / MESURES"
+    ERR_CMD_GET_INCONNUE = 60,    // "commande get inconnue : valeur attendue : CALIBRATION / MODE / PID / MESURES"
     ERR_MODE_GET = 61,    // "mode de pilotage erroné"
     ERR_MESURE_GET = 62,    // "commande get mesures : capteur inconnu"
-    ERR_CMD_DO_INCONNUE = 70,    // "commande do inconnue : valeurs possibles : RESET / INIT / OUVRIR / FERMER / STOP / PILOTER / CALIBRATION / TEST"
+    INFO_ACCEL_GET = 63,    // "accéléromètre ${désactivé|activé}"
+    ERR_ACCEL_ABSENT = 64,    // "accéléromètre non connecté"
+    INFO_BUZZER_GET = 65,    // "buzzer ${désactivé|activé}"
+    ERR_CMD_DO_INCONNUE = 70,    // "commande do inconnue : valeur attendue : RESET / INIT / OUVRIR / FERMER / STOP / PILOTER / CALIBRATION / TEST"
     INFO_DO_RESET = 71,    // "demande reset carte"
     INFO_DO_INIT = 72,    // "demande état INIT"
     INFO_DO_OUVRIR = 73,    // "demande état OUVRIR"
@@ -62,12 +69,12 @@ enum class MSG : uint8_t {
     DATA_MODE_POSITION = 82,    // "mode de pilotage en position"
     DATA_MODE_VITESSE = 83,    // "mode de pilotage en vitesse"
     DATA_MODE_PV = 84,    // "mode de pilotage en vitesse et position"
-    DATA_PID_VITESSE_KP = 90,    // "PID vitesse : Kp  =$.3"
-    DATA_PID_VITESSE_KI = 91,    // "PID vitesse : Ki  =$.3"
-    DATA_PID_VITESSE_KD = 92,    // "PID vitesse : Kd  =$.3"
-    DATA_PID_POSITION_KP = 93,    // "PID position : Kp =$.3"
-    DATA_PID_POSITION_KI = 94,    // "PID position : Ki =$.3"
-    DATA_PID_POSITION_KD = 95,    // "PID position : Kd =$.3"
+    DATA_PID_VITESSE_KP = 90,    // "PID vitesse :  Kp = $.3"
+    DATA_PID_VITESSE_KI = 91,    // "PID vitesse :  Ki = $.3"
+    DATA_PID_VITESSE_KD = 92,    // "PID vitesse :  Kd = $.3"
+    DATA_PID_POSITION_KP = 93,    // "PID position : Kp = $.3"
+    DATA_PID_POSITION_KI = 94,    // "PID position : Ki = $.3"
+    DATA_PID_POSITION_KD = 95,    // "PID position : Kd = $.3"
     INFO_MESURES_DESACTIVE = 100,    // "envoi des mesures désactivé"
     INFO_FREQ_MESURES = 101,    // "envoi des mesures toutes les $ ms"
     INFO_ANGLE_PORTE = 102,    // "angle de la porte $.2"
@@ -112,14 +119,21 @@ inline const __FlashStringHelper* msgName(MSG msg)
         case MSG::ERR_CONSIGNE_SET: return F("ERR_CONSIGNE_SET");
         case MSG::ERR_PID_TYPE_SET: return F("ERR_PID_TYPE_SET");
         case MSG::ERR_PID_SET: return F("ERR_PID_SET");
+        case MSG::ERR_ACCEL_SET: return F("ERR_ACCEL_SET");
+        case MSG::ERR_BUZZER_SET: return F("ERR_BUZZER_SET");
         case MSG::INFO_COURANT_SET: return F("INFO_COURANT_SET");
         case MSG::INFO_CALIBRATION_SET: return F("INFO_CALIBRATION_SET");
         case MSG::INFO_CONSIGNE_SET: return F("INFO_CONSIGNE_SET");
         case MSG::INFO_PID_SET: return F("INFO_PID_SET");
+        case MSG::INFO_ACCEL_SET: return F("INFO_ACCEL_SET");
+        case MSG::INFO_BUZZER: return F("INFO_BUZZER");
         case MSG::ERR_FREQ_MESURES_SET: return F("ERR_FREQ_MESURES_SET");
         case MSG::ERR_CMD_GET_INCONNUE: return F("ERR_CMD_GET_INCONNUE");
         case MSG::ERR_MODE_GET: return F("ERR_MODE_GET");
         case MSG::ERR_MESURE_GET: return F("ERR_MESURE_GET");
+        case MSG::INFO_ACCEL_GET: return F("INFO_ACCEL_GET");
+        case MSG::ERR_ACCEL_ABSENT: return F("ERR_ACCEL_ABSENT");
+        case MSG::INFO_BUZZER_GET: return F("INFO_BUZZER_GET");
         case MSG::ERR_CMD_DO_INCONNUE: return F("ERR_CMD_DO_INCONNUE");
         case MSG::INFO_DO_RESET: return F("INFO_DO_RESET");
         case MSG::INFO_DO_INIT: return F("INFO_DO_INIT");

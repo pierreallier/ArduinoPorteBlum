@@ -4,11 +4,7 @@
 #include "../Config/Types.h"
 #include "../Outputs/Motor.h"
 #include "../Inputs/SensorsManager.h"
-
-// Adresses EEPROM
-#define EEPROM_ADDR_ACTIVE_FLAG   0   // 1 octet (bool)
-#define EEPROM_ADDR_ON_FURNITURE  2   // 6 octets (3x uint16_t) 
-#define EEPROM_ADDR_OFF_FURNITURE 8 // 6 octets (3x uint16_t)
+#include "../Config/Constantes.h"
 
 // Valeur pour indiquer qu'une valeur n'est pas initialisée
 #define UNINITIALIZED_VALUE 0xFFFF

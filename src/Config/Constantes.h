@@ -71,3 +71,12 @@
 
 // Arduino - constantes
 #define ADC_MAX 1024 // Résolution du CAN
+
+// EEPROM
+// Valeurs des calibrations (TODO à stocker sur l'eeprom I2C)
+#define EEPROM_ADDR_ACTIVE_FLAG   0   // 1 octet (bool)
+#define EEPROM_ADDR_ON_FURNITURE  2   // 6 octets (3x uint16_t) 
+#define EEPROM_ADDR_OFF_FURNITURE 8 // 6 octets (3x uint16_t)
+// Autres valeurs (a stocker sur l'eeprom de l'arduino)
+#define EEPROM_ADDR_TENVOIS 15 // 1 octet (uint8_t)
+#define EEPROM_ADDR_BUZZER 16 // 1 octet (bool)

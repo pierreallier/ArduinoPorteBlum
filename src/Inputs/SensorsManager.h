@@ -63,6 +63,7 @@ class SensorsManager {
         inline MT6701& codeurPorte()  { return _codeurPorte; }
         inline bool checkCodeurPorte() { return _codeurPorte.checkPresence();}
         bool checkBNO();
+        inline void setBNO(bool etat) { _bno.setEnabled(etat);}
 
     private:
         AnalogStateDetector _meuble = AnalogStateDetector(DETECTEUR_MEUBLE, 100, 50, 500);

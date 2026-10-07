@@ -7,6 +7,7 @@
 
 #include "../Inputs/SensorsManager.h"
 #include "../Outputs/Motor.h"
+#include "../Outputs/Buzzer.h"
 #include "../Managers/StateMachine.h"
 
 #define EEPROM_ADDR_TENVOIS 15
@@ -16,7 +17,7 @@ constexpr float RAD_TO_TURN = 1.0f / (2.0f * PI);
 
 class SerialManager {
     public:
-        SerialManager(SensorsManager& s, StateMachine& ma);
+        SerialManager(SensorsManager& s, StateMachine& ma, Buzzer& b);
         void init();
         void task();
 
@@ -38,6 +39,7 @@ class SerialManager {
     private:
         SensorsManager& capteurs;
         StateMachine& machine;
+        Buzzer& buzzer;
 
         uint32_t time_precedent = 0;    
         uint16_t periode_echantillonnage_mesures = 25;

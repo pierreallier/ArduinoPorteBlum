@@ -24,7 +24,7 @@ Buzzer buzzer;
 Motor moteur(capteurs);
 
 StateMachine machine(moteur, capteurs);
-SerialManager portserie(capteurs, machine);
+SerialManager portserie(capteurs, machine, buzzer);
 
 uint32_t tVerif = 0;
 uint32_t tBt = 0;
@@ -83,6 +83,9 @@ void setup() {
 
     // Vérification capteur BN0055
     capteurs.checkBNO() ? sendDirect('I', "capteur BN0055 détecté"): sendDirect('I', "capteur BN0055 non détecté");
+    
+    // Vérificationb buzzer
+    buzzer.isEnabled() ? sendDirect('I', "Buzzer activé") : sendDirect('I', "Buzzer désactivé");
     
     portserie.printFinInit();
     buzzer.sequenceInit();

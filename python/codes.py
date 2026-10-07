@@ -37,14 +37,21 @@ class MSG(IntEnum):
     ERR_CONSIGNE_SET = 34
     ERR_PID_TYPE_SET = 35
     ERR_PID_SET = 36
+    ERR_ACCEL_SET = 37
+    ERR_BUZZER_SET = 38
     INFO_COURANT_SET = 40
     INFO_CALIBRATION_SET = 41
     INFO_CONSIGNE_SET = 42
     INFO_PID_SET = 43
+    INFO_ACCEL_SET = 44
+    INFO_BUZZER = 45
     ERR_FREQ_MESURES_SET = 50
     ERR_CMD_GET_INCONNUE = 60
     ERR_MODE_GET = 61
     ERR_MESURE_GET = 62
+    INFO_ACCEL_GET = 63
+    ERR_ACCEL_ABSENT = 64
+    INFO_BUZZER_GET = 65
     ERR_CMD_DO_INCONNUE = 70
     INFO_DO_RESET = 71
     INFO_DO_INIT = 72
@@ -79,7 +86,7 @@ class MSG(IntEnum):
 MESSAGE_TEXT = {
     MSG.NONE: 'none',
     MSG.ERR_CMD_INCONNUE: 'commande inconnue (ou mal formée)',
-    MSG.INFO_VERSION_DEV: 'mode ${DEV|PROD}',
+    MSG.INFO_VERSION_DEV: 'mode ${PROD|DEV}',
     MSG.INFO_VERSION_CARTE: 'version de la carte $',
     MSG.INFO_VERSION_SOFT: 'version du soft $',
     MSG.ERR_MESSAGE_PERDU: '$ message(s) perdu(s)',
@@ -98,22 +105,29 @@ MESSAGE_TEXT = {
     MSG.INFO_CALIBRE: 'système calibré',
     MSG.DATA_COURSE: 'course du capteur $',
     MSG.DATA_OFFSET: 'offset du capteur $',
-    MSG.ERR_CMD_SET_INCONNUE: 'commande set inconnue : valeur possibles : LIMITES / COURANT / CALIBRATION / MODE / CONSIGNE / PID / MESURES',
+    MSG.ERR_CMD_SET_INCONNUE: 'commande set inconnue : valeur attendue : LIMITES / COURANT / CALIBRATION / MODE / CONSIGNE / PID / MESURES / ACCEL',
     MSG.ERR_COURANT_SET: 'limite de courant incompatible (entre 0 et 2.5A) : valeur non modifiée ',
     MSG.ERR_CALIBRATION_SET: 'commande set calibration inconnue : valeur attendue : ON / OFF / EFFACER',
-    MSG.ERR_PILOTAGE_SET: 'mode de pilotage inconnu : valeur possibles : PWM / POSITION / VITESSE / POSITIOB_VITESSE',
-    MSG.ERR_CONSIGNE_SET: 'type de consigne inconnu : valeur possibles : POTENTIOMETRE / ECHELON / RAMPE / TRAPEZE / SINUS',
-    MSG.ERR_PID_TYPE_SET: 'type de PID inconnu : valeur possibles VITESSE / POSITION',
-    MSG.ERR_PID_SET: 'réglage PID erronné : TYPE [VITESSE|POSITION] KP KI KD attendus',
+    MSG.ERR_PILOTAGE_SET: 'mode de pilotage inconnu : valeur attendue : PWM / POSITION / VITESSE / POSITIOB_VITESSE',
+    MSG.ERR_CONSIGNE_SET: 'type de consigne inconnu : valeur attendue : POTENTIOMETRE / ECHELON / RAMPE / TRAPEZE / SINUS',
+    MSG.ERR_PID_TYPE_SET: 'type de PID inconnu : valeur attendue VITESSE / POSITION',
+    MSG.ERR_PID_SET: 'réglage PID erronné : TYPE [VITESSE|POSITION] KP KI KD attendu',
+    MSG.ERR_ACCEL_SET: 'commande set accéléromètre inconnue : valeur attendue : ON / OFF',
+    MSG.ERR_BUZZER_SET: 'commande set buzzer inconnue : valeur attendue : ON / OFF',
     MSG.INFO_COURANT_SET: 'limite de courant modifiée',
     MSG.INFO_CALIBRATION_SET: 'commande set calibration faite',
     MSG.INFO_CONSIGNE_SET: 'consigne mise à jour',
     MSG.INFO_PID_SET: 'configuration du PID effectuée',
+    MSG.INFO_ACCEL_SET: "${désactivation|activation} de l'accéléromètre",
+    MSG.INFO_BUZZER: 'Buzzer ${désactivé|activé}',
     MSG.ERR_FREQ_MESURES_SET: 'réglage de la fréquence de mesures : période manquante ou invalide (0 à 1000)',
-    MSG.ERR_CMD_GET_INCONNUE: 'commande get inconnue : valeurs possibles : CALIBRATION / MODE / PID / MESURES',
+    MSG.ERR_CMD_GET_INCONNUE: 'commande get inconnue : valeur attendue : CALIBRATION / MODE / PID / MESURES',
     MSG.ERR_MODE_GET: 'mode de pilotage erroné',
     MSG.ERR_MESURE_GET: 'commande get mesures : capteur inconnu',
-    MSG.ERR_CMD_DO_INCONNUE: 'commande do inconnue : valeurs possibles : RESET / INIT / OUVRIR / FERMER / STOP / PILOTER / CALIBRATION / TEST',
+    MSG.INFO_ACCEL_GET: 'accéléromètre ${désactivé|activé}',
+    MSG.ERR_ACCEL_ABSENT: 'accéléromètre non connecté',
+    MSG.INFO_BUZZER_GET: 'buzzer ${désactivé|activé}',
+    MSG.ERR_CMD_DO_INCONNUE: 'commande do inconnue : valeur attendue : RESET / INIT / OUVRIR / FERMER / STOP / PILOTER / CALIBRATION / TEST',
     MSG.INFO_DO_RESET: 'demande reset carte',
     MSG.INFO_DO_INIT: 'demande état INIT',
     MSG.INFO_DO_OUVRIR: 'demande état OUVRIR',
@@ -127,12 +141,12 @@ MESSAGE_TEXT = {
     MSG.DATA_MODE_POSITION: 'mode de pilotage en position',
     MSG.DATA_MODE_VITESSE: 'mode de pilotage en vitesse',
     MSG.DATA_MODE_PV: 'mode de pilotage en vitesse et position',
-    MSG.DATA_PID_VITESSE_KP: 'PID vitesse : Kp  =$.3',
-    MSG.DATA_PID_VITESSE_KI: 'PID vitesse : Ki  =$.3',
-    MSG.DATA_PID_VITESSE_KD: 'PID vitesse : Kd  =$.3',
-    MSG.DATA_PID_POSITION_KP: 'PID position : Kp =$.3',
-    MSG.DATA_PID_POSITION_KI: 'PID position : Ki =$.3',
-    MSG.DATA_PID_POSITION_KD: 'PID position : Kd =$.3',
+    MSG.DATA_PID_VITESSE_KP: 'PID vitesse :  Kp = $.3',
+    MSG.DATA_PID_VITESSE_KI: 'PID vitesse :  Ki = $.3',
+    MSG.DATA_PID_VITESSE_KD: 'PID vitesse :  Kd = $.3',
+    MSG.DATA_PID_POSITION_KP: 'PID position : Kp = $.3',
+    MSG.DATA_PID_POSITION_KI: 'PID position : Ki = $.3',
+    MSG.DATA_PID_POSITION_KD: 'PID position : Kd = $.3',
     MSG.INFO_MESURES_DESACTIVE: 'envoi des mesures désactivé',
     MSG.INFO_FREQ_MESURES: 'envoi des mesures toutes les $ ms',
     MSG.INFO_ANGLE_PORTE: 'angle de la porte $.2',

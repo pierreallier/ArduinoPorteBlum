@@ -9,7 +9,7 @@ void resetArduino() {
     }
 }
 
-SerialManager::SerialManager(SensorsManager& s, StateMachine& ma) : capteurs(s),machine(ma) {
+SerialManager::SerialManager(SensorsManager& s, StateMachine& ma, Buzzer& b) : capteurs(s),machine(ma),buzzer(b) {
 }
 
 void SerialManager::init() {
@@ -165,6 +165,46 @@ void SerialManager::_SET(String commande) {
             sendReponseOK(MSG::INFO_MESURES_DESACTIVE);
         }
     }
+    // Gestion de l'accéléromètre
+    else if (commande.startsWith("ACCEL")) {
+        String valeur = commande.substring(6);
+        valeur.trim();
+        valeur.toUpperCase();
+        // Lecture du statut de l'activation
+        bool active;
+        if (valeur == "ON") {
+            if (capteurs.bno().isConnected()) {
+                active = true;
+            } else {
+                sendReponseNOK(MSG::ERR_ACCEL_ABSENT);
+                return;
+            }
+        }
+        else if (valeur == "OFF") {
+            active = false;
+        } else {
+            sendReponseNOK(MSG::ERR_ACCEL_SET);
+            return;
+        }
+        capteurs.setBNO(active);
+        sendReponseOK(MSG::INFO_ACCEL_SET, capteurs.bno().isEnabled());
+    }
+    // Gestion du buzzer
+    else if (commande.startsWith("BUZZER")) {
+        String valeur = commande.substring(7);
+        valeur.trim();
+        valeur.toUpperCase();
+        // Lecture du statut de l'activation
+        if (valeur == "ON") {
+            buzzer.enable();
+        } else if (valeur == "OFF") {
+            buzzer.disable();
+        } else {
+            sendReponseNOK(MSG::ERR_BUZZER_SET);
+            return;
+        }
+        sendReponseOK(MSG::INFO_BUZZER,buzzer.isEnabled());
+    }
     else {
         sendError(MSG::ERR_CMD_SET_INCONNUE);
         return;
@@ -251,6 +291,13 @@ void SerialManager::_GET(String commande) {
         sendMessage(MSG::INFO_VERSION_CARTE,VERSION_CARTE);
         sendMessage(MSG::INFO_VERSION_SOFT,VERSION_SOFT);
         sendReponseOK(MSG::INFO_VERSION_DEV,VERSION_DEV);
+    }
+    else if (commande.startsWith("ACCEL")) {
+        capteurs.bno().isConnected() ? sendReponseOK(MSG::INFO_ACCEL_GET,capteurs.bno().isEnabled()) 
+                                     : sendReponseNOK(MSG::ERR_ACCEL_ABSENT);
+    }
+    else if (commande.startsWith("BUZZER")) {
+        sendReponseOK(MSG::INFO_BUZZER_GET, buzzer.isEnabled());
     }
     else
         sendError(MSG::ERR_CMD_GET_INCONNUE);

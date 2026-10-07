@@ -1,18 +1,25 @@
 #include "Buzzer.h"
-
+#include <EEPROM.h>
 
 void Buzzer::init() {
     pinMode(BUZZER_PIN, OUTPUT);
     digitalWrite(BUZZER_PIN, LOW);
-    enabled = true;
+    enabled = EEPROM.read(EEPROM_ADDR_BUZZER);
 }
 
 void Buzzer::enable() {
+    if (enabled)
+        return;
+
     enabled = true;
+    EEPROM.update(EEPROM_ADDR_BUZZER, enabled);
 }
 
 void Buzzer::disable() {
+    if (!enabled)
+        return;
     enabled = false;
+    EEPROM.update(EEPROM_ADDR_BUZZER, enabled);
 
     // Arrêt immédiat
     actif = false;
