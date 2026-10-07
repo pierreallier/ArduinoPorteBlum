@@ -1,6 +1,7 @@
 #include "StateMachine.h"
 
-StateMachine::StateMachine(Motor& m, SensorsManager& s) : moteur(m), capteurs(s), calibration(m,s), consigne() {
+StateMachine::StateMachine(SensorsManager& s, Motor& m, Buzzer& b) : capteurs(s), moteur(m), buzzer(b),
+                                                                     calibration(m,s), consigne() {
 }
 
 void StateMachine::init() {
@@ -66,6 +67,7 @@ void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
             moteur.disable();
             digitalWrite(LED_MOTOR_PIN, LOW);
             digitalWrite(LED_ERROR_PIN, HIGH);
+            buzzer.sequenceErreur();
             break;
         }
         default: {
@@ -193,6 +195,7 @@ bool StateMachine::etatPilote() {
     unsigned long time = millis();
     if (consigne.ended(time)) {
         moteur.stop();
+        buzzer.sequenceFinPilotage(); // Si mode Potentiomètre, la consigne ne se termine pas, donc pas de bip
         return true;
     }
     float consigne_value = consigne.get(time);

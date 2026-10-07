@@ -19,6 +19,7 @@ class Buzzer {
     void bip(uint16_t duree = 100);
     void sequenceInit();
     void sequenceErreur();  
+    void sequenceFinPilotage();
 
   private:
 

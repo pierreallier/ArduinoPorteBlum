@@ -5,6 +5,7 @@
 #include "../Serial/Messages.h"
 
 #include "../Outputs/Motor.h"
+#include "../Outputs/Buzzer.h"
 #include "../Inputs/SensorsManager.h"
 #include "CalibrationManager.h"
 #include "PID.h"
@@ -45,7 +46,7 @@ class StateMachine {
         PID pidPosition;
         PID pidVitesse;
 
-        StateMachine(Motor& m, SensorsManager& s);
+        StateMachine(SensorsManager& s, Motor& m, Buzzer& b);
         void init();
         void changerEtat(StateMachine::ETAT etat_demande);
         void setMode(StateMachine::MODE_PILOTAGE mode);
@@ -67,6 +68,7 @@ class StateMachine {
     private:
         Motor& moteur;
         SensorsManager& capteurs;
+        Buzzer& buzzer;
         ConsigneManager consigne;
  
         bool etatOuverture(uint16_t speed);

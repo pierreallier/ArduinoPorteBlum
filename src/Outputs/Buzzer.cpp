@@ -98,11 +98,15 @@ void Buzzer::play(uint8_t nb, uint16_t duree, uint16_t pauseMs) {
 }
 
 void Buzzer::sequenceErreur() {
-    play(3,50,50);
+    play(3,10,10);
 }
 
 void Buzzer::sequenceInit() {
-    play(1,10,10);
+    play(1,2,2);
+}
+
+void Buzzer::sequenceFinPilotage() {
+    play(2,2,2);
 }
 
 void Buzzer::bip(uint16_t duree) {

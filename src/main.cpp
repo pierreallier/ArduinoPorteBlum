@@ -23,7 +23,7 @@ SensorsManager capteurs;
 Buzzer buzzer;
 Motor moteur(capteurs);
 
-StateMachine machine(moteur, capteurs);
+StateMachine machine(capteurs, moteur, buzzer);
 SerialManager portserie(capteurs, machine, buzzer);
 
 uint32_t tVerif = 0;
