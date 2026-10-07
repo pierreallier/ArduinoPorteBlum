@@ -22,7 +22,8 @@ class Motor {
         void enable(); // Active le moteur
         void disable(); // Désactive le moteur
         void start(); // Démarre le moteur
-        void debrayage(); // Arrête le moteur en appliquant une petite vitesse inverse pour le débrayer
+        void startDebrayage(); // Arrête le moteur en appliquant une petite vitesse inverse pour le débrayer
+        bool isDebraye(); // retourne l'état de debrayage du moteur
         void stop(); // Arrête le moteur
         void ouvrir(uint16_t speed);
         void fermer(uint16_t speed);
@@ -32,14 +33,15 @@ class Motor {
         Motor::DIR getDirection() const { return direction; }
         int getPWM() const { return pwm; }
 
-        int32_t codeur_avant_debrayage = 0; // valeur du codeur avant le débrayage
-        float courant_avant_debrayage = 0.0; // valeur du courant avant le débrayage
-
     private:
         int pwm = 0; // valeur PWM pour la vitesse du moteur (0-255)
         bool enabled = false; // état du moteur (activé ou désactivé)
         DIR direction ; // direction du moteur (OUVERTURE ou FERMETURE)
         SensorsManager& capteurs;
+
+        int32_t codeur_avant_debrayage = 0; // valeur du codeur avant le débrayage
+        float courant_avant_debrayage = 0.0; // valeur du courant avant le débrayage
+        uint32_t time_avant_debrayage = 0; // début du debrayage
 };
 
 #endif

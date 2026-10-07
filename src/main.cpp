@@ -100,6 +100,8 @@ void setup() {
     portserie.printFinInit();
     buzzer.sequenceInit();
     delay(1000);
+
+    capteurs.mesures(0); // Initialise la 1er mesure
 }
 
 void loop() {

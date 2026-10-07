@@ -40,6 +40,7 @@ class SensorsManager {
         bool resetSecurities();
         inline bool onMeuble() const {return meuble.etat();}
         inline bool meubleChanged() {return meuble.changed();}
+        inline bool hasPower() { return _mesures.tension > 500;}
 
         inline Mesures getMesures() const { return _mesures;}
         inline float getTension() const { return _mesures.tension / 100.0f;}
@@ -50,6 +51,7 @@ class SensorsManager {
         inline float getPotentiometre() const { return potentiometre;}
         inline float getLimiteBasse() const { return calibrationData.lowLimit;}
         inline float getLimiteHaute() const { return calibrationData.highLimit;}
+        
 
         void setConsigne(int consigne);
         inline float getLimitCourant() const { return limite_courant;}

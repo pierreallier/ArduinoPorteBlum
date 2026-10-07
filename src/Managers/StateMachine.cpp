@@ -15,15 +15,19 @@ void StateMachine::init() {
 }
 
 void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
+    if (!capteurs.hasPower()) {
+        sendError(MSG::ERR_PUISSANCE, capteurs.getTension());
+        etat_demande = StateMachine::ETAT::ERREUR;
+    } 
     if (etat == etat_demande)
         return;
     if ((etat == StateMachine::ETAT::CALIBRATION) && calibration.isNotCalibrated()) {
         sendError(MSG::ERR_CALIBRATION_ANNULEE);
         calibration.changerEtat(CalibrationManager::ETAT::ERREUR);
     }
-    if (calibration.isNotCalibrated() && (etat_demande == StateMachine::ETAT::PILOTAGE || etat_demande == StateMachine::ETAT::OUVERTURE ||etat_demande == StateMachine::ETAT::FERMETURE)) {
+    if (calibration.isNotCalibrated() && (etat_demande == StateMachine::ETAT::PILOTAGE || etat_demande == StateMachine::ETAT::OUVERTURE || etat_demande == StateMachine::ETAT::FERMETURE)) {
         sendError(MSG::ERR_CALIBRATION_REQUISE);
-        etat_demande = StateMachine::ETAT::ERREUR;
+        etat_demande = StateMachine::ETAT::CALIBRATION;
     }
     etat = etat_demande;
     time_etat = millis();
@@ -33,7 +37,7 @@ void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
     switch (etat) {
         case StateMachine::ETAT::DEBRAYAGE: {
             moteur.enable();
-            moteur.debrayage();
+            moteur.startDebrayage();
             digitalWrite(LED_PILOTAGE_PIN, LOW);
             break;
         }
@@ -59,12 +63,15 @@ void StateMachine::changerEtat(StateMachine::ETAT etat_demande) {
             break;
         }
         case StateMachine::ETAT::ERREUR: {
+            moteur.disable();
+            digitalWrite(LED_MOTOR_PIN, LOW);
             digitalWrite(LED_ERROR_PIN, HIGH);
             break;
         }
         default: {
             moteur.disable();
             digitalWrite(LED_MOTOR_PIN, LOW);
+            digitalWrite(LED_ERROR_PIN, LOW);
             break;
         } 
     }   
@@ -129,7 +136,7 @@ void StateMachine::exec() {
             break;
         }
         case StateMachine::ETAT::DEBRAYAGE: { // ou Arrêt
-            if (etatDebrayage()) {
+            if (moteur.isDebraye()) {
                 changerEtat(StateMachine::ETAT::REPOS);
             }
             capteurs.setConsigne(moteur.getPWM());
@@ -143,11 +150,17 @@ void StateMachine::exec() {
             break;
         }
         case StateMachine::ETAT::ERREUR: {
-            changerEtat(StateMachine::ETAT::DEBRAYAGE);
+            if (capteurs.hasPower()) {
+                if (calibration.isNotCalibrated()) {
+                    changerEtat(StateMachine::ETAT::REPOS);
+                } else {
+                    changerEtat(StateMachine::ETAT::DEBRAYAGE);
+                }
+            }
             break;
         }
         default: {
-            changerEtat(StateMachine::ETAT::DEBRAYAGE);
+            changerEtat(StateMachine::ETAT::ERREUR);
             break;
         }
     }
@@ -174,16 +187,6 @@ bool StateMachine::etatFermeture(uint16_t speed) {
     return false;
 }
 
-bool StateMachine::etatDebrayage() {
-    /* Gestion du debrayage du moteur */
-    int32_t delta_angle = abs(capteurs.getAngleMoteur() - moteur.codeur_avant_debrayage);
-    //float delta_courant = abs(1 - moteur.courant_avant_debrayage/capteurs.getCourant());
-    if (millis() - time_etat >= 200 || delta_angle > 100 ) { //|| delta_courant > 0.5) {
-        moteur.stop();
-        return true;
-    }
-    return false;
-}
 
 bool StateMachine::etatPilote() {
     /* Gestion du pilotage de la porte via consigne */

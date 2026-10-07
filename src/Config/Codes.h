@@ -23,6 +23,7 @@ enum class MSG : uint8_t {
     ERR_LIMITE_PORTE = 12,    // "limite de la porte atteinte $.2°"
     DATA_LIMITE_BASSE = 13,    // "limite basse de sécurité $"
     DATA_LIMITE_HAUTE = 14,    // "limite haute de sécurité $"
+    ERR_PUISSANCE = 15,    // "absence de puissance : vérifier l'alimentation électrique"
     ERR_CALIBRATION_REQUISE = 20,    // "calibration requise"
     ERR_CALIBRATION_ANNULEE = 21,    // "calibration interrompue"
     ERR_NON_CALIBRE = 22,    // "système non calibré"
@@ -94,6 +95,7 @@ inline const __FlashStringHelper* msgName(MSG msg)
         case MSG::ERR_LIMITE_PORTE: return F("ERR_LIMITE_PORTE");
         case MSG::DATA_LIMITE_BASSE: return F("DATA_LIMITE_BASSE");
         case MSG::DATA_LIMITE_HAUTE: return F("DATA_LIMITE_HAUTE");
+        case MSG::ERR_PUISSANCE: return F("ERR_PUISSANCE");
         case MSG::ERR_CALIBRATION_REQUISE: return F("ERR_CALIBRATION_REQUISE");
         case MSG::ERR_CALIBRATION_ANNULEE: return F("ERR_CALIBRATION_ANNULEE");
         case MSG::ERR_NON_CALIBRE: return F("ERR_NON_CALIBRE");

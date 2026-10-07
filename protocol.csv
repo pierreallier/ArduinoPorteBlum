@@ -13,6 +13,7 @@
     ERR_LIMITE_PORTE            ; 12    ; "limite de la porte atteinte $.2°"    # val : angle de la porte x100 (°)
     DATA_LIMITE_BASSE           ; 13    ; "limite basse de sécurité $"
     DATA_LIMITE_HAUTE           ; 14    ; "limite haute de sécurité $"
+    ERR_PUISSANCE               ; 15    ; "absence de puissance : vérifier l'alimentation électrique"
 
 # CALIBRATION ---------------------------------------------------------------------------------------------------
     ERR_CALIBRATION_REQUISE     ; 20    ; "calibration requise"

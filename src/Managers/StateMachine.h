@@ -71,7 +71,6 @@ class StateMachine {
  
         bool etatOuverture(uint16_t speed);
         bool etatFermeture(uint16_t speed);
-        bool etatDebrayage();
         bool etatPilote();        
 };
 

@@ -20,6 +20,7 @@ class MSG(IntEnum):
     ERR_LIMITE_PORTE = 12
     DATA_LIMITE_BASSE = 13
     DATA_LIMITE_HAUTE = 14
+    ERR_PUISSANCE = 15
     ERR_CALIBRATION_REQUISE = 20
     ERR_CALIBRATION_ANNULEE = 21
     ERR_NON_CALIBRE = 22
@@ -87,6 +88,7 @@ MESSAGE_TEXT = {
     MSG.ERR_LIMITE_PORTE: 'limite de la porte atteinte $.2°',
     MSG.DATA_LIMITE_BASSE: 'limite basse de sécurité $',
     MSG.DATA_LIMITE_HAUTE: 'limite haute de sécurité $',
+    MSG.ERR_PUISSANCE: "absence de puissance : vérifier l'alimentation électrique",
     MSG.ERR_CALIBRATION_REQUISE: 'calibration requise',
     MSG.ERR_CALIBRATION_ANNULEE: 'calibration interrompue',
     MSG.ERR_NON_CALIBRE: 'système non calibré',
