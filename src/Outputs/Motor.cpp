@@ -1,6 +1,6 @@
 #include "Motor.h"
 
-Motor::Motor(Sensors& c) : capteurs(c) {
+Motor::Motor(SensorsManager& c) : capteurs(c) {
     direction = Motor::DIR::OUVERTURE;
 }
 
@@ -52,10 +52,11 @@ void Motor::disable() {
     pwm = 0;
 }
 
-void Motor::debrayage() {
+void Motor::startDebrayage() {
     // Arrête le moteur en enregistrant quelques mesures
-    codeur_avant_debrayage = capteurs.angle_moteur;
-    courant_avant_debrayage = capteurs.courant_moyen;
+    codeur_avant_debrayage = capteurs.getAngleMoteur();
+    courant_avant_debrayage = capteurs.getCourant();
+    time_avant_debrayage = millis();
     if (direction == Motor::DIR::OUVERTURE) {
        setSpeedDir(-150); // Apply a small reverse speed to stop the motor
     } else if (direction == Motor::DIR::FERMETURE) {
@@ -63,9 +64,31 @@ void Motor::debrayage() {
     }
 }
 
+bool Motor::isDebraye() {
+    int32_t delta_angle = abs(capteurs.getAngleMoteur() - codeur_avant_debrayage);
+    //float delta_courant = abs(1 - courant_avant_debrayage/capteurs.getCourant());
+    if (millis() - time_avant_debrayage >= 200 || delta_angle > 100 ) { //|| delta_courant > 0.5) {
+        stop();
+        return true;
+    }
+    return false;
+}
+
 void Motor::stop(){
     // Arrête le moteur
     setSpeed(0);
+}
+
+void Motor::ouvrir(uint16_t speed) {
+    setDirection(DIR::OUVERTURE);
+    setSpeed(speed);
+    capteurs.setConsigne(speed);
+}
+
+void Motor::fermer(uint16_t speed) {
+    setDirection(DIR::FERMETURE);
+    setSpeed(speed);
+    capteurs.setConsigne(speed);
 }
 
 void Motor::update() {
@@ -77,10 +100,10 @@ void Motor::update() {
         digitalWrite(STBY_PIN, LOW); // Ensure the motor driver is disabled
         digitalWrite(LED_MOTOR_PIN, LOW); // Indicate motor disabled
     }
-    if (direction == Motor::DIR::OUVERTURE && !capteurs.limite_haute) {
+    if (direction == Motor::DIR::OUVERTURE && !capteurs.isLimiteHaute()) {
         analogWrite(PWM_FOR_PIN, pwm);
         analogWrite(PWM_REV_PIN, 0);
-    } else if (direction == Motor::DIR::FERMETURE && !capteurs.limite_basse) {
+    } else if (direction == Motor::DIR::FERMETURE && !capteurs.isLimiteBasse()) {
         analogWrite(PWM_REV_PIN, pwm);
         analogWrite(PWM_FOR_PIN, 0);
     } else {

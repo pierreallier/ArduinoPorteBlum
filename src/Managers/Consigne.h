@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include "Constantes.h"
+#include "../Config/Constantes.h"
 
 /**
  * @brief Classe abstraite représentant une consigne de pilotage.

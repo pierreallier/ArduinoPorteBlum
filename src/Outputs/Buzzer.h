@@ -2,7 +2,7 @@
 #define BUZZER_H
 
 #include <Arduino.h>
-#include "Constantes.h"
+#include "../Config/Constantes.h"
 
 class Buzzer {
   public:
@@ -19,6 +19,7 @@ class Buzzer {
     void bip(uint16_t duree = 100);
     void sequenceInit();
     void sequenceErreur();  
+    void sequenceFinPilotage();
 
   private:
 

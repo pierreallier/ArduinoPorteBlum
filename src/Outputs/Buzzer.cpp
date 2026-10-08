@@ -1,18 +1,25 @@
 #include "Buzzer.h"
-
+#include <EEPROM.h>
 
 void Buzzer::init() {
     pinMode(BUZZER_PIN, OUTPUT);
     digitalWrite(BUZZER_PIN, LOW);
-    enabled = true;
+    enabled = EEPROM.read(EEPROM_ADDR_BUZZER);
 }
 
 void Buzzer::enable() {
+    if (enabled)
+        return;
+
     enabled = true;
+    EEPROM.update(EEPROM_ADDR_BUZZER, enabled);
 }
 
 void Buzzer::disable() {
+    if (!enabled)
+        return;
     enabled = false;
+    EEPROM.update(EEPROM_ADDR_BUZZER, enabled);
 
     // Arrêt immédiat
     actif = false;
@@ -91,11 +98,15 @@ void Buzzer::play(uint8_t nb, uint16_t duree, uint16_t pauseMs) {
 }
 
 void Buzzer::sequenceErreur() {
-    play(3,50,50);
+    play(3,10,10);
 }
 
 void Buzzer::sequenceInit() {
-    play(1,10,10);
+    play(1,2,2);
+}
+
+void Buzzer::sequenceFinPilotage() {
+    play(2,2,2);
 }
 
 void Buzzer::bip(uint16_t duree) {
