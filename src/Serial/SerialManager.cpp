@@ -13,7 +13,7 @@ SerialManager::SerialManager(SensorsManager& s, StateMachine& ma, Buzzer& b) : c
 }
 
 void SerialManager::init() {
-    Serial.begin(115200);
+    Serial.begin(DEBIT);
     Serial.flush();
     loadMesurePeriode();
     printStart();
@@ -42,6 +42,12 @@ void SerialManager::readSerial() {
             sendError(MSG::ERR_CMD_INCONNUE);
         }
     }
+}
+
+bool SerialManager::testRequired() {
+    bool val = demandeTest;
+    demandeTest=0;
+    return val;
 }
 
 void SerialManager::_SET(String commande) {
@@ -326,7 +332,7 @@ void SerialManager::_GET(String commande) {
                                      : sendReponseNOK(MSG::ERR_ACCEL_ABSENT);
     }
     else if (commande.startsWith("BUZZER")) {
-        sendReponseOK(MSG::INFO_BUZZER_GET, buzzer.isEnabled());
+        sendReponseOK(MSG::INFO_BUZZER, buzzer.isEnabled());
     }
     else
         sendError(MSG::ERR_CMD_GET_INCONNUE);

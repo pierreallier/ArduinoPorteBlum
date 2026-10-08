@@ -45,13 +45,12 @@ class MSG(IntEnum):
     INFO_CONSIGNE_SET = 52
     INFO_PID_SET = 53
     INFO_ACCEL_SET = 54
-    INFO_BUZZER = 55
     ERR_CMD_GET_INCONNUE = 60
     ERR_MODE_GET = 61
     ERR_MESURE_GET = 62
     INFO_ACCEL_GET = 63
     ERR_ACCEL_ABSENT = 64
-    INFO_BUZZER_GET = 65
+    INFO_BUZZER = 65
     ERR_CMD_DO_INCONNUE = 70
     INFO_DO_RESET = 71
     INFO_DO_INIT = 72
@@ -111,7 +110,7 @@ MESSAGE_TEXT = {
     MSG.INFO_CALIBRE: 'système calibré',
     MSG.DATA_COURSE: 'course du capteur $',
     MSG.DATA_OFFSET: 'offset du capteur $',
-    MSG.ERR_CMD_SET_INCONNUE: 'commande set inconnue : valeur attendue : LIMITES / COURANT / CALIBRATION / MODE / CONSIGNE / PID / MESURES / ACCEL',
+    MSG.ERR_CMD_SET_INCONNUE: 'commande set inconnue : valeur attendue : COURANT / CALIBRATION / MODE / CONSIGNE / PID / MESURES / ACCEL / BUZZER',
     MSG.ERR_COURANT_SET: 'limite de courant incompatible (entre 0 et 2.5A) : valeur non modifiée ',
     MSG.ERR_CALIBRATION_SET: 'commande set calibration inconnue : valeur attendue : ON / OFF / EFFACER',
     MSG.ERR_PILOTAGE_SET: 'mode de pilotage inconnu : valeur attendue : PWM / POSITION / VITESSE / POSITIOB_VITESSE',
@@ -126,13 +125,12 @@ MESSAGE_TEXT = {
     MSG.INFO_CONSIGNE_SET: 'consigne mise à jour',
     MSG.INFO_PID_SET: 'configuration du PID effectuée',
     MSG.INFO_ACCEL_SET: "${désactivation|activation} de l'accéléromètre",
-    MSG.INFO_BUZZER: 'Buzzer ${désactivé|activé}',
-    MSG.ERR_CMD_GET_INCONNUE: 'commande get inconnue : valeur attendue : CALIBRATION / MODE / PID / MESURES',
+    MSG.ERR_CMD_GET_INCONNUE: 'commande get inconnue : valeur attendue : LIMITS / CALIBRATION / MODE / PID / MESURES / ACCEL / BUZZER',
     MSG.ERR_MODE_GET: 'mode de pilotage erroné',
     MSG.ERR_MESURE_GET: 'commande get mesures : capteur inconnu',
     MSG.INFO_ACCEL_GET: 'accéléromètre ${désactivé|activé}',
     MSG.ERR_ACCEL_ABSENT: 'accéléromètre non connecté',
-    MSG.INFO_BUZZER_GET: 'buzzer ${désactivé|activé}',
+    MSG.INFO_BUZZER: 'buzzer ${désactivé|activé}',
     MSG.ERR_CMD_DO_INCONNUE: 'commande do inconnue : valeur attendue : RESET / INIT / OUVRIR / FERMER / STOP / PILOTER / CALIBRATION / TEST',
     MSG.INFO_DO_RESET: 'demande reset carte',
     MSG.INFO_DO_INIT: 'demande état INIT',

@@ -10,8 +10,6 @@
 #include "../Outputs/Buzzer.h"
 #include "../Managers/StateMachine.h"
 
-#define EEPROM_ADDR_TENVOIS 15
-
 constexpr float RADS_TO_RPM = 60.0f / (2.0f * PI);
 constexpr float RAD_TO_TURN = 1.0f / (2.0f * PI);
 
@@ -34,7 +32,7 @@ class SerialManager {
         void loadMesurePeriode();
         void setMesurePeriode(uint16_t periode, bool save = false);
 
-        bool demandeTest = false;                          // Levé par DO TEST, consommé par loop()
+        bool testRequired();
         inline void resync() { time_precedent = millis(); } // Resynchronise le timer après le test
 
         
@@ -45,14 +43,14 @@ class SerialManager {
         Buzzer& buzzer;
 
         uint32_t time_precedent = 0;    
-        uint16_t periode_echantillonnage_mesures = 25;
+        uint16_t periode_echantillonnage_mesures = T_ENVOI;
+        bool demandeTest = false;
 
         void _SET(String commande);
         void _GET(String commande);
         void _DO(String commande);
         int splitCommande(const String& commande, String items[], int maxItems);
-
-        
+  
 };
 
 

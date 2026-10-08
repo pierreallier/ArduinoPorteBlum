@@ -27,7 +27,7 @@
     DATA_OFFSET                 ; 28    ; "offset du capteur $"                 # val : angle de la porte BRUT
 
 # SET ERR --------------------------------------------------------------------------------------------------------
-    ERR_CMD_SET_INCONNUE        ; 30    ; "commande set inconnue : valeur attendue : LIMITES / COURANT / CALIBRATION / MODE / CONSIGNE / PID / MESURES / ACCEL"
+    ERR_CMD_SET_INCONNUE        ; 30    ; "commande set inconnue : valeur attendue : COURANT / CALIBRATION / MODE / CONSIGNE / PID / MESURES / ACCEL / BUZZER"
     ERR_COURANT_SET             ; 31    ; "limite de courant incompatible (entre 0 et 2.5A) : valeur non modifiée "
     ERR_CALIBRATION_SET         ; 32    ; "commande set calibration inconnue : valeur attendue : ON / OFF / EFFACER"
     ERR_PILOTAGE_SET            ; 33    ; "mode de pilotage inconnu : valeur attendue : PWM / POSITION / VITESSE / POSITIOB_VITESSE"
@@ -44,15 +44,14 @@
     INFO_CONSIGNE_SET           ; 52    ; "consigne mise à jour"
     INFO_PID_SET                ; 53    ; "configuration du PID effectuée"
     INFO_ACCEL_SET              ; 54    ; "${désactivation|activation} de l'accéléromètre"
-    INFO_BUZZER                 ; 55    ; "Buzzer ${désactivé|activé}"
 
 # GET ----------------------------------------------------------------------------------------------------------
-    ERR_CMD_GET_INCONNUE        ; 60    ; "commande get inconnue : valeur attendue : CALIBRATION / MODE / PID / MESURES"
+    ERR_CMD_GET_INCONNUE        ; 60    ; "commande get inconnue : valeur attendue : LIMITS / CALIBRATION / MODE / PID / MESURES / ACCEL / BUZZER"
     ERR_MODE_GET                ; 61    ; "mode de pilotage erroné"
     ERR_MESURE_GET              ; 62    ; "commande get mesures : capteur inconnu"
     INFO_ACCEL_GET              ; 63    ; "accéléromètre ${désactivé|activé}"
     ERR_ACCEL_ABSENT            ; 64    ; "accéléromètre non connecté"
-    INFO_BUZZER_GET             ; 65    ; "buzzer ${désactivé|activé}"
+    INFO_BUZZER                 ; 65    ; "buzzer ${désactivé|activé}"
 
 # DO -----------------------------------------------------------------------------------------------------------
     ERR_CMD_DO_INCONNUE         ; 70    ; "commande do inconnue : valeur attendue : RESET / INIT / OUVRIR / FERMER / STOP / PILOTER / CALIBRATION / TEST"

@@ -25,19 +25,18 @@ void BN0055::setEnabled(bool enabled) {
     _enabled = enabled;
 
     if (!_enabled) {
-        _connected = false;
         _dataAvailable = false;
         _state = DISABLED;
         return;
     }
 
     // Activation
-    _connected = false;
     _dataAvailable = false;
 
     // On pourra lancer immédiatement une recherche.
     _lastDetectionTime = millis() - DETECTION_INTERVAL_MS;
     _state = SEARCHING;
+    update();
 }
 
 

@@ -33,7 +33,7 @@ enum class MSG : uint8_t {
     INFO_CALIBRE = 26,    // "système calibré"
     DATA_COURSE = 27,    // "course du capteur $"
     DATA_OFFSET = 28,    // "offset du capteur $"
-    ERR_CMD_SET_INCONNUE = 30,    // "commande set inconnue : valeur attendue : LIMITES / COURANT / CALIBRATION / MODE / CONSIGNE / PID / MESURES / ACCEL"
+    ERR_CMD_SET_INCONNUE = 30,    // "commande set inconnue : valeur attendue : COURANT / CALIBRATION / MODE / CONSIGNE / PID / MESURES / ACCEL / BUZZER"
     ERR_COURANT_SET = 31,    // "limite de courant incompatible (entre 0 et 2.5A) : valeur non modifiée "
     ERR_CALIBRATION_SET = 32,    // "commande set calibration inconnue : valeur attendue : ON / OFF / EFFACER"
     ERR_PILOTAGE_SET = 33,    // "mode de pilotage inconnu : valeur attendue : PWM / POSITION / VITESSE / POSITIOB_VITESSE"
@@ -48,13 +48,12 @@ enum class MSG : uint8_t {
     INFO_CONSIGNE_SET = 52,    // "consigne mise à jour"
     INFO_PID_SET = 53,    // "configuration du PID effectuée"
     INFO_ACCEL_SET = 54,    // "${désactivation|activation} de l'accéléromètre"
-    INFO_BUZZER = 55,    // "Buzzer ${désactivé|activé}"
-    ERR_CMD_GET_INCONNUE = 60,    // "commande get inconnue : valeur attendue : CALIBRATION / MODE / PID / MESURES"
+    ERR_CMD_GET_INCONNUE = 60,    // "commande get inconnue : valeur attendue : LIMITS / CALIBRATION / MODE / PID / MESURES / ACCEL / BUZZER"
     ERR_MODE_GET = 61,    // "mode de pilotage erroné"
     ERR_MESURE_GET = 62,    // "commande get mesures : capteur inconnu"
     INFO_ACCEL_GET = 63,    // "accéléromètre ${désactivé|activé}"
     ERR_ACCEL_ABSENT = 64,    // "accéléromètre non connecté"
-    INFO_BUZZER_GET = 65,    // "buzzer ${désactivé|activé}"
+    INFO_BUZZER = 65,    // "buzzer ${désactivé|activé}"
     ERR_CMD_DO_INCONNUE = 70,    // "commande do inconnue : valeur attendue : RESET / INIT / OUVRIR / FERMER / STOP / PILOTER / CALIBRATION / TEST"
     INFO_DO_RESET = 71,    // "demande reset carte"
     INFO_DO_INIT = 72,    // "demande état INIT"
@@ -133,13 +132,12 @@ inline const __FlashStringHelper* msgName(MSG msg)
         case MSG::INFO_CONSIGNE_SET: return F("INFO_CONSIGNE_SET");
         case MSG::INFO_PID_SET: return F("INFO_PID_SET");
         case MSG::INFO_ACCEL_SET: return F("INFO_ACCEL_SET");
-        case MSG::INFO_BUZZER: return F("INFO_BUZZER");
         case MSG::ERR_CMD_GET_INCONNUE: return F("ERR_CMD_GET_INCONNUE");
         case MSG::ERR_MODE_GET: return F("ERR_MODE_GET");
         case MSG::ERR_MESURE_GET: return F("ERR_MESURE_GET");
         case MSG::INFO_ACCEL_GET: return F("INFO_ACCEL_GET");
         case MSG::ERR_ACCEL_ABSENT: return F("ERR_ACCEL_ABSENT");
-        case MSG::INFO_BUZZER_GET: return F("INFO_BUZZER_GET");
+        case MSG::INFO_BUZZER: return F("INFO_BUZZER");
         case MSG::ERR_CMD_DO_INCONNUE: return F("ERR_CMD_DO_INCONNUE");
         case MSG::INFO_DO_RESET: return F("INFO_DO_RESET");
         case MSG::INFO_DO_INIT: return F("INFO_DO_INIT");

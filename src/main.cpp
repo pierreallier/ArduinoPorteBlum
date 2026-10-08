@@ -1,17 +1,17 @@
 #include <Arduino.h>
 #include <Bounce2.h>
-#include "Serial/Messages.h"
-#include "Outputs/Buzzer.h"
-#include "Inputs/BN0055.h"
-#include "Inputs/MT6701.h"
-#include "Managers/TestManager.h"
-
-#include "Managers/StateMachine.h"
-#include "Inputs/SensorsManager.h"
-#include "Serial/SerialManager.h"
-#include "Outputs/Motor.h"
 
 #include "Config/Constantes.h"
+
+#include "Inputs/SensorsManager.h"
+#include "Managers/TestManager.h"
+#include "Managers/StateMachine.h"
+
+#include "Outputs/Motor.h"
+#include "Outputs/Buzzer.h"
+
+#include "Serial/Messages.h"
+#include "Serial/SerialManager.h"
 
 Bounce2::Button btTest;
 Bounce2::Button btWireless;
@@ -40,7 +40,6 @@ void ordonnanceur();
 void setup() {
     portserie.init(); // Initialisation du port série
     buzzer.init(); // Initialiation du buzzer
-    buzzer.disable();
 
     // Configuration des boutons avec résistance de pull-up interne et état actif à LOW
     btTest.attach(TEST_BT,INPUT_PULLUP);
@@ -86,7 +85,7 @@ void setup() {
     // Vérification capteur BN0055
     capteurs.checkBNO() ? sendDirect('I', "capteur BN0055 détecté"): sendDirect('I', "capteur BN0055 non détecté");
     
-    // Vérificationb buzzer
+    // Vérification buzzer
     buzzer.isEnabled() ? sendDirect('I', "Buzzer activé") : sendDirect('I', "Buzzer désactivé");
     
     portserie.printFinInit();
@@ -98,8 +97,7 @@ void setup() {
 
 void loop() {
     portserie.task();
-    if (portserie.demandeTest) {
-        portserie.demandeTest = false;
+    if (portserie.testRequired()) {
         lancerTest();
     } else {
         machine.exec();
@@ -144,18 +142,6 @@ void ordonnanceur() {
         capteurs.mesures(pwm);
     }
 
-    // Envoies des mesures sur le port série
-    if (PERIODE_ENVOI <= 1000 && maintenant - tEnvoi >= PERIODE_ENVOI) {
-        tEnvoi += PERIODE_ENVOI;
-        sendMesures(capteurs.getMesures());
-        if (capteurs.bno().isEnabled() && maintenant - tBno >= 5 * PERIODE_ENVOI) {
-            tBno += 5 * PERIODE_ENVOI;
-            capteurs.bno().readData();
-            sendMesures(capteurs.bno().getMesures());
-            capteurs.bno().requestData(maintenant);
-        }
-    } 
-
     // Vérifications des sécurités 
     if (is_time_securite) {
         is_time_securite = false;
@@ -193,6 +179,18 @@ void ordonnanceur() {
             }
         }
     }
+
+    // Envoies des mesures sur le port série
+    if (PERIODE_ENVOI <= 1000 && maintenant - tEnvoi >= PERIODE_ENVOI) {
+        tEnvoi += PERIODE_ENVOI;
+        sendMesures(capteurs.getMesures());
+        if (capteurs.bno().isEnabled() && maintenant - tBno >= 5 * PERIODE_ENVOI) {
+            tBno += 5 * PERIODE_ENVOI;
+            capteurs.bno().readData();
+            sendMesures(capteurs.bno().getMesures());
+            capteurs.bno().requestData(maintenant);
+        }
+    } 
 
     // Vérification des boutons de commande (50ms)
     if (maintenant - tBt >= 50) {

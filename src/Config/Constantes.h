@@ -1,5 +1,6 @@
 #pragma once
 
+// Version de la carte et de soft
 #define VERSION_CARTE 3
 #define VERSION_SOFT 0
 #define VERSION_DEV 1
@@ -71,6 +72,8 @@
 
 // Arduino - constantes
 #define ADC_MAX 1024 // Résolution du CAN
+#define DEBIT 115200 // Débit du port série
+#define T_ENVOI 25 // Periode d'envois des mesures par défaut
 
 // EEPROM
 // Valeurs des calibrations (TODO à stocker sur l'eeprom I2C)
