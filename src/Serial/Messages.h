@@ -4,35 +4,22 @@
 #include "EventQueue.h"
 #include "../Config/Constantes.h"
 #include "../Config/Codes.h"
+#include "../Config/Etats.h"
 #include "../Config/Types.h"
+
+enum class MSGTYPE : char {
+    NONE = ' ',
+    REQUETE = 'R',
+    REPONSE_OK = 'O',
+    REPONSE_NOK = 'N',
+    INFO = 'I',
+    WARNING = 'W',
+    ERROR = 'E',
+    ETAT = 'S',
+};
 
 #if VERSION_DEV
     constexpr uint8_t TAILLE_MESSAGE = 20;
-
-    const char* const CALIBRATION_NAMES[] = {
-        "CALIBRATION_DEBUT",
-        "CALIBRATION_OUVERTURE",
-        "CALIBRATION_PAUSEHAUT",
-        "CALIBRATION_BUTEEBASSES",
-        "CALIBRATION_PAUSEBAS",
-        "CALIBRATION_BUTEEHAUTES",
-        "CALIBRATION_ENREGISTREMENT",
-        "CALIBRATION_ERREUR",
-        "CALIBRATION_NONE"
-    };
-
-    const char* const ETAT_NAMES[] ={
-        "INIT",
-        "REPOS",
-        "FONCTIONNEMENT",
-        "OUVERTURE",
-        "FERMETURE",
-        "PILOTAGE",
-        "CALIBRATION",
-        "DEBRAYAGE",
-        "ERREUR",
-        "STOP"
-    };
 #else
     constexpr uint8_t TAILLE_MESSAGE = sizeof(Event);
 #endif
@@ -68,52 +55,60 @@ constexpr uint8_t TAILLE_MESURES_BN0055 = sizeof(MesuresBN0055);
  * @return false si l'espace disponible est insuffisant.
  */
 inline bool sendMessage(MSG code, int32_t val = 0) { 
-    return EventQueue::instance().push('R', code, val); 
+    return EventQueue::instance().push(static_cast<char>(MSGTYPE::REQUETE), code, val); 
 }
 
 inline bool sendReponseOK(MSG code, int32_t val = 0) {
-    return EventQueue::instance().push('O', code, val);
+    return EventQueue::instance().push(static_cast<char>(MSGTYPE::REPONSE_OK), code, val);
 }
 inline bool sendReponseNOK(MSG code, int32_t val = 0) {
-    return EventQueue::instance().push('N', code, val);
+    return EventQueue::instance().push(static_cast<char>(MSGTYPE::REPONSE_NOK), code, val);
 }
 
 inline bool sendInfo(MSG code, int32_t val = 0) { 
-    return EventQueue::instance().push('I', code, val); 
+    return EventQueue::instance().push(static_cast<char>(MSGTYPE::INFO), code, val); 
 }
 
 inline bool sendWarning(MSG code, int32_t val = 0) { 
-    return EventQueue::instance().push('W', code, val); 
+    return EventQueue::instance().push(static_cast<char>(MSGTYPE::WARNING), code, val); 
 }
 
 inline bool sendError(MSG code, int32_t val = 0) { 
-    return EventQueue::instance().push('E', code, val); 
+    return EventQueue::instance().push(static_cast<char>(MSGTYPE::ERROR), code, val); 
 }
 
 inline bool sendEtat(MSG code,int32_t val = 0) { 
-    return EventQueue::instance().push('S', code, val); 
+    return EventQueue::instance().push(static_cast<char>(MSGTYPE::ETAT), code, val); 
 }
 
 /** 
  * @brief Envoie un message directement sur le port série.
  * Format : TYPE;MESSAGE
  */
-inline void sendDirect(char type, const char* message) {
-    Serial.write(type);
+inline void sendDirect(MSGTYPE type, const char* message) {
+    Serial.write(static_cast<char>(type));
     Serial.write(';');
     Serial.println(message);
 }
 
 /** 
  * @brief Envoie un message directement sur le port série.
- * Format : TYPE;MESSAGE
+ * Format : TYPE;CODE;VALEUR
  */
-inline void sendDirect(char type, MSG code,int32_t val = 0) {
-    Serial.write(type);
+inline void sendDirect(MSGTYPE type, MSG code,int32_t val = 0) {
+    #if VERSION_DEV
+    Serial.write(static_cast<char>(type));
     Serial.write(';');
     Serial.print(msgName(code));
     Serial.write(';');
     Serial.println(val);
+    #else
+        Event message;
+        message.type = static_cast<char>(type);
+        message.code = code;
+        message.val  = val;
+        Serial.write((uint8_t*)&message, TAILLE_MESSAGE);
+    #endif
 }
 
 /**
@@ -142,30 +137,31 @@ inline void sendTest(const char* cible, long valeur) {
  * @return false si non.
  */
 inline bool sendMesures(Mesures message) {
+    #if VERSION_DEV
+    Serial.print(F("M;"));
+    Serial.print(message.time);
+    Serial.print(";");
+    Serial.print(message.tension / 100.0f);
+    Serial.print(";");
+    Serial.print(message.courant_moyen / 100.0f);
+    Serial.print(";");
+    Serial.print(message.angle_porte / 100.0f);
+    Serial.print(";");
+    Serial.print(message.angle_moteur / 100.0f);
+    Serial.print(";");
+    Serial.print(message.vitesse_moteur / 100.0f);
+    Serial.print(";");
+    Serial.print(message.pwm / 100.0f);
+    Serial.print(";");
+    Serial.println(message.consigne / 100.0f);
+    return true;
+    #else
     if (Serial.availableForWrite() >= TAILLE_MESURES) {
-        #if VERSION_DEV
-        Serial.print(F("M;"));
-        Serial.print(message.time);
-        Serial.print(";");
-        Serial.print(message.tension / 100.0f);
-        Serial.print(";");
-        Serial.print(message.courant_moyen / 100.0f);
-        Serial.print(";");
-        Serial.print(message.angle_porte / 100.0f);
-        Serial.print(";");
-        Serial.print(message.angle_moteur / 100.0f);
-        Serial.print(";");
-        Serial.print(message.vitesse_moteur / 100.0f);
-        Serial.print(";");
-        Serial.print(message.pwm / 100.0f);
-        Serial.print(";");
-        Serial.println(message.consigne / 100.0f);
-        #else
         Serial.write((uint8_t*)&message, TAILLE_MESURES);
-        #endif
         return true;
     }
     return false;
+    #endif
 }
 
 
@@ -178,18 +174,19 @@ inline bool sendMesures(Mesures message) {
  * @return false si non.
  */
 inline bool sendMesures(MesuresBN0055 message) {
+    #if VERSION_DEV
+    Serial.print(F("A;"));
+    Serial.print(message.time);
+    Serial.print(";");
+    Serial.println(message.accelX);
+    return true;
+    #else
     if (Serial.availableForWrite() >= TAILLE_MESURES_BN0055) {
-        #if VERSION_DEV
-        Serial.print(F("A;"));
-        Serial.print(message.time);
-        Serial.print(";");
-        Serial.println(message.accelX);
-        #else
         Serial.write((uint8_t*)&message, TAILLE_MESURES_BN0055);
-        #endif
         return true;
     } 
     return false;
+    #endif
 }
 
 /**
@@ -207,30 +204,34 @@ inline bool sendEvents() {
     if (queue.perdus() > 0) {
         dispo -= 1;
         #if VERSION_DEV
-            Serial.print(F("W;"));
+            Serial.print(static_cast<char>(MSGTYPE::WARNING));
+            Serial.print(";");
             Serial.print(msgName(MSG::ERR_MESSAGE_PERDU));
             Serial.print(";");
             Serial.println(queue.perdus());
         #else
             Event e ; 
-            e.type = 'W';
+            e.type = static_cast<char>(MSGTYPE::WARNING);
             e.code = MSG::ERR_MESSAGE_PERDU;
             e.val  = queue.perdus();
             Serial.write((uint8_t*)&e,TAILLE_MESSAGE);
         #endif
         queue.clearPerdu();
     }
+    dispo = min(dispo, 3); // on ne vide jamais plus de 3 messages d'un coup
     if (dispo > 0) {
         for (int i=0;i<dispo;i++) {
             #if VERSION_DEV
                 Event data = queue.peek();
-                if (data.type == 'S') {
+                if (data.type == static_cast<char>(MSGTYPE::ETAT)) {
                     if (data.code == MSG::ETAT_CALIBRATION) {
-                        Serial.print(F("S;CALIBRATION;"));
-                        Serial.println(CALIBRATION_NAMES[data.val]);
+                        Serial.print(static_cast<char>(MSGTYPE::ETAT));
+                        Serial.print(";CALIBRATION;");
+                        Serial.println(etatName(static_cast<ETAT_CALIBRATION>(data.val)));
                     } else if (data.code == MSG::ETAT_PROD) {
-                        Serial.print(F("S;ETAT;"));
-                        Serial.println(ETAT_NAMES[data.val]);
+                        Serial.print(static_cast<char>(MSGTYPE::ETAT));
+                        Serial.print(";ETAT;");
+                        Serial.println(etatName(static_cast<ETAT>(data.val)));
                     }
                 } else {
                     Serial.print(data.type);

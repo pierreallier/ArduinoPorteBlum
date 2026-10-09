@@ -2,6 +2,7 @@
 #define CALIBRATIONMANAGER_H
 
 #include "../Config/Types.h"
+#include "../Config/Etats.h"
 #include "../Outputs/Motor.h"
 #include "../Inputs/SensorsManager.h"
 #include "../Config/Constantes.h"
@@ -19,19 +20,6 @@ public:
     enum Config {
         ON_FURNITURE,
         OFF_FURNITURE
-    };
-
-    // Les différents états pour la calibration
-    enum class ETAT : uint8_t {
-        DEBUT,
-        OUVERTURE,
-        ATTENTE_HAUT,
-        BUTEE_BASSE,
-        ATTENTE_BAS,
-        BUTEE_HAUTE,
-        ENREGISTREMENT,
-        ERREUR,
-        NONE
     };
 
     CalibrationManager(SensorsManager& c, Motor& m); // Constructeur
@@ -66,7 +54,7 @@ public:
     void updateCapteursLimits() { capteurs.setCalibration(calibrationData[getConfig()]);}
 
     // Gestion machine à état
-    void changerEtat(CalibrationManager::ETAT nouvelle_etape); // Changer d'état 
+    void changerEtat(ETAT_CALIBRATION nouvelle_etape); // Changer d'état 
     bool exec(); // Execution de la machine à états
 
     uint16_t getCourse() { return calibrationData[getConfig()].highLimit;}
@@ -90,7 +78,7 @@ private:
     bool ledState = false;
 
     // Variables pour la machine à états
-    ETAT etat;
+    ETAT_CALIBRATION etat;
     uint32_t time_etat = 0;
     uint32_t time_capteur = 0;
     uint32_t time_led = 0;

@@ -5,8 +5,6 @@
 #include "../Config/Codes.h"
 #include "../Config/Types.h"
 
-
-
 /**
  * @brief File circulaire des messages en attente d'envoi.
  *

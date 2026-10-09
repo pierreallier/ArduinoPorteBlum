@@ -3,7 +3,7 @@
 // Version de la carte et de soft
 #define VERSION_CARTE 3
 #define VERSION_SOFT 0
-#define VERSION_DEV 1
+#define VERSION_DEV 0
 
 // Moteur et driver
 #define PWM_REV_PIN  7 // Pin de commande PWM pour la rotation inverse du moteur

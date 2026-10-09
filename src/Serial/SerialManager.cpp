@@ -16,14 +16,13 @@ void SerialManager::init() {
     Serial.begin(DEBIT);
     Serial.flush();
     loadMesurePeriode();
-    printStart();
 }
 
 void SerialManager::task() {
     if (millis() - time_precedent >= 100) {
         time_precedent += 100;
         readSerial(); // Traitement des données reçues
-        sendEvents();
+        
     }
 }
 
@@ -54,7 +53,7 @@ void SerialManager::_SET(String commande) {
     commande.trim(); // Supprime les espaces et les retours à la ligne
     commande.toUpperCase(); // Convertit la commande
 
-    if (commande.startsWith("CALIBRATION") && machine.etat == StateMachine::ETAT::REPOS) {
+    if (commande.startsWith("CALIBRATION") && machine.etat == ETAT::REPOS) {
         String valeurs = commande.substring(11);
         valeurs.trim();
         valeurs.toUpperCase();
@@ -78,7 +77,7 @@ void SerialManager::_SET(String commande) {
         sendReponseOK(MSG::INFO_CALIBRATION_SET);
         return;
     }
-    else if (commande.startsWith("COURANT") && machine.etat == StateMachine::ETAT::REPOS) {
+    else if (commande.startsWith("COURANT") && machine.etat == ETAT::REPOS) {
         String valeurs = commande.substring(8);
         valeurs.trim();
         float limite = valeurs.substring(0).toFloat();
@@ -88,7 +87,7 @@ void SerialManager::_SET(String commande) {
             sendReponseNOK(MSG::ERR_COURANT_SET);
     }
     // Configuration du mode de pilotage
-    else if (commande.startsWith("MODE") && machine.etat != StateMachine::ETAT::PILOTAGE) {
+    else if (commande.startsWith("MODE") && machine.etat != ETAT::PILOTAGE) {
         String valeur = commande.substring(5);
         valeur.trim();
         if (valeur == "PWM")
@@ -116,7 +115,7 @@ void SerialManager::_SET(String commande) {
         }
     }
     // Configuration des PID
-    else if (commande.startsWith("PID") && machine.etat != StateMachine::ETAT::PILOTAGE) {
+    else if (commande.startsWith("PID") && machine.etat != ETAT::PILOTAGE) {
         String parametres = commande.substring(4);
         parametres.trim();
         // Recherche des séparateurs
@@ -343,42 +342,42 @@ void SerialManager::_DO(String commande) {
     commande.toUpperCase(); // Convertit la commande
 
     if (commande.startsWith("RESET")) {
-        sendDirect('I',MSG::INFO_DO_RESET);
+        sendDirect(MSGTYPE::INFO,MSG::INFO_DO_RESET);
         resetArduino();
         return;
     }
     if (commande.startsWith("TEST")) {
-        if (machine.etat == StateMachine::ETAT::REPOS ||
-            machine.etat == StateMachine::ETAT::CALIBRATION) {
+        if (machine.etat == ETAT::REPOS ||
+            machine.etat == ETAT::CALIBRATION) {
             demandeTest = true;
-            sendDirect('I',"TEST Demandée");
+            sendDirect(MSGTYPE::INFO,MSG::INFO_DO_TEST);
         } else {
             sendReponseNOK(MSG::ERR_TEST_IMPOSSIBLE);
         }
         return;
     }
     if (commande.startsWith("INIT")) {
-        machine.changerEtat(StateMachine::ETAT::INIT);
+        machine.changerEtat(ETAT::INIT);
         sendReponseOK(MSG::INFO_DO_INIT);
     }
     else if (commande.startsWith("OUVRIR")) {
-        machine.changerEtat(StateMachine::ETAT::OUVERTURE);
+        machine.changerEtat(ETAT::OUVERTURE);
         sendReponseOK(MSG::INFO_DO_OUVRIR);
     }
     else if (commande.startsWith("FERMER")) {
-        machine.changerEtat(StateMachine::ETAT::FERMETURE);
+        machine.changerEtat(ETAT::FERMETURE);
         sendReponseOK(MSG::INFO_DO_FERMER);
     }
     else if (commande.startsWith("STOP")) {
-        machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
+        machine.changerEtat(ETAT::DEBRAYAGE);
         sendReponseOK(MSG::INFO_DO_STOP);
     }
     else if (commande.startsWith("PILOTER")) {
-        machine.changerEtat(StateMachine::ETAT::PILOTAGE);
+        machine.changerEtat(ETAT::PILOTAGE);
         sendReponseOK(MSG::INFO_DO_PILOTER);
     }
     else if (commande.startsWith("CALIBRATION")) {
-        machine.changerEtat(StateMachine::ETAT::CALIBRATION);
+        machine.changerEtat(ETAT::CALIBRATION);
         sendReponseOK(MSG::INFO_DO_CALIBRATION);
     }
     else {

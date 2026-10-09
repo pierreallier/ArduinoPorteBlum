@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "../Serial/Messages.h"
+#include "../Config/Etats.h"
 
 #include "../Outputs/Motor.h"
 #include "../Outputs/Buzzer.h"
@@ -16,19 +17,6 @@
 
 class StateMachine {
     public:
-        enum class ETAT : uint8_t {
-            INIT,
-            REPOS,
-            FONCTIONNEMENT,
-            OUVERTURE,
-            FERMETURE,
-            PILOTAGE,
-            CALIBRATION,
-            DEBRAYAGE,
-            ERREUR,
-            STOP
-        };
-        
         enum class MODE_PILOTAGE : uint8_t {
             PWM,
             POSITION,
@@ -48,7 +36,7 @@ class StateMachine {
 
         StateMachine(SensorsManager& s, Motor& m, Buzzer& b);
         void init();
-        void changerEtat(StateMachine::ETAT etat_demande);
+        void changerEtat(ETAT etat_demande);
         void setMode(StateMachine::MODE_PILOTAGE mode);
         void exec();
 

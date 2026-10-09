@@ -39,30 +39,41 @@
     ERR_FREQ_MESURES_SET        ; 39    ; "réglage de la fréquence de mesures : période manquante ou invalide (0 à 1000)"
     
 # SET OK ------------------------------------------------------------------------------------------------------- 
-    INFO_COURANT_SET            ; 50    ; "limite de courant modifiée"
-    INFO_CALIBRATION_SET        ; 51    ; "commande set calibration faite"
-    INFO_CONSIGNE_SET           ; 52    ; "consigne mise à jour"
-    INFO_PID_SET                ; 53    ; "configuration du PID effectuée"
-    INFO_ACCEL_SET              ; 54    ; "${désactivation|activation} de l'accéléromètre"
+    INFO_COURANT_SET            ; 40    ; "limite de courant modifiée"
+    INFO_CALIBRATION_SET        ; 41    ; "commande set calibration faite"
+    INFO_CONSIGNE_SET           ; 42    ; "consigne mise à jour"
+    INFO_PID_SET                ; 43    ; "configuration du PID effectuée"
+    INFO_ACCEL_SET              ; 44    ; "${désactivation|activation} de l'accéléromètre"
 
 # GET ----------------------------------------------------------------------------------------------------------
-    ERR_CMD_GET_INCONNUE        ; 60    ; "commande get inconnue : valeur attendue : LIMITS / CALIBRATION / MODE / PID / MESURES / ACCEL / BUZZER"
-    ERR_MODE_GET                ; 61    ; "mode de pilotage erroné"
-    ERR_MESURE_GET              ; 62    ; "commande get mesures : capteur inconnu"
-    INFO_ACCEL_GET              ; 63    ; "accéléromètre ${désactivé|activé}"
-    ERR_ACCEL_ABSENT            ; 64    ; "accéléromètre non connecté"
-    INFO_BUZZER                 ; 65    ; "buzzer ${désactivé|activé}"
+    ERR_CMD_GET_INCONNUE        ; 50    ; "commande get inconnue : valeur attendue : LIMITS / CALIBRATION / MODE / PID / MESURES / ACCEL / BUZZER"
+    ERR_MODE_GET                ; 51    ; "mode de pilotage erroné"
+    ERR_MESURE_GET              ; 52    ; "commande get mesures : capteur inconnu"
+    INFO_ACCEL_GET              ; 53    ; "accéléromètre ${désactivé|activé}"
+    ERR_ACCEL_ABSENT            ; 54    ; "accéléromètre non connecté"
+    INFO_BUZZER                 ; 55    ; "buzzer ${désactivé|activé}"
 
 # DO -----------------------------------------------------------------------------------------------------------
-    ERR_CMD_DO_INCONNUE         ; 70    ; "commande do inconnue : valeur attendue : RESET / INIT / OUVRIR / FERMER / STOP / PILOTER / CALIBRATION / TEST"
-    INFO_DO_RESET               ; 71    ; "demande reset carte"
-    INFO_DO_INIT                ; 72    ; "demande état INIT"
-    INFO_DO_OUVRIR              ; 73    ; "demande état OUVRIR"
-    INFO_DO_FERMER              ; 74    ; "demande état FERMER"
-    INFO_DO_STOP                ; 75    ; "demande état STOP"
-    INFO_DO_PILOTER             ; 76    ; "demande état PILOTER"
-    INFO_DO_CALIBRATION         ; 77    ; "demande état CALIBRATION"
-    ERR_TEST_IMPOSSIBLE         ; 78    ; "demande de test impossible : uniquement au repos ou en calibration"
+    ERR_CMD_DO_INCONNUE         ; 60    ; "commande do inconnue : valeur attendue : RESET / INIT / OUVRIR / FERMER / STOP / PILOTER / CALIBRATION / TEST"
+    INFO_DO_RESET               ; 61    ; "demande reset carte"
+    INFO_DO_INIT                ; 62    ; "demande état INIT"
+    INFO_DO_OUVRIR              ; 63    ; "demande état OUVRIR"
+    INFO_DO_FERMER              ; 64    ; "demande état FERMER"
+    INFO_DO_STOP                ; 65    ; "demande état STOP"
+    INFO_DO_PILOTER             ; 66    ; "demande état PILOTER"
+    INFO_DO_CALIBRATION         ; 67    ; "demande état CALIBRATION"
+    INFO_DO_TEST                ; 68    ; "test de la carte demandé"   
+    ERR_TEST_IMPOSSIBLE         ; 69    ; "demande de test impossible : uniquement au repos ou en calibration"
+
+# INITIALISATION -------------------------------------------------------------------------------------------------
+    INFO_INIT_DEBUT             ; 70    ; "==== Pilotage Porte Blum ===="
+    INFO_INIT_FIN               ; 71    ; "== Initialisation terminée =="
+    ERR_INIT                    ; 72    ; "erreur d'initialisation"
+    INFO_DEV                    ; 73    ; "version de développement"
+    ERR_CAPTEUR_ABSENT          ; 74    ; "codeur absolu de la porte non détecté"
+    INFO_CAPTEUR_PRESENT        ; 75    ; "codeur absolu de la porte détecté"
+    INFO_BUZZER_ACTIVE          ; 76    ; "buzzer activé"
+    INFO_BUZZER_DESACTIVE       ; 77    ; "buzzer désactivé"
 
 # PILOTAGE -----------------------------------------------------------------------------------------------------
     ERR_CONSIGNE_EN_PILOTAGE    ; 80    ; "impossible de changer de consigne pendant le pilotage : le système doit être au repos"
@@ -79,21 +90,30 @@
     DATA_PID_POSITION_KI        ; 94    ; "PID position : Ki = $.3"      #val : valeur *1000
     DATA_PID_POSITION_KD        ; 95    ; "PID position : Kd = $.3"      #val : valeur *1000
 
+#TEST ------------------------------------------------------------------------------------------------------
+    INFO_TEST_DEBUT             ; 100    ; "debut du mode test (DO STOP pour quitter)"
+    INFO_TEST_CAPTEURS_FIN      ; 101    ; "sequence test terminée, entrées toujours surveillées (DO STOP pour quitter)"
+    INFO_TEST_FIN               ; 102    ; "fin du mode test"
+    INFO_TEST_ACTIF             ; 103   ; "mode test toujours actif : DO STOP pour quitter"
+    DATA_TEST_ENTREES           ; 104    ; "état des entrées : $"
+    DATA_TEST_SORTIES           ; 105    ; "état des sorties : $"
+
 #MESURES -------------------------------------------------------------------------------------------------------
-    INFO_MESURES_DESACTIVE      ; 100   ; "envoi des mesures désactivé"
-    DATA_FREQ_MESURES           ; 101   ; "envoi des mesures toutes les $ ms"   # val : temps en ms
-    DATA_ANGLE_PORTE            ; 102   ; "angle de la porte $.2°"              # val : angle (*100)°
-    DATA_TENSION                ; 103   ; "tension d'alimentation $.2V"         # val : tension (*100)V
-    DATA_COURANT                ; 104   ; "courant consommé $.2A"               # val : courant (*100)A
-    DATA_ANGLE_MOTEUR           ; 105   ; "angle moteur $.2°"                   # val : angle (*100)°
-    DATA_VITESSE_MOTEUR         ; 106   ; "vitesse moteur $.2 rad/s"            # val : vitesse (*100)rad/s
-    DATA_PWM                    ; 107   ; "PWM moteur $.2"                      # val : PWM (*100)
-    DATA_CONSIGNE               ; 108   ; "consigne moteur $.2 (PWM,°,rad/s)"   # val : (*100) PWM ou angle ou rad/s
-    INFO_SUR_MEUBLE             ; 109   ; "servodrive monté sur le meuble"
-    INFO_DEMONTE                ; 110   ; "servodrive non monté sur le meuble"
-    INFO_BN0055_ABSENT          ; 111   ; "capteur BN0055 absent"
-    INFO_BN0055_PRESENT         ; 112   ; "capteur BN0055 détecté"
+    INFO_MESURES_DESACTIVE      ; 110   ; "envoi des mesures désactivé"
+    DATA_FREQ_MESURES           ; 111   ; "envoi des mesures toutes les $ ms"   # val : temps en ms
+    DATA_ANGLE_PORTE            ; 112   ; "angle de la porte $.2°"              # val : angle (*100)°
+    DATA_TENSION                ; 113   ; "tension d'alimentation $.2V"         # val : tension (*100)V
+    DATA_COURANT                ; 114   ; "courant consommé $.2A"               # val : courant (*100)A
+    DATA_ANGLE_MOTEUR           ; 115   ; "angle moteur $.2°"                   # val : angle (*100)°
+    DATA_VITESSE_MOTEUR         ; 116   ; "vitesse moteur $.2 rad/s"            # val : vitesse (*100)rad/s
+    DATA_PWM                    ; 117   ; "PWM moteur $.2"                      # val : PWM (*100)
+    DATA_CONSIGNE               ; 118   ; "consigne moteur $.2 (PWM,°,rad/s)"   # val : (*100) PWM ou angle ou rad/s
+    INFO_SUR_MEUBLE             ; 119   ; "servodrive monté sur le meuble"
+    INFO_DEMONTE                ; 120   ; "servodrive non monté sur le meuble"
+    INFO_BN0055_ABSENT          ; 121   ; "capteur BN0055 absent"
+    INFO_BN0055_PRESENT         ; 122   ; "capteur BN0055 détecté"
+
 
 #ETATS ---------------------------------------------------------------------------------------------------------
-    ETAT_PROD                   ; 250   ; "etat en prod"
+    ETAT_PROD                   ; 250   ; "etat de prod"
     ETAT_CALIBRATION            ; 251   ; "etat de calibration"
