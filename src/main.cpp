@@ -191,6 +191,8 @@ void ordonnanceur() {
             capteurs.bno().readData();
             sendMesures(capteurs.bno().getMesures());
             capteurs.bno().requestData(maintenant);
+        } else {
+            sendEvents(); // Envoi des messages si pas d'envois des données de l'accéléromètre (pour éviter de saturer le port série)
         }
     } 
 

@@ -107,7 +107,7 @@ inline void sendDirect(MSGTYPE type, MSG code,int32_t val = 0) {
         message.type = static_cast<char>(type);
         message.code = code;
         message.val  = val;
-        Serial.write((uint8_t*)&message, TAILLE_MESURES);
+        Serial.write((uint8_t*)&message, TAILLE_MESSAGE);
     #endif
 }
 
@@ -218,6 +218,7 @@ inline bool sendEvents() {
         #endif
         queue.clearPerdu();
     }
+    dispo = min(dispo, 3); // on ne vide jamais plus de 10 messages d'un coup
     if (dispo > 0) {
         for (int i=0;i<dispo;i++) {
             #if VERSION_DEV

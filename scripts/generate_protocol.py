@@ -28,7 +28,6 @@ except Exception:
 
 CSV_FILE = ROOT / "protocol.csv"
 ETATS_CSV_FILE = ROOT / "etats.csv"
-CONSTANTES_FILE = ROOT / "src" / "Config" / "Constantes.h"
 
 CPP_OUTPUT = ROOT / "src" / "Config" / "Codes.h"
 ETATS_OUTPUT = ROOT / "src" / "Config" / "Etats.h"
@@ -40,7 +39,7 @@ PY_OUTPUT = ROOT / "python" / "codes.py"
 # ============================================================
 def doit_regenerer():
     """Vrai si une sortie est absente ou plus ancienne qu'une entrée."""
-    inputs = (CSV_FILE, ETATS_CSV_FILE, CONSTANTES_FILE)
+    inputs = (CSV_FILE, ETATS_CSV_FILE)
     latest_input_time = max(path.stat().st_mtime for path in inputs)
 
     for out in (CPP_OUTPUT, ETATS_OUTPUT, PY_OUTPUT):
@@ -177,23 +176,6 @@ def read_states_csv():
         raise ValueError(f"Aucun état CALI trouvé dans {ETATS_CSV_FILE}")
 
     return prod, cali
-
-
-# ============================================================
-# Lecture de DEBIT depuis Constantes.h
-# ============================================================
-def parse_debit():
-    content = CONSTANTES_FILE.read_text(encoding="utf-8")
-    match = re.search(r"^\s*#define\s+DEBIT\s+(.+?)\s*(?://.*)?$", content, re.M)
-    if not match:
-        return 115200  # Valeur par défaut si non trouvée
-
-    raw_value = match.group(1).strip()
-    try:
-        return int(raw_value, 0)
-    except ValueError as exc:
-        return 115200  # Valeur par défaut si non trouvée
-
 
 # ============================================================
 # Vérifications
@@ -378,7 +360,7 @@ def generate_etats_h(prod_states, calibration_states):
 # ============================================================
 # Génération du fichier Python
 # ============================================================
-def generate_python(messages, debit, prod_states, calibration_states):
+def generate_python(messages, prod_states, calibration_states):
     lines = [
         '"""',
         "Fichier généré automatiquement.",
@@ -397,8 +379,6 @@ def generate_python(messages, debit, prod_states, calibration_states):
 
     lines.extend([
         "}",
-        "",
-        f"DEBIT = {debit}",
         "",
         "ETAT_PROD = {",
     ])
@@ -435,7 +415,6 @@ def generer_fichiers():
             raise ValueError("Aucun code trouvé dans le fichier CSV")
 
         prod_states, calibration_states = read_states_csv()
-        debit = parse_debit()
 
         check_codes(messages)
         check_states(prod_states, "PROD")
@@ -443,7 +422,7 @@ def generer_fichiers():
 
         generate_cpp(messages)
         generate_etats_h(prod_states, calibration_states)
-        generate_python(messages, debit, prod_states, calibration_states)
+        generate_python(messages, prod_states, calibration_states)
 
     except ValueError as error:
         log(f"\nERREUR : {error}", file=sys.stderr)
