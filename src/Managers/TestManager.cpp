@@ -43,13 +43,13 @@ void TestManager::run() {
         etatBoutons[i] = (digitalRead(BOUTONS[i].pin) == LOW);
     tEntrees = millis();
 
-    sendDirect('I', "Debut du mode test (DO STOP pour quitter)");
+    sendDirect(MSGTYPE::INFO, MSG::INFO_TEST_DEBUT);
 
     testSorties();
     if (!quitter) testCapteurs();
     if (!quitter) testI2C();
     if (!quitter) {
-        sendDirect('I', "Sequence test terminée, entrées toujours surveillées (DO STOP pour quitter)");
+        sendDirect(MSGTYPE::INFO, MSG::INFO_TEST_CAPTEURS_FIN);
         while (!quitter) service();
     }
 
@@ -57,7 +57,7 @@ void TestManager::run() {
     for (uint8_t i = 0; i < NB_LEDS; i++)
         digitalWrite(LEDS[i].pin, LOW);
     buzzer.stop();
-    sendDirect('I', "Fin du mode test");
+    sendDirect(MSGTYPE::INFO, MSG::INFO_TEST_FIN);
 }
 
 void TestManager::testSorties() {
@@ -121,7 +121,7 @@ void TestManager::lireCommande() {
     if (c.indexOf("STOP") >= 0 || c.indexOf("FIN_TEST") >= 0)
         quitter = true;
     else if (c.length() > 0)
-        sendDirect('W', "Mode test actif : DO STOP pour quitter");
+        sendDirect(MSGTYPE::INFO, MSG::INFO_TEST_ACTIF);
 }
 
 void TestManager::testI2C() {

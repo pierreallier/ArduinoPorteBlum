@@ -19,13 +19,6 @@ class SerialManager {
         void init();
         void task();
 
-        inline void printStart() { 
-            Serial.println(F("\n==== Pilotage Porte Blum ====\n"));
-        }
-        inline void printFinInit() { 
-            Serial.println(F("\n== Initialisation terminée ==\n"));
-        }
-
         void readSerial();
 
         uint32_t getMesurePeriode();

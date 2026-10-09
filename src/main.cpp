@@ -41,6 +41,8 @@ void setup() {
     portserie.init(); // Initialisation du port série
     buzzer.init(); // Initialiation du buzzer
 
+    sendDirect(MSGTYPE::INFO, MSG::INFO_INIT_DEBUT);
+
     // Configuration des boutons avec résistance de pull-up interne et état actif à LOW
     btTest.attach(TEST_BT,INPUT_PULLUP);
     btTest.setPressedState(LOW); 
@@ -57,7 +59,7 @@ void setup() {
 
     // Mode DEV (message et envoi des mesures) sinon on n'envoi pas les mesures (à activer via le SET)
     #if VERSION_DEV
-        sendDirect('W', "version de développement");
+        sendDirect(MSGTYPE::WARNING, MSG::INFO_DEV);
     #else
         portserie.setMesurePeriode(0);
     #endif
@@ -66,29 +68,29 @@ void setup() {
     bool send_error = false;  // Flag pour éviter d'afficher plusieurs fois l'erreur
     while (!capteurs.checkCodeurPorte()) {
         if (!send_error) {
-            sendDirect('E', "codeur absolu de la porte non détecté");
+            sendDirect(MSGTYPE::ERROR, MSG::ERR_CAPTEUR_ABSENT);
             digitalWrite(LED_ERROR_PIN, HIGH);  
             send_error = true;         
         }
         delay(1000);  // Petite pause pour éviter de saturer le CPU
     }
-    sendDirect('I', "codeur absolu de la porte détecté");
+    sendDirect(MSGTYPE::INFO, MSG::INFO_CAPTEUR_PRESENT);
     digitalWrite(LED_ERROR_PIN, LOW);
 
     // Vérification type de montage 
-    capteurs.onMeuble() ? sendDirect('I', "servodrive monté sur le meuble") : sendDirect('I', "servodrive non monté sur le meuble");
+    capteurs.onMeuble() ? sendDirect(MSGTYPE::INFO, MSG::INFO_SUR_MEUBLE) : sendDirect(MSGTYPE::INFO, MSG::INFO_DEMONTE);
     // Vérification système calibré
     if (!machine.isCalibrated()) {
-        sendDirect('W', "calibration requise");
+        sendDirect(MSGTYPE::WARNING, MSG::ERR_CALIBRATION_REQUISE);
     }
 
     // Vérification capteur BN0055
-    capteurs.checkBNO() ? sendDirect('I', "capteur BN0055 détecté"): sendDirect('I', "capteur BN0055 non détecté");
+    capteurs.checkBNO() ? sendDirect(MSGTYPE::INFO, MSG::INFO_CAPTEUR_PRESENT): sendDirect(MSGTYPE::ERROR, MSG::ERR_CAPTEUR_ABSENT);
     
     // Vérification buzzer
-    buzzer.isEnabled() ? sendDirect('I', "Buzzer activé") : sendDirect('I', "Buzzer désactivé");
+    buzzer.isEnabled() ? sendDirect(MSGTYPE::INFO, MSG::INFO_BUZZER_ACTIVE) : sendDirect(MSGTYPE::INFO, MSG::INFO_BUZZER_DESACTIVE);
     
-    portserie.printFinInit();
+    sendDirect(MSGTYPE::INFO, MSG::INFO_INIT_FIN);
     buzzer.sequenceInit();
     delay(1000);
 
@@ -145,26 +147,26 @@ void ordonnanceur() {
     // Vérifications des sécurités 
     if (is_time_securite) {
         is_time_securite = false;
-        if (machine.etat != StateMachine::ETAT::CALIBRATION) {
-            if (capteurs.isLimiteAngle() && (machine.etat != StateMachine::ETAT::DEBRAYAGE && machine.etat != StateMachine::ETAT::REPOS)) {
-                if (machine.etat == StateMachine::ETAT::PILOTAGE) {
+        if (machine.etat != ETAT::CALIBRATION) {
+            if (capteurs.isLimiteAngle() && (machine.etat != ETAT::DEBRAYAGE && machine.etat != ETAT::REPOS)) {
+                if (machine.etat == ETAT::PILOTAGE) {
                     sendError(MSG::ERR_LIMITE_PORTE, capteurs.getAnglePorte());
-                    machine.changerEtat(StateMachine::ETAT::ERREUR);
+                    machine.changerEtat(ETAT::ERREUR);
                     buzzer.sequenceErreur();
                 } else {
                     sendInfo(MSG::ERR_LIMITE_PORTE, capteurs.getAnglePorte());
-                    machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
+                    machine.changerEtat(ETAT::DEBRAYAGE);
                 }
                 capteurs.resetSecurities();
             } else {
                 if (capteurs.isLimiteCourant()) {
                     sendError(MSG::ERR_COURANT);
-                    machine.changerEtat(StateMachine::ETAT::ERREUR);
+                    machine.changerEtat(ETAT::ERREUR);
                     buzzer.sequenceErreur();
                 }
                 if (capteurs.isBlocage()){
                     sendError(MSG::ERR_BLOCAGE);
-                    machine.changerEtat(StateMachine::ETAT::ERREUR);
+                    machine.changerEtat(ETAT::ERREUR);
                     buzzer.sequenceErreur();
                 }
                 if (capteurs.meubleChanged()) {
@@ -172,8 +174,8 @@ void ordonnanceur() {
                     if (!machine.isCalibrated()) {
                         sendWarning(MSG::ERR_CALIBRATION_REQUISE);
                     }
-                    if (machine.etat != StateMachine::ETAT::REPOS) {
-                        machine.changerEtat(StateMachine::ETAT::ERREUR);
+                    if (machine.etat != ETAT::REPOS) {
+                        machine.changerEtat(ETAT::ERREUR);
                     }
                 }
             }
@@ -201,24 +203,24 @@ void ordonnanceur() {
         btCalibration.update();
         btPilotage.update();
         if (btCalibration.pressed()) {
-            if (machine.etat == StateMachine::ETAT::REPOS) {
-                machine.changerEtat(StateMachine::ETAT::CALIBRATION);
+            if (machine.etat == ETAT::REPOS) {
+                machine.changerEtat(ETAT::CALIBRATION);
             }
             else
-                machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
+                machine.changerEtat(ETAT::DEBRAYAGE);
         }
         if (btPilotage.pressed()) {
-            if (machine.etat == StateMachine::ETAT::REPOS) {
-                machine.changerEtat(StateMachine::ETAT::PILOTAGE);
+            if (machine.etat == ETAT::REPOS) {
+                machine.changerEtat(ETAT::PILOTAGE);
             }
             else
-                machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
+                machine.changerEtat(ETAT::DEBRAYAGE);
         }
         if (btWireless.pressed() || btTest.pressed()) {
-            if (machine.etat == StateMachine::ETAT::REPOS)
-                machine.changerEtat(StateMachine::ETAT::FONCTIONNEMENT);
+            if (machine.etat == ETAT::REPOS)
+                machine.changerEtat(ETAT::FONCTIONNEMENT);
             else
-                machine.changerEtat(StateMachine::ETAT::DEBRAYAGE);
+                machine.changerEtat(ETAT::DEBRAYAGE);
         }
     }
 }
