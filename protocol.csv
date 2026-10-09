@@ -66,8 +66,8 @@
     ERR_TEST_IMPOSSIBLE         ; 69    ; "demande de test impossible : uniquement au repos ou en calibration"
 
 # INITIALISATION -------------------------------------------------------------------------------------------------
-    INFO_INIT_DEBUT             ; 70    ; "\n==== Pilotage Porte Blum ====\n"
-    INFO_INIT_FIN               ; 71    ; "\n== Initialisation terminée ==\n"
+    INFO_INIT_DEBUT             ; 70    ; "==== Pilotage Porte Blum ===="
+    INFO_INIT_FIN               ; 71    ; "== Initialisation terminée =="
     ERR_INIT                    ; 72    ; "erreur d'initialisation"
     INFO_DEV                    ; 73    ; "version de développement"
     ERR_CAPTEUR_ABSENT          ; 74    ; "codeur absolu de la porte non détecté"

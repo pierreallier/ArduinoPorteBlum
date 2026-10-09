@@ -3,6 +3,7 @@
 
 import struct
 import threading
+import time
 import serial
 
 try:
@@ -49,6 +50,7 @@ class SerialPortHandler:
         self.reader_running = False
         self.rx_buffer = bytearray()
         self.show_hex = False
+        self._mesures_requested = False
 
     def connect(self, port, baud):
         self.disconnect()
@@ -56,9 +58,18 @@ class SerialPortHandler:
         self.reader_running = True
         self.reader_thread = threading.Thread(target=self._reader, daemon=True)
         self.reader_thread.start()
+        # Do NOT request mesures here; wait for the firmware 'end of init' event (code 71).
+        self._mesures_requested = False
 
     def disconnect(self):
+        # Request device to stop sending mesures, then close port
         self.reader_running = False
+
+        try:
+            # Try to send the OFF command with retries before closing
+            self._silent_write(b"SET MESURES OFF\n")
+        except Exception:
+            pass
 
         if self.serial_port is not None:
             try:
@@ -67,6 +78,38 @@ class SerialPortHandler:
                 pass
 
         self.serial_port = None
+        # Reset flag so next connection will wait for init event again
+        self._mesures_requested = False
+
+    def _silent_write(self, data: bytes, attempts: int = 3, delay: float = 0.05) -> bool:
+        """Write `data` to serial port silently with retries.
+
+        Returns True on success, False otherwise. Does not raise.
+        """
+        try:
+            ser = self.serial_port
+            if ser is None:
+                return False
+
+            for i in range(attempts):
+                try:
+                    if getattr(ser, "is_open", False):
+                        ser.write(data)
+                        try:
+                            ser.flush()
+                        except Exception:
+                            pass
+                        return True
+                    else:
+                        # Port closed; nothing to do
+                        return False
+                except Exception:
+                    # Wait briefly and retry
+                    time.sleep(delay)
+
+            return False
+        except Exception:
+            return False
 
     def is_connected(self):
         return self.serial_port is not None and self.serial_port.is_open
@@ -109,6 +152,31 @@ class SerialPortHandler:
 
                 # enqueue raw binary frame
                 self.rx_queue.put(("bin", frame, message_name, payload_struct))
+
+                # If this is an Event frame, check for init-complete code (71)
+                try:
+                    if first_byte == EVENT_BINARY_ID and message_name == "Event" and not self._mesures_requested:
+                        payload = frame[1:]
+                        try:
+                            values = payload_struct.unpack(payload)
+                            if len(values) >= 2:
+                                _, code = values[0], values[1]
+                                try:
+                                    code_int = int(code)
+                                except Exception:
+                                    code_int = None
+
+                                if code_int == 71:
+                                    # send SET MESURES ON once
+                                    try:
+                                        self._silent_write(b"SET MESURES ON\n")
+                                    except Exception:
+                                        pass
+                                    self._mesures_requested = True
+                        except struct.error:
+                            pass
+                except Exception:
+                    pass
                 continue
 
             newline_index = self.rx_buffer.find(b"\n")
@@ -159,34 +227,25 @@ class SerialPortHandler:
                 state_name = str(value)
 
             code_text = self._message_name(code)
-            return f"{event_label} : type={message_type_text} code={code} ({code_text}) val={state_name}"
+            return f"{event_label} : {state_name}"
 
         template = MSG.get(code, None)
         if template is None:
-            formatted = str(value)
-        else:
-            formatted = self._format_template(template, value)
+            # No template: show code and raw value
+            return f"{event_label} : code={code} val={value}"
 
-        code_text = self._message_name(code)
-        return f"Event {event_label} | type={message_type_text} code={code} ({code_text}) val={formatted}"
+        # Apply template substitutions using the value
+        formatted = self._format_template(template, value)
+        return f"{event_label} : {formatted}"
 
     def _decode_mesures(self, values, frame):
         if len(values) != 8:
             return f"--- Trame Mesures invalide : {self._format_hex(frame)} ---"
 
-        (
-            time_ms,
-            tension,
-            courant_moyen,
-            angle_moteur,
-            vitesse_moteur,
-            angle_porte,
-            pwm,
-            consigne,
-        ) = values
+        (time_ms,tension,courant_moyen,angle_moteur,vitesse_moteur,angle_porte,pwm,consigne) = values
 
         return (
-            "Mesures | "
+            "Mesures : "
             f"t={time_ms}ms "
             f"tension={tension / 100:.2f}V "
             f"courant={courant_moyen / 100:.2f}A "
@@ -201,27 +260,14 @@ class SerialPortHandler:
         if len(values) != 10:
             return f"--- Trame MesuresBN0055 invalide : {self._format_hex(frame)} ---"
 
-        (
-            accel_x,
-            accel_y,
-            accel_z,
-            time_ms,
-            gyro_x,
-            gyro_y,
-            gyro_z,
-            heading,
-            roll,
-            pitch,
-        ) = values
+        (time_ms,accel_x,accel_y,accel_z,gyro_x,gyro_y,gyro_z,heading,roll,pitch) = values
 
         return (
-            "Accéléro | "
+            "Accéléro : "
             f"t={time_ms}ms "
-            f"accel=({accel_x / 100:.2f},{accel_y / 100:.2f},{accel_z / 100:.2f}) "
-            f"gyro=({gyro_x / 100:.2f},{gyro_y / 100:.2f},{gyro_z / 100:.2f}) "
-            f"heading={heading / 100:.2f}° "
-            f"roll={roll / 100:.2f}° "
-            f"pitch={pitch / 100:.2f}°"
+            f"accel=({accel_x / 100:.2f},{accel_y / 100:.2f},{accel_z / 100:.2f}) rad/s² "
+            f"gyro=({gyro_x / 100:.2f},{gyro_y / 100:.2f},{gyro_z / 100:.2f})rad/s "
+            f"euler=({heading / 100:.2f},{roll / 100:.2f},{pitch / 100:.2f})°"
         )
 
     # Utility formatting functions used by the handler

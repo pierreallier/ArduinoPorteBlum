@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Petit terminal série pour Arduino.
+Petit terminal série pour Arduino adapté au système Blum respectant le protocole de communication utilisé.
 
 Dépendance externe :
     pyserial

@@ -5,16 +5,11 @@ import queue
 import threading
 import tkinter as tk
 from tkinter import ttk, messagebox
+import serial
 
 from SerialPortHandler import SerialPortHandler
 
-try:
-    from codes import DEBIT
-except Exception:
-    DEBIT = 115200
-
-DEFAULT_BAUDRATE = DEBIT
-
+DEFAULT_BAUDRATE = 115200
 
 class SerialTerminalGui(tk.Tk):
     def __init__(self):
@@ -105,9 +100,16 @@ class SerialTerminalGui(tk.Tk):
 
         self.terminal.configure(yscrollcommand=scrollbar_y.set)
 
-        self.terminal.tag_configure("tx", justify="left")
-        self.terminal.tag_configure("rx", justify="right")
-        self.terminal.tag_configure("info", justify="center")
+        # Sent commands (tx) align to the right; received frames (rx) align to the left
+        self.terminal.tag_configure("tx", justify="right")
+        self.terminal.tag_configure("rx", justify="left")
+        # Severity/color tags for received messages
+        self.terminal.tag_configure("err", foreground="#C00000", justify="left")
+        self.terminal.tag_configure("warn", foreground="#D28C00", justify="left")
+        self.terminal.tag_configure("info", foreground="#0066CC", justify="left")
+        self.terminal.tag_configure("state", foreground="#007A29", justify="left")
+        # Centered informational tag
+        self.terminal.tag_configure("info_center", foreground="#FFFFFF", justify="center", background="#727171")
 
         bottom_frame = ttk.Frame(self, padding=(8, 4, 8, 8))
         bottom_frame.pack(fill="x")
@@ -325,7 +327,18 @@ class SerialTerminalGui(tk.Tk):
     # Display helpers
     def _write_terminal(self, text, tag):
         self.terminal.configure(state="normal")
-        self.terminal.insert("end", text + "\n", tag)
+
+        out_tag = tag
+
+        # For received frames, determine severity-based color tag
+        if tag == "rx":
+            out_tag = self._severity_tag(text)
+
+        # Keep existing centered info behavior
+        if tag == "info":
+            out_tag = "info_center"
+
+        self.terminal.insert("end", text + "\n", out_tag)
         self.terminal.configure(state="disabled")
 
         if self.autoscroll:
@@ -369,3 +382,33 @@ class SerialTerminalGui(tk.Tk):
     def _close(self):
         self._disconnect()
         self.destroy()
+
+    def _severity_tag(self, text: str) -> str:
+        """Return a tag name based on the message content for coloring.
+
+        Mapping:
+        - Error / NOK -> 'err' (red)
+        - Warning -> 'warn' (yellow)
+        - Info / OK -> 'info' (blue)
+        - State -> 'state' (green)
+        - Otherwise -> 'rx' (default)
+        """
+        if not text:
+            return "rx"
+
+        t = text.strip().lower()
+
+        # Check for explicit event labels produced by the decoder
+        if t.startswith("erreur") or " nok" in t or t.endswith(" nok") or "nok" in t:
+            return "err"
+
+        if t.startswith("warning") or "warning" in t or "warn" in t:
+            return "warn"
+
+        if t.startswith("state") or "state" in t or "etat" in t:
+            return "state"
+
+        if t.startswith("info") or t.startswith("ok") or " ok" in t or "(ok)" in t:
+            return "info"
+
+        return "rx"

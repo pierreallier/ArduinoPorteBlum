@@ -33,6 +33,7 @@ uint32_t tEnvoi = 0;
 uint32_t tBno = 0;
 
 bool is_time_securite = false;
+bool has_send_accelero = false;
 
 void lancerTest();
 void ordonnanceur();
@@ -191,10 +192,14 @@ void ordonnanceur() {
             capteurs.bno().readData();
             sendMesures(capteurs.bno().getMesures());
             capteurs.bno().requestData(maintenant);
+            has_send_accelero = true;
         } else {
-            sendEvents(); // Envoi des messages si pas d'envois des données de l'accéléromètre (pour éviter de saturer le port série)
+            has_send_accelero = false;
         }
     } 
+    if (!has_send_accelero) {
+        sendEvents(); // Envoi des messages si pas d'envois des données de l'accéléromètre (pour éviter de saturer le port série)
+    }
 
     // Vérification des boutons de commande (50ms)
     if (maintenant - tBt >= 50) {
