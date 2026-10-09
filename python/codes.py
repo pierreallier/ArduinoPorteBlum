@@ -100,8 +100,6 @@ MSG = {
     251: 'etat de calibration',    # 'ETAT_CALIBRATION'
 }
 
-DEBIT = 115200
-
 ETAT_PROD = {
     0: "INIT",
     1: "REPOS",

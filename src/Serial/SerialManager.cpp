@@ -22,7 +22,7 @@ void SerialManager::task() {
     if (millis() - time_precedent >= 100) {
         time_precedent += 100;
         readSerial(); // Traitement des données reçues
-        sendEvents();
+        
     }
 }
 
