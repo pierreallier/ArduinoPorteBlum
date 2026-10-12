@@ -1,27 +1,27 @@
 #include "TestManager.h"
 
 namespace {
-    struct Broche { const char* nom; uint8_t pin; };
+    struct Broche { MSG nom; uint8_t pin; };
     
     const Broche LEDS[] = {
-        {"LED_MOTOR",       LED_MOTOR_PIN},
-        {"LED_CALIBRATION", LED_CALIBRATION_PIN},
-        {"LED_PILOTAGE",    LED_PILOTAGE_PIN},
-        {"LED_ERROR",       LED_ERROR_PIN}
+        {MSG::TEST_LED_MOTOR,       LED_MOTOR_PIN},
+        {MSG::TEST_LED_CALIBRATION, LED_CALIBRATION_PIN},
+        {MSG::TEST_LED_PILOTAGE,    LED_PILOTAGE_PIN},
+        {MSG::TEST_LED_ERROR,       LED_ERROR_PIN}
     };
     const Broche BOUTONS[] = {
-        {"BT_TEST",        TEST_BT},
-        {"BT_WIRELESS",    WIRELESS_BT},
-        {"BT_CALIBRATION", CALIBRATION_BT},
-        {"BT_PILOTAGE",    PILOTAGE_BT}
+        {MSG::TEST_BT_MOUVEMENT,    TEST_BT},
+        {MSG::TEST_BT_WIRELESS,     WIRELESS_BT},
+        {MSG::TEST_BT_CALIBRATION,  CALIBRATION_BT},
+        {MSG::TEST_BT_PILOTAGE,     PILOTAGE_BT}
     };
     const Broche CAPTEURS[] = {
-        {"CAPTEUR_A0_TENSION_MOTEUR",   MOTOR_VOLTAGE},
-        {"CAPTEUR_A1_COURANT_DRIVER",   DRIVER_CURRENT},
-        {"CAPTEUR_A2_COURANT_MOTEUR",   MOTOR_CURRENT},
-        {"CAPTEUR_A3_CODEUR_PORTE",     CODEUR_PORTE},
-        {"CAPTEUR_A4_DETECTEUR_MEUBLE", DETECTEUR_MEUBLE},
-        {"CAPTEUR_A5_POTENTIOMETRE",    POTENTIOMETRE}
+        {MSG::TEST_CAPTEUR_TENSION_MOTEUR,   MOTOR_VOLTAGE},
+        {MSG::TEST_CAPTEUR_COURANT_DRIVER,   DRIVER_CURRENT},
+        {MSG::TEST_CAPTEUR_COURANT_MOTEUR,   MOTOR_CURRENT},
+        {MSG::TEST_CAPTEUR_CODEUR_PORTE,     CODEUR_PORTE},
+        {MSG::TEST_CAPTEUR_MEUBLE,           DETECTEUR_MEUBLE},
+        {MSG::TEST_CAPTEUR_POTENTIOMETRE,    POTENTIOMETRE}
     };
 
     const uint8_t NB_LEDS     = sizeof(LEDS)     / sizeof(LEDS[0]);
@@ -45,30 +45,41 @@ void TestManager::run() {
 
     sendDirect(MSGTYPE::INFO, MSG::INFO_TEST_DEBUT);
 
+    if (!buzzer.isEnabled()) {
+        buzzer.enable();
+        disabled_buzzer = true;
+    }
+
     testSorties();
     if (!quitter) testCapteurs();
     if (!quitter) testI2C();
     if (!quitter) {
-        sendDirect(MSGTYPE::INFO, MSG::INFO_TEST_CAPTEURS_FIN);
+        sendTest(MSG::INFO_TEST_CAPTEURS_FIN);
         while (!quitter) service();
     }
 
     // Retour au repos
     for (uint8_t i = 0; i < NB_LEDS; i++)
         digitalWrite(LEDS[i].pin, LOW);
-    buzzer.stop();
+    buzzer.sequenceFinPilotage();
+
+    if (disabled_buzzer) {
+        buzzer.disable();
+        disabled_buzzer = false;
+    }
+
     sendDirect(MSGTYPE::INFO, MSG::INFO_TEST_FIN);
 }
 
 void TestManager::testSorties() {
     for (uint8_t i = 0; i < NB_LEDS && !quitter; i++) {
-        sendTest("SORTIE", LEDS[i].nom);
+        sendTest(LEDS[i].nom);
         digitalWrite(LEDS[i].pin, HIGH);
         attendre(DUREE_SORTIE);
         digitalWrite(LEDS[i].pin, LOW);
     }
     if (quitter) return;
-    sendTest("SORTIE", "BUZZER");
+    sendTest(MSG::TEST_BUZZER);
     buzzer.play(3, 150, 150);
     attendre(DUREE_SORTIE);
 }
@@ -107,7 +118,7 @@ void TestManager::surveillerEntrees() {
         bool presse = (digitalRead(BOUTONS[i].pin) == LOW);
         if (presse != etatBoutons[i]) {
             etatBoutons[i] = presse;
-            sendTest(BOUTONS[i].nom, presse ? "PRESSE" : "RELACHE");
+            sendTest(BOUTONS[i].nom, presse ? 1:0);
         }
     }
 }
@@ -127,20 +138,14 @@ void TestManager::lireCommande() {
 void TestManager::testI2C() {
     if (quitter) return;
 
-    if (!verifierCodeur()) {
-        sendTest("I2C_CODEUR_PORTE", "NON_PRESENT");
-    } else {
-        sendTest("I2C_CODEUR_PORTE", "PRESENT");
-    }
+    sendTest(MSG::TEST_I2C_CODEUR_PORTE, verifierCodeur() ? 1 : 0);
+    
     attendre(PERIODE_LECTURE);        // laisse partir le message (service() vide le buffer TX)
 
     if (quitter) return;
 
-    if (!verifierBNO()) {
-        sendTest("I2C_ACCELEROMETRE", "NON_PRESENT");
-    } else {
-        sendTest("I2C_ACCELEROMETRE", "PRESENT");
-    }
+    sendTest(MSG::TEST_I2C_ACCELEROMETRE, verifierBNO() ? 1 : 0);
+    
     attendre(PERIODE_LECTURE);
 }
 

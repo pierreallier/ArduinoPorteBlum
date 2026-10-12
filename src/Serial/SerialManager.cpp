@@ -350,7 +350,7 @@ void SerialManager::_DO(String commande) {
         if (machine.etat == ETAT::REPOS ||
             machine.etat == ETAT::CALIBRATION) {
             demandeTest = true;
-            sendDirect(MSGTYPE::INFO,MSG::INFO_DO_TEST);
+            sendDirect(MSGTYPE::REPONSE_OK,MSG::INFO_DO_TEST);
         } else {
             sendReponseNOK(MSG::ERR_TEST_IMPOSSIBLE);
         }
