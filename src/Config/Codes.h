@@ -64,8 +64,8 @@ enum class MSG : uint8_t {
     INFO_DO_CALIBRATION = 67,    // "demande état CALIBRATION"
     INFO_DO_TEST = 68,    // "test de la carte demandé"
     ERR_TEST_IMPOSSIBLE = 69,    // "demande de test impossible : uniquement au repos ou en calibration"
-    INFO_INIT_DEBUT = 70,    // "\n==== Pilotage Porte Blum ====\n"
-    INFO_INIT_FIN = 71,    // "\n== Initialisation terminée ==\n"
+    INFO_INIT_DEBUT = 70,    // "==== Pilotage Porte Blum ===="
+    INFO_INIT_FIN = 71,    // "== Initialisation terminée =="
     ERR_INIT = 72,    // "erreur d'initialisation"
     INFO_DEV = 73,    // "version de développement"
     ERR_CAPTEUR_ABSENT = 74,    // "codeur absolu de la porte non détecté"
@@ -89,19 +89,36 @@ enum class MSG : uint8_t {
     INFO_TEST_ACTIF = 103,    // "mode test toujours actif : DO STOP pour quitter"
     DATA_TEST_ENTREES = 104,    // "état des entrées : $"
     DATA_TEST_SORTIES = 105,    // "état des sorties : $"
-    INFO_MESURES_DESACTIVE = 110,    // "envoi des mesures désactivé"
-    DATA_FREQ_MESURES = 111,    // "envoi des mesures toutes les $ ms"
-    DATA_ANGLE_PORTE = 112,    // "angle de la porte $.2°"
-    DATA_TENSION = 113,    // "tension d'alimentation $.2V"
-    DATA_COURANT = 114,    // "courant consommé $.2A"
-    DATA_ANGLE_MOTEUR = 115,    // "angle moteur $.2°"
-    DATA_VITESSE_MOTEUR = 116,    // "vitesse moteur $.2 rad/s"
-    DATA_PWM = 117,    // "PWM moteur $.2"
-    DATA_CONSIGNE = 118,    // "consigne moteur $.2 (PWM,°,rad/s)"
-    INFO_SUR_MEUBLE = 119,    // "servodrive monté sur le meuble"
-    INFO_DEMONTE = 120,    // "servodrive non monté sur le meuble"
-    INFO_BN0055_ABSENT = 121,    // "capteur BN0055 absent"
-    INFO_BN0055_PRESENT = 122,    // "capteur BN0055 détecté"
+    TEST_I2C_CODEUR_PORTE = 106,    // "test I2C du codeur absolu de la porte : ${KO|OK}"
+    TEST_I2C_ACCELEROMETRE = 107,    // "test I2C de l'accéléromètre : ${KO|OK}"
+    TEST_BT_MOUVEMENT = 108,    // "test bouton mouvement : ${RELACHE|PRESSE}"
+    TEST_BT_WIRELESS = 109,    // "test bouton wireless : ${RELACHE|PRESSE}"
+    TEST_BT_CALIBRATION = 110,    // "test bouton calibration : ${RELACHE|PRESSE}"
+    TEST_BT_PILOTAGE = 111,    // "test bouton pilotage : ${RELACHE|PRESSE}"
+    TEST_LED_ERROR = 112,    // "test LED ERREUR"
+    TEST_LED_MOTOR = 113,    // "test LED MOTEUR"
+    TEST_LED_CALIBRATION = 114,    // "test LED CALIBRATION"
+    TEST_LED_PILOTAGE = 115,    // "test LED PILOTAGE"
+    TEST_BUZZER = 116,    // "test BUZZER"
+    TEST_CAPTEUR_TENSION_MOTEUR = 117,    // "test capteur TENSION MOTEUR : $"
+    TEST_CAPTEUR_COURANT_DRIVER = 118,    // "test capteur COURANT DRIVER : $"
+    TEST_CAPTEUR_COURANT_MOTEUR = 119,    // "test capteur COURANT MOTEUR : $"
+    TEST_CAPTEUR_CODEUR_PORTE = 120,    // "test capteur CODEUR PORTE : $"
+    TEST_CAPTEUR_MEUBLE = 121,    // "test capteur DETECTEUR MEUBLE : $"
+    TEST_CAPTEUR_POTENTIOMETRE = 122,    // "test capteur POTENTIOMETRE : $"
+    INFO_MESURES_DESACTIVE = 150,    // "envoi des mesures désactivé"
+    DATA_FREQ_MESURES = 151,    // "envoi des mesures toutes les $ ms"
+    DATA_ANGLE_PORTE = 152,    // "angle de la porte $.2°"
+    DATA_TENSION = 153,    // "tension d'alimentation $.2V"
+    DATA_COURANT = 154,    // "courant consommé $.2A"
+    DATA_ANGLE_MOTEUR = 155,    // "angle moteur $.2°"
+    DATA_VITESSE_MOTEUR = 156,    // "vitesse moteur $.2 rad/s"
+    DATA_PWM = 157,    // "PWM moteur $.2"
+    DATA_CONSIGNE = 158,    // "consigne moteur $.2 (PWM,°,rad/s)"
+    INFO_SUR_MEUBLE = 159,    // "servodrive monté sur le meuble"
+    INFO_DEMONTE = 160,    // "servodrive non monté sur le meuble"
+    INFO_BN0055_ABSENT = 161,    // "capteur BN0055 absent"
+    INFO_BN0055_PRESENT = 162,    // "capteur BN0055 détecté"
     ETAT_PROD = 250,    // "etat de prod"
     ETAT_CALIBRATION = 251,    // "etat de calibration"
 };
@@ -186,6 +203,23 @@ inline const __FlashStringHelper* msgName(MSG msg)
         case MSG::INFO_TEST_ACTIF: return F("INFO_TEST_ACTIF");
         case MSG::DATA_TEST_ENTREES: return F("DATA_TEST_ENTREES");
         case MSG::DATA_TEST_SORTIES: return F("DATA_TEST_SORTIES");
+        case MSG::TEST_I2C_CODEUR_PORTE: return F("TEST_I2C_CODEUR_PORTE");
+        case MSG::TEST_I2C_ACCELEROMETRE: return F("TEST_I2C_ACCELEROMETRE");
+        case MSG::TEST_BT_MOUVEMENT: return F("TEST_BT_MOUVEMENT");
+        case MSG::TEST_BT_WIRELESS: return F("TEST_BT_WIRELESS");
+        case MSG::TEST_BT_CALIBRATION: return F("TEST_BT_CALIBRATION");
+        case MSG::TEST_BT_PILOTAGE: return F("TEST_BT_PILOTAGE");
+        case MSG::TEST_LED_ERROR: return F("TEST_LED_ERROR");
+        case MSG::TEST_LED_MOTOR: return F("TEST_LED_MOTOR");
+        case MSG::TEST_LED_CALIBRATION: return F("TEST_LED_CALIBRATION");
+        case MSG::TEST_LED_PILOTAGE: return F("TEST_LED_PILOTAGE");
+        case MSG::TEST_BUZZER: return F("TEST_BUZZER");
+        case MSG::TEST_CAPTEUR_TENSION_MOTEUR: return F("TEST_CAPTEUR_TENSION_MOTEUR");
+        case MSG::TEST_CAPTEUR_COURANT_DRIVER: return F("TEST_CAPTEUR_COURANT_DRIVER");
+        case MSG::TEST_CAPTEUR_COURANT_MOTEUR: return F("TEST_CAPTEUR_COURANT_MOTEUR");
+        case MSG::TEST_CAPTEUR_CODEUR_PORTE: return F("TEST_CAPTEUR_CODEUR_PORTE");
+        case MSG::TEST_CAPTEUR_MEUBLE: return F("TEST_CAPTEUR_MEUBLE");
+        case MSG::TEST_CAPTEUR_POTENTIOMETRE: return F("TEST_CAPTEUR_POTENTIOMETRE");
         case MSG::INFO_MESURES_DESACTIVE: return F("INFO_MESURES_DESACTIVE");
         case MSG::DATA_FREQ_MESURES: return F("DATA_FREQ_MESURES");
         case MSG::DATA_ANGLE_PORTE: return F("DATA_ANGLE_PORTE");

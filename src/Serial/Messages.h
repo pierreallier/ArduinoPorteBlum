@@ -16,6 +16,7 @@ enum class MSGTYPE : char {
     WARNING = 'W',
     ERROR = 'E',
     ETAT = 'S',
+    TEST = 'T',
 };
 
 #if VERSION_DEV
@@ -97,11 +98,11 @@ inline void sendDirect(MSGTYPE type, const char* message) {
  */
 inline void sendDirect(MSGTYPE type, MSG code,int32_t val = 0) {
     #if VERSION_DEV
-    Serial.write(static_cast<char>(type));
-    Serial.write(';');
-    Serial.print(msgName(code));
-    Serial.write(';');
-    Serial.println(val);
+        Serial.write(static_cast<char>(type));
+        Serial.write(';');
+        Serial.print(msgName(code));
+        Serial.write(';');
+        Serial.println(val);
     #else
         Event message;
         message.type = static_cast<char>(type);
@@ -115,17 +116,19 @@ inline void sendDirect(MSGTYPE type, MSG code,int32_t val = 0) {
  * @brief Envoie un message du mode test (directement sur le port série).
  * Format : T;CIBLE;VALEUR
  */
-inline void sendTest(const char* cible, const char* valeur) {
-    Serial.print(F("T;"));
-    Serial.print(cible);
-    Serial.write(';');
-    Serial.println(valeur);
-}
-inline void sendTest(const char* cible, long valeur) {
-    Serial.print(F("T;"));
-    Serial.print(cible);
-    Serial.write(';');
-    Serial.println(valeur);
+inline void sendTest(MSG code, int32_t val = 0) {
+    #if VERSION_DEV
+        Serial.print(F("T;"));
+        Serial.print(msgName(code));
+        Serial.write(';');
+        Serial.println(val);
+    #else
+        Event message;
+        message.type = static_cast<char>(MSGTYPE::TEST);
+        message.code = code;
+        message.val  = val;
+        Serial.write((uint8_t*)&message, TAILLE_MESSAGE);
+    #endif
 }
 
 /**

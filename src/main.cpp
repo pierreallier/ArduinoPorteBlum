@@ -95,7 +95,11 @@ void setup() {
     buzzer.sequenceInit();
     delay(1000);
 
+    tVerif = tMesure = tBt  = tEnvoi = tBno = millis();
     capteurs.mesures(0); // Initialise la 1er mesure
+    if (capteurs.bno().isEnabled()) {
+        capteurs.bno().requestData(millis());
+    }
 }
 
 void loop() {
@@ -189,8 +193,10 @@ void ordonnanceur() {
         sendMesures(capteurs.getMesures());
         if (capteurs.bno().isEnabled() && maintenant - tBno >= 5 * PERIODE_ENVOI) {
             tBno += 5 * PERIODE_ENVOI;
-            capteurs.bno().readData();
-            sendMesures(capteurs.bno().getMesures());
+            if (capteurs.bno().available()) {
+                capteurs.bno().readData();
+                sendMesures(capteurs.bno().getMesures());
+            }
             capteurs.bno().requestData(maintenant);
             has_send_accelero = true;
         } else {
