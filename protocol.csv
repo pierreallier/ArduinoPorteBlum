@@ -94,24 +94,41 @@
     INFO_TEST_DEBUT             ; 100    ; "debut du mode test (DO STOP pour quitter)"
     INFO_TEST_CAPTEURS_FIN      ; 101    ; "sequence test terminée, entrées toujours surveillées (DO STOP pour quitter)"
     INFO_TEST_FIN               ; 102    ; "fin du mode test"
-    INFO_TEST_ACTIF             ; 103   ; "mode test toujours actif : DO STOP pour quitter"
+    INFO_TEST_ACTIF             ; 103    ; "mode test toujours actif : DO STOP pour quitter"
     DATA_TEST_ENTREES           ; 104    ; "état des entrées : $"
     DATA_TEST_SORTIES           ; 105    ; "état des sorties : $"
+    TEST_I2C_CODEUR_PORTE       ; 106    ; "test I2C du codeur absolu de la porte : ${KO|OK}"   # val : KO=0 ou OK=1
+    TEST_I2C_ACCELEROMETRE      ; 107    ; "test I2C de l'accéléromètre : ${KO|OK}"             # val : KO=0 ou OK=1
+    TEST_BT_MOUVEMENT           ; 108    ; "test bouton mouvement : ${RELACHE|PRESSE}"          # val : RELACHE=0 ou PRESSE=1
+    TEST_BT_WIRELESS            ; 109    ; "test bouton wireless : ${RELACHE|PRESSE}"           # val : RELACHE=0 ou PRESSE=1
+    TEST_BT_CALIBRATION         ; 110    ; "test bouton calibration : ${RELACHE|PRESSE}"        # val : RELACHE=0 ou PRESSE=1
+    TEST_BT_PILOTAGE            ; 111    ; "test bouton pilotage : ${RELACHE|PRESSE}"           # val : RELACHE=0 ou PRESSE=1
+    TEST_LED_ERROR              ; 112    ; "test LED ERREUR"                     
+    TEST_LED_MOTOR              ; 113    ; "test LED MOTEUR"                  
+    TEST_LED_CALIBRATION        ; 114    ; "test LED CALIBRATION"                  
+    TEST_LED_PILOTAGE           ; 115    ; "test LED PILOTAGE"
+    TEST_BUZZER                 ; 116    ; "test BUZZER"                         
+    TEST_CAPTEUR_TENSION_MOTEUR ; 117    ; "test capteur TENSION MOTEUR : $"         # val : valeur de la tension moteur brute
+    TEST_CAPTEUR_COURANT_DRIVER ; 118    ; "test capteur COURANT DRIVER : $"         # val : valeur du courant driver brute
+    TEST_CAPTEUR_COURANT_MOTEUR ; 119    ; "test capteur COURANT MOTEUR : $"         # val : valeur du courant moteur brute
+    TEST_CAPTEUR_CODEUR_PORTE   ; 120    ; "test capteur CODEUR PORTE : $"           # val : valeur du codeur de porte brute
+    TEST_CAPTEUR_MEUBLE         ; 121    ; "test capteur DETECTEUR MEUBLE : $"       # val : valeur du détecteur de meuble brute
+    TEST_CAPTEUR_POTENTIOMETRE  ; 122    ; "test capteur POTENTIOMETRE : $"          # val : valeur du potentiometre brute
 
 #MESURES -------------------------------------------------------------------------------------------------------
-    INFO_MESURES_DESACTIVE      ; 110   ; "envoi des mesures désactivé"
-    DATA_FREQ_MESURES           ; 111   ; "envoi des mesures toutes les $ ms"   # val : temps en ms
-    DATA_ANGLE_PORTE            ; 112   ; "angle de la porte $.2°"              # val : angle (*100)°
-    DATA_TENSION                ; 113   ; "tension d'alimentation $.2V"         # val : tension (*100)V
-    DATA_COURANT                ; 114   ; "courant consommé $.2A"               # val : courant (*100)A
-    DATA_ANGLE_MOTEUR           ; 115   ; "angle moteur $.2°"                   # val : angle (*100)°
-    DATA_VITESSE_MOTEUR         ; 116   ; "vitesse moteur $.2 rad/s"            # val : vitesse (*100)rad/s
-    DATA_PWM                    ; 117   ; "PWM moteur $.2"                      # val : PWM (*100)
-    DATA_CONSIGNE               ; 118   ; "consigne moteur $.2 (PWM,°,rad/s)"   # val : (*100) PWM ou angle ou rad/s
-    INFO_SUR_MEUBLE             ; 119   ; "servodrive monté sur le meuble"
-    INFO_DEMONTE                ; 120   ; "servodrive non monté sur le meuble"
-    INFO_BN0055_ABSENT          ; 121   ; "capteur BN0055 absent"
-    INFO_BN0055_PRESENT         ; 122   ; "capteur BN0055 détecté"
+    INFO_MESURES_DESACTIVE      ; 150   ; "envoi des mesures désactivé"
+    DATA_FREQ_MESURES           ; 151   ; "envoi des mesures toutes les $ ms"   # val : temps en ms
+    DATA_ANGLE_PORTE            ; 152   ; "angle de la porte $.2°"              # val : angle (*100)°
+    DATA_TENSION                ; 153   ; "tension d'alimentation $.2V"         # val : tension (*100)V
+    DATA_COURANT                ; 154   ; "courant consommé $.2A"               # val : courant (*100)A
+    DATA_ANGLE_MOTEUR           ; 155   ; "angle moteur $.2°"                   # val : angle (*100)°
+    DATA_VITESSE_MOTEUR         ; 156   ; "vitesse moteur $.2 rad/s"            # val : vitesse (*100)rad/s
+    DATA_PWM                    ; 157   ; "PWM moteur $.2"                      # val : PWM (*100)
+    DATA_CONSIGNE               ; 158   ; "consigne moteur $.2 (PWM,°,rad/s)"   # val : (*100) PWM ou angle ou rad/s
+    INFO_SUR_MEUBLE             ; 159   ; "servodrive monté sur le meuble"
+    INFO_DEMONTE                ; 160   ; "servodrive non monté sur le meuble"
+    INFO_BN0055_ABSENT          ; 161   ; "capteur BN0055 absent"
+    INFO_BN0055_PRESENT         ; 162   ; "capteur BN0055 détecté"
 
 
 #ETATS ---------------------------------------------------------------------------------------------------------

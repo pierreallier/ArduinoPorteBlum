@@ -2,6 +2,7 @@
 #define TESTMANAGER_H
 
 #include <Arduino.h>
+#include "../Config/Codes.h"
 #include "../Config/Constantes.h"
 #include "../Serial/Messages.h"
 #include "../Outputs/Buzzer.h"
@@ -19,6 +20,7 @@ class TestManager {
         SensorsManager& capteurs;
         Buzzer& buzzer;
 
+        bool disabled_buzzer = false;
         bool quitter = false;
         bool etatBoutons[4] = {false, false, false, false};
         uint32_t tEntrees = 0;
