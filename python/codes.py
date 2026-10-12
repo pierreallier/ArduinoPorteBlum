@@ -46,7 +46,6 @@ MSG = {
     51: 'mode de pilotage erroné',    # 'ERR_MODE_GET'
     52: 'commande get mesures : capteur inconnu',    # 'ERR_MESURE_GET'
     53: 'accéléromètre ${désactivé|activé}',    # 'INFO_ACCEL_GET'
-    54: 'accéléromètre non connecté',    # 'ERR_ACCEL_ABSENT'
     55: 'buzzer ${désactivé|activé}',    # 'INFO_BUZZER'
     60: 'commande do inconnue : valeur attendue : RESET / INIT / OUVRIR / FERMER / STOP / PILOTER / CALIBRATION / TEST',    # 'ERR_CMD_DO_INCONNUE'
     61: 'demande reset carte',    # 'INFO_DO_RESET'
@@ -64,8 +63,10 @@ MSG = {
     73: 'version de développement',    # 'INFO_DEV'
     74: 'codeur absolu de la porte non détecté',    # 'ERR_CAPTEUR_ABSENT'
     75: 'codeur absolu de la porte détecté',    # 'INFO_CAPTEUR_PRESENT'
-    76: 'buzzer activé',    # 'INFO_BUZZER_ACTIVE'
-    77: 'buzzer désactivé',    # 'INFO_BUZZER_DESACTIVE'
+    76: 'accéléromètre détecté',    # 'INFO_ACCEL_PRESENT'
+    77: 'accéléromètre non détecté',    # 'ERR_ACCEL_ABSENT'
+    78: 'buzzer activé',    # 'INFO_BUZZER_ACTIVE'
+    79: 'buzzer désactivé',    # 'INFO_BUZZER_DESACTIVE'
     80: 'impossible de changer de consigne pendant le pilotage : le système doit être au repos',    # 'ERR_CONSIGNE_EN_PILOTAGE'
     81: 'mode de pilotage PWM',    # 'DATA_MODE_PWM'
     82: 'mode de pilotage en position',    # 'DATA_MODE_POSITION'
@@ -125,9 +126,10 @@ ETAT_PROD = {
     4: "FERMETURE",
     5: "PILOTAGE",
     6: "CALIBRATION",
-    7: "DEBRAYAGE",
-    8: "ERREUR",
-    9: "STOP",
+    7: "CALIBRATION_REQUIS",
+    8: "DEBRAYAGE",
+    9: "ERREUR",
+    10: "NO_POWER",
 }
 
 ETAT_CALIBRATION = {

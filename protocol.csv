@@ -50,7 +50,6 @@
     ERR_MODE_GET                ; 51    ; "mode de pilotage erroné"
     ERR_MESURE_GET              ; 52    ; "commande get mesures : capteur inconnu"
     INFO_ACCEL_GET              ; 53    ; "accéléromètre ${désactivé|activé}"
-    ERR_ACCEL_ABSENT            ; 54    ; "accéléromètre non connecté"
     INFO_BUZZER                 ; 55    ; "buzzer ${désactivé|activé}"
 
 # DO -----------------------------------------------------------------------------------------------------------
@@ -72,8 +71,10 @@
     INFO_DEV                    ; 73    ; "version de développement"
     ERR_CAPTEUR_ABSENT          ; 74    ; "codeur absolu de la porte non détecté"
     INFO_CAPTEUR_PRESENT        ; 75    ; "codeur absolu de la porte détecté"
-    INFO_BUZZER_ACTIVE          ; 76    ; "buzzer activé"
-    INFO_BUZZER_DESACTIVE       ; 77    ; "buzzer désactivé"
+    INFO_ACCEL_PRESENT          ; 76    ; "accéléromètre détecté"
+    ERR_ACCEL_ABSENT            ; 77    ; "accéléromètre non détecté"
+    INFO_BUZZER_ACTIVE          ; 78    ; "buzzer activé"
+    INFO_BUZZER_DESACTIVE       ; 79    ; "buzzer désactivé"
 
 # PILOTAGE -----------------------------------------------------------------------------------------------------
     ERR_CONSIGNE_EN_PILOTAGE    ; 80    ; "impossible de changer de consigne pendant le pilotage : le système doit être au repos"

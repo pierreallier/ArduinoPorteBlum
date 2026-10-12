@@ -10,7 +10,7 @@ void Motor::init() {
     pinMode(PWM_REV_PIN, OUTPUT);
     pinMode(PWM_FOR_PIN, OUTPUT);
     pinMode(STBY_PIN, OUTPUT);
-    pinMode(LED_MOTOR_PIN, OUTPUT);
+    ledMotor.init();
     disable();
 }
 
@@ -44,12 +44,14 @@ void Motor::setSpeedDir(int speed) {
 void Motor::enable() {
     // Active le moteur
     enabled = true;
+    ledMotor.on(); // Indique que le moteur est activé
 }
 
 void Motor::disable() {
     // Désactive le moteur
     enabled = false;
     pwm = 0;
+    ledMotor.off(); // Indique que le moteur est désactivé
 }
 
 void Motor::startDebrayage() {
@@ -62,6 +64,7 @@ void Motor::startDebrayage() {
     } else if (direction == Motor::DIR::FERMETURE) {
         setSpeedDir(150); // Apply a small forward speed to stop the motor
     }
+    ledMotor.blink(10); // Blink the motor LED to indicate debrayage
 }
 
 bool Motor::isDebraye() {
@@ -77,6 +80,7 @@ bool Motor::isDebraye() {
 void Motor::stop(){
     // Arrête le moteur
     setSpeed(0);
+    ledMotor.stopBlinking(); // Stop blinking the motor LED
 }
 
 void Motor::ouvrir(uint16_t speed) {
@@ -95,10 +99,10 @@ void Motor::update() {
     // Met à jour l'état du moteur en fonction de la consigne et des capteurs
     if (enabled == true) {
         digitalWrite(STBY_PIN, HIGH); // Ensure the motor driver is enabled
-        digitalWrite(LED_MOTOR_PIN, HIGH); // Indicate motor enabled
+        ledMotor.on(); // Indicate motor enabled
     } else {
         digitalWrite(STBY_PIN, LOW); // Ensure the motor driver is disabled
-        digitalWrite(LED_MOTOR_PIN, LOW); // Indicate motor disabled
+        ledMotor.off(); // Indicate motor disabled
     }
     if (direction == Motor::DIR::OUVERTURE && !capteurs.isLimiteHaute()) {
         analogWrite(PWM_FOR_PIN, pwm);
@@ -110,4 +114,5 @@ void Motor::update() {
         analogWrite(PWM_FOR_PIN, 0);
         analogWrite(PWM_REV_PIN, 0);
     }
+    ledMotor.update(); // Update the motor LED state (for blinking)
 }

@@ -19,9 +19,10 @@ enum class ETAT : uint8_t {
     FERMETURE = 4,    // "FERMETURE"
     PILOTAGE = 5,    // "PILOTAGE"
     CALIBRATION = 6,    // "CALIBRATION"
-    DEBRAYAGE = 7,    // "DEBRAYAGE"
-    ERREUR = 8,    // "ERREUR"
-    STOP = 9,    // "STOP"
+    CALIBRATION_REQUIS = 7,    // "CALIBRATION_REQUIS"
+    DEBRAYAGE = 8,    // "DEBRAYAGE"
+    ERREUR = 9,    // "ERREUR"
+    NO_POWER = 10,    // "NO_POWER"
 };
 
 enum class ETAT_CALIBRATION : uint8_t {
@@ -46,9 +47,10 @@ inline const __FlashStringHelper* etatName(ETAT etat)
         case ETAT::FERMETURE: return F("FERMETURE");
         case ETAT::PILOTAGE: return F("PILOTAGE");
         case ETAT::CALIBRATION: return F("CALIBRATION");
+        case ETAT::CALIBRATION_REQUIS: return F("CALIBRATION_REQUIS");
         case ETAT::DEBRAYAGE: return F("DEBRAYAGE");
         case ETAT::ERREUR: return F("ERREUR");
-        case ETAT::STOP: return F("STOP");
+        case ETAT::NO_POWER: return F("NO_POWER");
 
         default:
             return F("UNKNOWN");

@@ -5,15 +5,15 @@
 #include "../Serial/Messages.h"
 #include "../Config/Etats.h"
 
+#include "../Inputs/SensorsManager.h"
+
 #include "../Outputs/Motor.h"
 #include "../Outputs/Buzzer.h"
-#include "../Inputs/SensorsManager.h"
+#include "../Outputs/Led.h"
+
 #include "CalibrationManager.h"
 #include "PID.h"
 #include "ConsigneManager.h"
-
-
-//const uint16_t PWM_CALIBRATION = 150; 
 
 class StateMachine {
     public:
@@ -28,8 +28,10 @@ class StateMachine {
         MODE_PILOTAGE modePilotage;
         uint32_t time_etat = 0;
 
+        Led ledError = Led(LED_ERROR_PIN);
+
         bool butee_desactivated = false; // Variable qui spécifie si on doit désactiver la détection des butées
-        bool is_calibre();
+        bool isCalibre() { return calibration.isCalibrated(); } // Vérifie si le système est calibré
 
         PID pidPosition;
         PID pidVitesse;
@@ -56,8 +58,12 @@ class StateMachine {
     
     private:
         SensorsManager& capteurs;
+
         Motor& moteur;
         Buzzer& buzzer;
+        Led ledPilotage = Led(LED_PILOTAGE_PIN);
+        Led ledCalibration = Led(LED_CALIBRATION_PIN);
+
         CalibrationManager calibration;
         ConsigneManager consigne;
  

@@ -5,6 +5,8 @@
 #include "../Inputs/SensorsManager.h"
 #include "../Config/Constantes.h"
 
+#include "Led.h"
+
 class Motor {
     public:
         enum class DIR :bool {
@@ -38,6 +40,7 @@ class Motor {
         bool enabled = false; // état du moteur (activé ou désactivé)
         DIR direction ; // direction du moteur (OUVERTURE ou FERMETURE)
         SensorsManager& capteurs;
+        Led ledMotor = Led(LED_MOTOR_PIN);
 
         int32_t codeur_avant_debrayage = 0; // valeur du codeur avant le débrayage
         float courant_avant_debrayage = 0.0; // valeur du courant avant le débrayage

@@ -25,7 +25,6 @@ public:
     CalibrationManager(SensorsManager& c, Motor& m); // Constructeur
 
     void init(); // Initialise les données
-    void task(); // Execute les taches périodiques
     
     void setEepromActive(bool active); // Activer/désactiver l'utilisation de l'EEPROM
     void clearEeprom(); // Efface les données sauvegardé en EEPROM
@@ -75,13 +74,9 @@ private:
     SensorsManager& capteurs;
     Motor& moteur;
 
-    bool ledState = false;
-
     // Variables pour la machine à états
     ETAT_CALIBRATION etat;
     uint32_t time_etat = 0;
-    uint32_t time_capteur = 0;
-    uint32_t time_led = 0;
     uint16_t angle_butee_basse;
     uint16_t angle_butee_haute;
 };

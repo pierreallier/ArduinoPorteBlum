@@ -52,7 +52,6 @@ enum class MSG : uint8_t {
     ERR_MODE_GET = 51,    // "mode de pilotage erroné"
     ERR_MESURE_GET = 52,    // "commande get mesures : capteur inconnu"
     INFO_ACCEL_GET = 53,    // "accéléromètre ${désactivé|activé}"
-    ERR_ACCEL_ABSENT = 54,    // "accéléromètre non connecté"
     INFO_BUZZER = 55,    // "buzzer ${désactivé|activé}"
     ERR_CMD_DO_INCONNUE = 60,    // "commande do inconnue : valeur attendue : RESET / INIT / OUVRIR / FERMER / STOP / PILOTER / CALIBRATION / TEST"
     INFO_DO_RESET = 61,    // "demande reset carte"
@@ -70,8 +69,10 @@ enum class MSG : uint8_t {
     INFO_DEV = 73,    // "version de développement"
     ERR_CAPTEUR_ABSENT = 74,    // "codeur absolu de la porte non détecté"
     INFO_CAPTEUR_PRESENT = 75,    // "codeur absolu de la porte détecté"
-    INFO_BUZZER_ACTIVE = 76,    // "buzzer activé"
-    INFO_BUZZER_DESACTIVE = 77,    // "buzzer désactivé"
+    INFO_ACCEL_PRESENT = 76,    // "accéléromètre détecté"
+    ERR_ACCEL_ABSENT = 77,    // "accéléromètre non détecté"
+    INFO_BUZZER_ACTIVE = 78,    // "buzzer activé"
+    INFO_BUZZER_DESACTIVE = 79,    // "buzzer désactivé"
     ERR_CONSIGNE_EN_PILOTAGE = 80,    // "impossible de changer de consigne pendant le pilotage : le système doit être au repos"
     DATA_MODE_PWM = 81,    // "mode de pilotage PWM"
     DATA_MODE_POSITION = 82,    // "mode de pilotage en position"
@@ -166,7 +167,6 @@ inline const __FlashStringHelper* msgName(MSG msg)
         case MSG::ERR_MODE_GET: return F("ERR_MODE_GET");
         case MSG::ERR_MESURE_GET: return F("ERR_MESURE_GET");
         case MSG::INFO_ACCEL_GET: return F("INFO_ACCEL_GET");
-        case MSG::ERR_ACCEL_ABSENT: return F("ERR_ACCEL_ABSENT");
         case MSG::INFO_BUZZER: return F("INFO_BUZZER");
         case MSG::ERR_CMD_DO_INCONNUE: return F("ERR_CMD_DO_INCONNUE");
         case MSG::INFO_DO_RESET: return F("INFO_DO_RESET");
@@ -184,6 +184,8 @@ inline const __FlashStringHelper* msgName(MSG msg)
         case MSG::INFO_DEV: return F("INFO_DEV");
         case MSG::ERR_CAPTEUR_ABSENT: return F("ERR_CAPTEUR_ABSENT");
         case MSG::INFO_CAPTEUR_PRESENT: return F("INFO_CAPTEUR_PRESENT");
+        case MSG::INFO_ACCEL_PRESENT: return F("INFO_ACCEL_PRESENT");
+        case MSG::ERR_ACCEL_ABSENT: return F("ERR_ACCEL_ABSENT");
         case MSG::INFO_BUZZER_ACTIVE: return F("INFO_BUZZER_ACTIVE");
         case MSG::INFO_BUZZER_DESACTIVE: return F("INFO_BUZZER_DESACTIVE");
         case MSG::ERR_CONSIGNE_EN_PILOTAGE: return F("ERR_CONSIGNE_EN_PILOTAGE");

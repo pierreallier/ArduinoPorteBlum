@@ -9,26 +9,11 @@ CalibrationManager::CalibrationManager(SensorsManager& c, Motor& m)
 
 void CalibrationManager::init() {
   
-  pinMode(LED_CALIBRATION_PIN, OUTPUT);
-  digitalWrite(LED_CALIBRATION_PIN, LOW);
-
   etat = ETAT_CALIBRATION::NONE;
   loadFromEeprom(false);  // Initialiser les données à partir de la RAM
   updateCapteursLimits(getConfig());
 
   time_etat = millis();
-  time_capteur = time_etat;
-  time_led = time_etat;
-}
-
-void CalibrationManager::task() {
-  const uint32_t now = millis();
-  // Clignotement LED toutes les 1s si calibration requise
-  if (isNotCalibrated() && (etat == ETAT_CALIBRATION::NONE) && (now - time_led >= 1000)) {
-    time_led += 1000;
-    ledState = !ledState;
-    digitalWrite(LED_CALIBRATION_PIN, ledState);
-  }
 }
 
 
@@ -148,8 +133,6 @@ bool CalibrationManager::exec() {
     case ETAT_CALIBRATION::DEBUT:
       {
         sendInfo(MSG::INFO_CALIBRATION_DEBUT);
-        ledState = HIGH;
-        digitalWrite(LED_CALIBRATION_PIN, HIGH);
         angle_butee_basse = 0;
         angle_butee_haute = 0;
         moteur.enable();
@@ -223,8 +206,6 @@ bool CalibrationManager::exec() {
       }
     case ETAT_CALIBRATION::NONE:
       {
-        ledState = LOW;
-        digitalWrite(LED_CALIBRATION_PIN, LOW);
         return true;
       }
     default:

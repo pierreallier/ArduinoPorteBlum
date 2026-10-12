@@ -70,23 +70,19 @@ void setup() {
     while (!capteurs.checkCodeurPorte()) {
         if (!send_error) {
             sendDirect(MSGTYPE::ERROR, MSG::ERR_CAPTEUR_ABSENT);
-            digitalWrite(LED_ERROR_PIN, HIGH);  
+            machine.ledError.on(); // Allume la LED d'erreur pour indiquer un problème avec le capteur 
             send_error = true;         
         }
         delay(1000);  // Petite pause pour éviter de saturer le CPU
     }
     sendDirect(MSGTYPE::INFO, MSG::INFO_CAPTEUR_PRESENT);
-    digitalWrite(LED_ERROR_PIN, LOW);
+    machine.ledError.off();
 
     // Vérification type de montage 
     capteurs.onMeuble() ? sendDirect(MSGTYPE::INFO, MSG::INFO_SUR_MEUBLE) : sendDirect(MSGTYPE::INFO, MSG::INFO_DEMONTE);
-    // Vérification système calibré
-    if (!machine.isCalibrated()) {
-        sendDirect(MSGTYPE::WARNING, MSG::ERR_CALIBRATION_REQUISE);
-    }
 
     // Vérification capteur BN0055
-    capteurs.checkBNO() ? sendDirect(MSGTYPE::INFO, MSG::INFO_CAPTEUR_PRESENT): sendDirect(MSGTYPE::ERROR, MSG::ERR_CAPTEUR_ABSENT);
+    capteurs.checkBNO() ? sendDirect(MSGTYPE::INFO, MSG::INFO_ACCEL_PRESENT): sendDirect(MSGTYPE::ERROR, MSG::ERR_ACCEL_ABSENT);
     
     // Vérification buzzer
     buzzer.isEnabled() ? sendDirect(MSGTYPE::INFO, MSG::INFO_BUZZER_ACTIVE) : sendDirect(MSGTYPE::INFO, MSG::INFO_BUZZER_DESACTIVE);
@@ -153,37 +149,37 @@ void ordonnanceur() {
     if (is_time_securite) {
         is_time_securite = false;
         if (machine.etat != ETAT::CALIBRATION) {
+            // On vérifie les sécurités uniquement si on n'est pas en calibration (géré côté calibration)
             if (capteurs.isLimiteAngle() && (machine.etat != ETAT::DEBRAYAGE && machine.etat != ETAT::REPOS)) {
                 if (machine.etat == ETAT::PILOTAGE) {
+                    // En pilotage, on ne devrait pas atteindre les limites
                     sendError(MSG::ERR_LIMITE_PORTE, capteurs.getAnglePorte());
                     machine.changerEtat(ETAT::ERREUR);
                     buzzer.sequenceErreur();
                 } else {
+                    // En fonctionnement normal, on passe en débrayage pour éviter d'endommager le système
                     sendInfo(MSG::ERR_LIMITE_PORTE, capteurs.getAnglePorte());
                     machine.changerEtat(ETAT::DEBRAYAGE);
                 }
-                capteurs.resetSecurities();
+                capteurs.resetSecurities(); // requis pour éviter de répéter le message d'erreur
             } else {
                 if (capteurs.isLimiteCourant()) {
+                    // Limite de courant atteinte, sans avoir atteint les limites
                     sendError(MSG::ERR_COURANT);
                     machine.changerEtat(ETAT::ERREUR);
                     buzzer.sequenceErreur();
                 }
                 if (capteurs.isBlocage()){
+                    // Blocage mécanique détecté, sans avoir atteint les limites
                     sendError(MSG::ERR_BLOCAGE);
                     machine.changerEtat(ETAT::ERREUR);
                     buzzer.sequenceErreur();
                 }
-                if (capteurs.meubleChanged()) {
-                        sendWarning(capteurs.onMeuble() ? MSG::INFO_SUR_MEUBLE : MSG::INFO_DEMONTE);
-                    if (!machine.isCalibrated()) {
-                        sendWarning(MSG::ERR_CALIBRATION_REQUISE);
-                    }
-                    if (machine.etat != ETAT::REPOS) {
-                        machine.changerEtat(ETAT::ERREUR);
-                    }
-                }
             }
+        }
+        if (capteurs.meubleChanged()) {
+            sendWarning(capteurs.onMeuble() ? MSG::INFO_SUR_MEUBLE : MSG::INFO_DEMONTE);
+            machine.changerEtat(ETAT::DEBRAYAGE); // C'est la machine à état qui basculera vers l'état requis (calibration ou repos) après le débrayage
         }
     }
 
@@ -216,11 +212,11 @@ void ordonnanceur() {
         btCalibration.update();
         btPilotage.update();
         if (btCalibration.pressed()) {
-            if (machine.etat == ETAT::REPOS) {
+            if (machine.etat == ETAT::REPOS || machine.etat == ETAT::CALIBRATION_REQUIS) {
                 machine.changerEtat(ETAT::CALIBRATION);
-            }
-            else
+            } else if (machine.etat == ETAT::CALIBRATION) {
                 machine.changerEtat(ETAT::DEBRAYAGE);
+            }
         }
         if (btPilotage.pressed()) {
             if (machine.etat == ETAT::REPOS) {

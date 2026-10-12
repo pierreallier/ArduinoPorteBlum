@@ -110,17 +110,9 @@ def read_states_csv():
     cali = []
 
     with ETATS_CSV_FILE.open("r", encoding="utf-8") as f:
-        for line_number, raw_line in enumerate(f, start=1):
-            line = raw_line.strip()
-            if not line:
-                continue
-
-            # Accepte les lignes commentées de configuration:
-            # # PROD ; INIT ; 0 ; INIT
-            if line.startswith("#"):
-                line = line[1:].strip()
-
-            if not line:
+        for line_number, line in enumerate(f, start=1):
+            line = line.strip()
+            if not line or line.startswith("#"):
                 continue
 
             parts = [part.strip() for part in line.split(";")]
