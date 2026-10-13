@@ -18,7 +18,7 @@ void StateMachine::init() {
 
 void StateMachine::changerEtat(ETAT etat_demande) {
     if (!capteurs.hasPower()) {
-        sendError(MSG::ERR_PUISSANCE, capteurs.getTension());
+        sendError(MSG::ERR_PUISSANCE, capteurs.getTension()*100);
         etat_demande = ETAT::NO_POWER;
     } 
     if (etat == etat_demande)

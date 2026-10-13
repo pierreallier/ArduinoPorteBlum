@@ -160,7 +160,7 @@ bool CalibrationManager::exec() {
       {
         if (blocage) {
           moteur.stop();
-          angle_butee_basse = analogRead(CODEUR_PORTE);
+          angle_butee_basse = analogRead(CODEUR_PORTE_PIN);
           changerEtat(ETAT_CALIBRATION::ATTENTE_BAS);
         }
         break;
@@ -177,7 +177,7 @@ bool CalibrationManager::exec() {
       {
         if (blocage) {
           moteur.stop();
-          angle_butee_haute = analogRead(CODEUR_PORTE);
+          angle_butee_haute = analogRead(CODEUR_PORTE_PIN);
           changerEtat(ETAT_CALIBRATION::ENREGISTREMENT);
         }
         break;

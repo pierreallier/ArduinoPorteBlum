@@ -39,7 +39,7 @@
  * }
  * @endcode
  */
-class AnalogStateDetector {
+class AnalogStateDetector : public Sensor<uint16_t> {
     public:
     AnalogStateDetector(
         uint8_t pin,
@@ -47,7 +47,7 @@ class AnalogStateDetector {
         uint16_t seuilDesactivation,
         uint16_t temporisation
     )
-        : _pin(pin),
+        : Sensor<uint16_t>(pin, 1.0f),
         _seuilActivation(seuilActivation),
         _seuilDesactivation(seuilDesactivation),
         _temporisation(temporisation)
@@ -57,14 +57,12 @@ class AnalogStateDetector {
     /**
     * @brief Initialise le détecteur d’état analogique.
     *
-    * Configure la broche analogique, lit la valeur initiale du capteur
-    * et initialise l’état stable ainsi que les indicateurs internes.
+    * lit la valeur initiale du capteur et initialise l’état stable ainsi que les indicateurs internes.
     *
     * Cette fonction doit être appelée une seule fois dans setup().
     */
     void init() {
-        pinMode(_pin, INPUT);
-        _etatStable = mesure() >= _seuilActivation;
+        _etatStable = read() >= _seuilActivation;
         _etatCandidat = _etatStable;
         _temporisationEnCours = false;
         _instantDebut = 0;
@@ -80,7 +78,7 @@ class AnalogStateDetector {
     * Cette fonction est non bloquante et doit être appelée régulièrement dans loop().
     */
     void update() {
-        uint16_t m = mesure();
+        uint16_t m = read();
         // Détermination du nouvel état candidat avec hystérésis
         if (!_etatStable && m >= _seuilActivation)
             _etatCandidat = true;
@@ -133,21 +131,7 @@ class AnalogStateDetector {
     }
 
 
-    /**
-    * @brief Lit la valeur analogique du capteur.
-    *
-    * Effectue une mesure sur la broche analogique associée au capteur
-    * et retourne la valeur obtenue par le convertisseur analogique-numérique.
-    *
-    * @return Valeur mesurée, généralement comprise entre 0 et 1023.
-    */
-    uint16_t mesure() const {
-        return analogRead(_pin);
-    }
-
     private:
-        uint8_t _pin;
-
         uint16_t _seuilActivation;
         uint16_t _seuilDesactivation;
 

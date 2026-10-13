@@ -244,6 +244,7 @@ void SerialManager::_GET(String commande) {
             sendReponseNOK(MSG::ERR_NON_CALIBRE);
     }
     else if (commande.startsWith("LIMITS")) {
+        sendMessage(MSG::DATA_LIMITE_COURANT, capteurs.getLimitCourant()*100);
         sendMessage(MSG::DATA_LIMITE_BASSE,capteurs.getLimiteBasse());
         sendMessage(MSG::DATA_LIMITE_HAUTE,capteurs.getLimiteHaute());
         sendReponseOK(MSG::INFO_CALIBRE);

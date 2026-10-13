@@ -2,13 +2,12 @@
 
 MT6701 *MT6701::_instance = nullptr;
 
-MT6701::MT6701(uint8_t address) : _address(address) {
+MT6701::MT6701(uint8_t pin, float coeff, uint8_t address) : Sensor<uint16_t>(pin, coeff), _address(address) {
     _connected = false;
     _busy = false;
     _dataAvailable = false;
     _lastI2CStatus = CI2C::STATUS_OK;
     _raw = 0;
-    _offset = 0.0f;
 }
 
 
@@ -98,15 +97,10 @@ uint16_t MT6701::getRaw() const {
 }
 
 
-bool MT6701::readAngle(float &angle) {
+uint16_t MT6701::readAngle(float &angle) {
     if (!_dataAvailable)
         return false;
-    float a = getRaw() * (360.0f / 16384.0f) + _offset;
-    while (a < 0.0f)
-        a += 360.0f;
-    while (a >= 360.0f)
-        a -= 360.0f;
-    angle = a;
-    _dataAvailable = false;
-    return true;
+    int32_t offsetI2C = (int32_t)round((float)_offset * I2C_MAX / ADC_MAX);
+    uint16_t a = (I2C_MAX + offsetI2C - getRaw()) % I2C_MAX;
+    return a;
 }

@@ -16,12 +16,12 @@
 
 #if VERSION_CARTE == 2
     // Capteurs
-    #define MOTOR_VOLTAGE A0 // Driver du moteur : mesure de la tension
-    #define DRIVER_CURRENT A1 // Driver du moteur : mesure du courant
-    #define MOTOR_CURRENT A2 // Mesure du courant fournit au moteur
+    #define MOTOR_VOLTAGE_PIN A0 // Driver du moteur : mesure de la tension
+    #define DRIVER_CURRENT_PIN A1 // Driver du moteur : mesure du courant
+    #define MOTOR_CURRENT_PIN A2 // Mesure du courant fournit au moteur
     #define DETECTEUR_MEUBLE A4 // Détecteur de présence du meuble
-    #define POTENTIOMETRE A5 // Potentiomètre réglage vitesse moteur
-    #define CODEUR_PORTE A3 // Codeur de position absolue de la porte
+    #define POTENTIOMETRE_PIN A5 // Potentiomètre réglage vitesse moteur
+    #define CODEUR_PORTE_PIN A3 // Codeur de position absolue de la porte
 
     // Boutons
     #define TEST_BT 33 // Bouton de test
@@ -40,12 +40,12 @@
 
 #elif VERSION_CARTE == 3
     // Capteurs
-    #define MOTOR_VOLTAGE A1 // Driver du moteur : mesure de la tension
-    #define DRIVER_CURRENT A0 // Driver du moteur : mesure du courant
-    #define MOTOR_CURRENT A2 // Mesure du courant fournit au moteur
+    #define MOTOR_VOLTAGE_PIN A1 // Driver du moteur : mesure de la tension
+    #define DRIVER_CURRENT_PIN A0 // Driver du moteur : mesure du courant
+    #define MOTOR_CURRENT_PIN A2 // Mesure du courant fournit au moteur
     #define DETECTEUR_MEUBLE A10 // Détecteur de présence du meuble
-    #define POTENTIOMETRE A12 // Potentiomètre réglage vitesse moteur
-    #define CODEUR_PORTE A11 // Codeur de position absolue de la porte
+    #define POTENTIOMETRE_PIN A12 // Potentiomètre réglage vitesse moteur
+    #define CODEUR_PORTE_PIN A11 // Codeur de position absolue de la porte
 
     // Boutons
     #define TEST_BT 37 // Bouton de test

@@ -53,6 +53,7 @@ enum class MSG : uint8_t {
     ERR_MESURE_GET = 52,    // "commande get mesures : capteur inconnu"
     INFO_ACCEL_GET = 53,    // "accéléromètre ${désactivé|activé}"
     INFO_BUZZER = 55,    // "buzzer ${désactivé|activé}"
+    DATA_LIMITE_COURANT = 56,    // "limite de courant du moteur $.2A"
     ERR_CMD_DO_INCONNUE = 60,    // "commande do inconnue : valeur attendue : RESET / INIT / OUVRIR / FERMER / STOP / PILOTER / CALIBRATION / TEST"
     INFO_DO_RESET = 61,    // "demande reset carte"
     INFO_DO_INIT = 62,    // "demande état INIT"
@@ -168,6 +169,7 @@ inline const __FlashStringHelper* msgName(MSG msg)
         case MSG::ERR_MESURE_GET: return F("ERR_MESURE_GET");
         case MSG::INFO_ACCEL_GET: return F("INFO_ACCEL_GET");
         case MSG::INFO_BUZZER: return F("INFO_BUZZER");
+        case MSG::DATA_LIMITE_COURANT: return F("DATA_LIMITE_COURANT");
         case MSG::ERR_CMD_DO_INCONNUE: return F("ERR_CMD_DO_INCONNUE");
         case MSG::INFO_DO_RESET: return F("INFO_DO_RESET");
         case MSG::INFO_DO_INIT: return F("INFO_DO_INIT");

@@ -1,24 +1,23 @@
-#ifndef SENSORS_H
-#define SENSORS_H
+#ifndef SENSORSMANAGER_H
+#define SENSORSMANAGER_H
 
 #include <Arduino.h>
+#include "Sensor.h"
 #include "AnalogStateDetector.h"
 #include "MT6701.h"
 #include "BN0055.h"
+#include "CurrentMoySensor.h"
+#include "ABEncoder.h"
+
 #include "../Config/Constantes.h"
 #include "../Config/Types.h"
 
-// Constantes des capteurs
-constexpr float RAD_PER_TICK = 2.0f * PI / 128.0f * 100;
-constexpr float K_VITESSE = 2.0f * PI / 128.0f / 0.1f * 100;
-constexpr float CURRENT_COEF = 5.0f / 1023.0f / 0.400f * 100;
-constexpr float VOLTAGE_COEF = 29.8f / 1023.0f * 100;
-constexpr float CODEURPORTE_COEF = 360.0f / ADC_MAX * 100;
-
-
-// Variables pour le calcul de la moyenne glissante du courant
-const float LIMITE_COURANT = 2.0f;
-const unsigned int NB_MOY_COURANT = 5;
+// Coefficient de conversion pour les capteurs analogiques (tension, courant, potentiomètre)
+const float COEFF_TENSION = 29.8f / ADC_MAX * 100; // Convertit la valeur brute du capteur de tension en V*100 (29.8V max)
+const float COEFF_COURANT = 5.0f / ADC_MAX / 0.400f; // Convertit la valeur brute du capteur de courant en A (0.400V/A)
+const float COEFF_POTENTIOMETRE = 0.5f * 100; // Convertit la valeur brute du potentiomètre en pourcentage (0 à 100)
+const float COEFF_CODEUR_PORTE = 360.0f / ADC_MAX * 100; // Convertit la sortie analogique du codeur en degrés*100
+const float COEFF_CODEUR_MOTEUR = 2.0f * PI / 128.0f * 100; // Convertit les ticks du codeur en rad*100
 
 // Détections butées
 const int PWM_MIN = 50;
@@ -45,6 +44,7 @@ class SensorsManager {
         inline bool hasPower() { return _mesures.tension > 500;}
 
         inline Mesures getMesures() const { return _mesures;}
+        // Retourne les mesures converties en unités physiques (float)
         inline float getTension() const { return _mesures.tension / 100.0f;}
         inline float getCourant() const { return _mesures.courant_moyen / 100.0f;}
         inline float getAnglePorte() const { return _mesures.angle_porte / 100.0f;}
@@ -52,12 +52,12 @@ class SensorsManager {
         inline float getVitesseMoteur() const { return _mesures.vitesse_moteur / 100.0f;}
         inline float getPWM() const { return _mesures.pwm / 100.0f;}
         inline float getConsigne() const { return _mesures.consigne / 100.0f;}
-        inline float getPotentiometre() const { return potentiometre;}
+        inline float getPotentiometre() const { return _potentiometre.get() / 100.0f;}
         inline float getLimiteBasse() const { return calibrationData.lowLimit;}
         inline float getLimiteHaute() const { return calibrationData.highLimit;}
         
         void setConsigne(int consigne);
-        inline float getLimitCourant() const { return limite_courant;}
+        inline float getLimitCourant() const { return _courant.getLimit();}
         bool setLimitCourant(float limite);
         void setCalibration(CalibrationData c);
         CalibrationData& getCalibration() {return calibrationData;}
@@ -69,36 +69,27 @@ class SensorsManager {
         inline void setBNO(bool etat) { _bno.setEnabled(etat);}
 
     private:
-        AnalogStateDetector _meuble = AnalogStateDetector(DETECTEUR_MEUBLE, 100, 50, 500);
-        MT6701 _codeurPorte = MT6701(MT6701_ADDRESS);
+        AnalogStateDetector _meuble = AnalogStateDetector(DETECTEUR_MEUBLE, 100, 50, 500); // Binaire 
+        Sensor<uint16_t> _tension = Sensor<uint16_t>(MOTOR_VOLTAGE_PIN, COEFF_TENSION); // en V*100
+        Sensor<float> _potentiometre = Sensor<float>(POTENTIOMETRE_PIN, COEFF_POTENTIOMETRE, 500); // BRUT
+        CurrentMoySensor _courant = CurrentMoySensor(MOTOR_CURRENT_PIN, COEFF_COURANT, 2.0f); // en A, limite 2.0A
+        MT6701 _codeurPorte = MT6701(CODEUR_PORTE_PIN, COEFF_CODEUR_PORTE, MT6701_ADDRESS); // en °*100
         BN0055 _bno = BN0055(BN0055_ADDRESS);
+        ABEncoder _codeurMoteur = ABEncoder(COEFF_CODEUR_MOTEUR); // en rad*100 et rad/s*100
+
         Mesures _mesures;
 
         bool limite_haute = false;
         bool limite_basse = false;
         bool blocage_detecte = false;
         bool limite_courant_atteinte = false;
-
-        int courant_offset = 0;
-        unsigned int courant_idx = 0;
-        float courant_tab[NB_MOY_COURANT];
-        float courantSomme = 0.0f;
-        float addCourant(float current);
-
         uint8_t compteur_blocage = 0;
-        int32_t codeur_Delta_Pos = 0;
-        int32_t encoderGetTicks();
-        void encoderResetTicks();
 
         CalibrationData calibrationData;
-        float limite_courant;
-
-        float potentiometre = 0.0f;
 
         void readCodeurPorte();
         void readCourant();
         void readTension();
-        void readCodeurMoteur();
         void readPotentiometre();
 };
 

@@ -1,45 +1,11 @@
 #include "SensorsManager.h"
 
-volatile int32_t ticks_codeur=0;
-void isr_Codeur() {
-    // Gestion interruption du codeur
-    ticks_codeur += (PIND & _BV(PD3)) ? -1 : +1;
-}
-
 void SensorsManager::init() {
-    pinMode(CODEUR_PORTE, INPUT);
-    pinMode(MOTOR_VOLTAGE, INPUT);
-    pinMode(MOTOR_CURRENT, INPUT);
-    pinMode(DRIVER_CURRENT, INPUT);
-    pinMode(POTENTIOMETRE, INPUT);
-
     _meuble.init(); // Initialisation du détecteur de meuble
     _codeurPorte.init(); // Initialisation du codeur absolu de la porte
     _bno.init(); // Initialisation du capteur BN0055
-
-    // Initialisation des limites
-    limite_courant = LIMITE_COURANT;
-
-    // Initialisation du tableau du courant
-    _mesures.courant_moyen = 0;
-    courant_idx = 0;
-    courantSomme = 0.0f;
-    for (unsigned int i=0; i < NB_MOY_COURANT; i++) {
-        courant_tab[i] = 0;
-    }
-
-    // Calcul offset courant
-    uint32_t somme = 0;
-    for (int i = 0; i < 500; i++) {
-        somme += analogRead(MOTOR_CURRENT);
-    }
-    courant_offset = somme / 500;
-
-    // Initialisation du codeur du moteur
-    pinMode(CODEUR_A_PIN, INPUT_PULLUP);
-    pinMode(CODEUR_B_PIN, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(CODEUR_A_PIN), isr_Codeur, RISING);
-
+    _codeurMoteur.init(); // Initialisation du codeur du moteur
+    _courant.init(); // Initialisation du capteur de courant
     _mesures.time = millis();
 }
 
@@ -50,14 +16,14 @@ void SensorsManager::updateSecurities(int pwm) {
     //  - Vérifie les blocages
 
     // Détection des limites extrémales de la porte
-    readCodeurPorte();
+    _mesures.angle_porte = _codeurPorte.read();
     float angle = getAnglePorte();
     limite_haute = (angle >= calibrationData.highLimit);
     limite_basse = (angle <= calibrationData.lowLimit);
 
     // Limite de courant
-    readCourant();
-    limite_courant_atteinte = (getCourant() >= limite_courant);
+    _courant.read();
+    limite_courant_atteinte = _courant.isLimitReached();
 
     // Détection blocage
     uint8_t pwm_abs = abs(pwm);
@@ -66,7 +32,7 @@ void SensorsManager::updateSecurities(int pwm) {
         blocage_detecte = false;
         return;
     }
-    if (abs(codeur_Delta_Pos) > TICKS_MIN) { // Le moteur tourne suffisamment
+    if (abs(_codeurMoteur.getDeltaTicks()) > TICKS_MIN) { // Le moteur tourne suffisamment
         compteur_blocage = 0;
         blocage_detecte = false;
         return;
@@ -113,71 +79,33 @@ bool SensorsManager::resetSecurities() {
 
 
 void SensorsManager::mesures(int p) {
-    readCodeurMoteur();
-    readTension();
-    readPotentiometre();
+    _codeurMoteur.read();
+    _mesures.time = millis();
+    _mesures.angle_moteur = _codeurMoteur.getAngle();
+    _mesures.vitesse_moteur = _codeurMoteur.getSpeed();
+    _mesures.tension = _tension.read();
+    _mesures.courant_moyen = static_cast<int>(_courant.getMoy() * 100); // le courant a été lu dans updateSecurities()
+    _potentiometre.read();
     _mesures.pwm = p * 100;
     _meuble.update();
 }
 
-float SensorsManager::addCourant(float current) {
-    // Fonction qui calcule la moyenne glissante du courant
-    courantSomme -= courant_tab[courant_idx];
-    courantSomme += current;
-
-    courant_tab[courant_idx] = current;
-    courant_idx = (courant_idx + 1) % NB_MOY_COURANT;
-
-    return courantSomme / NB_MOY_COURANT;
-}
-
-
-void SensorsManager::readCourant() {
-    int adc = analogRead(MOTOR_CURRENT);
-    int diff = adc - courant_offset;
-    float current = diff * CURRENT_COEF;
-
-    _mesures.courant_moyen = addCourant(current);
-}
-
-
 void SensorsManager::readCodeurPorte() {
     // Lecture du codeur
-    _mesures.angle_porte = ((int32_t)ADC_MAX + calibrationData.offset - analogRead(CODEUR_PORTE)) % ADC_MAX * CODEURPORTE_COEF;
+    _mesures.angle_porte = _codeurPorte.read();
 }
 
+void SensorsManager::readCourant() {
+    _courant.read();
+    _mesures.courant_moyen = static_cast<int>(_courant.getMoy() * 100); // Converti en A*100
+}
 
 void SensorsManager::readTension() {
-    _mesures.tension = analogRead(MOTOR_VOLTAGE)*VOLTAGE_COEF; // en V*100
-}
-
-
-void SensorsManager::readCodeurMoteur() {
-    codeur_Delta_Pos = encoderGetTicks();
-    encoderResetTicks();
-
-    float current_time = millis();
-    _mesures.vitesse_moteur = K_VITESSE * codeur_Delta_Pos / (millis() - _mesures.time);   // rad/s en 128
-    _mesures.angle_moteur += RAD_PER_TICK * codeur_Delta_Pos; // en rad
-    _mesures.time = current_time;
-}
-
-int32_t SensorsManager::encoderGetTicks() {
-    noInterrupts();
-    int32_t ticks = ticks_codeur;
-    interrupts();
-
-    return ticks;
-}
-
-void SensorsManager::encoderResetTicks() {
-    noInterrupts();
-    ticks_codeur = 0;
-    interrupts();
+    _mesures.tension = _tension.read();
 }
 
 void SensorsManager::readPotentiometre() {
-    potentiometre = (analogRead(POTENTIOMETRE)-500)*0.5;
+    _potentiometre.read();
 }
 
 void SensorsManager::setConsigne(int c) {
@@ -186,12 +114,13 @@ void SensorsManager::setConsigne(int c) {
 
 void SensorsManager::setCalibration(CalibrationData c) {
     calibrationData = c;
+    _codeurPorte.setOffset(calibrationData.offset);
 }
 
 
 bool SensorsManager::setLimitCourant(float limite) {
     if (limite > 0.0f && limite < 2.5f) {
-        limite_courant = limite;
+        _courant.setLimit(limite);
         return true;
     }
     return false;

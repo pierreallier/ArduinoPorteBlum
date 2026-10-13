@@ -33,11 +33,11 @@ class ConsignePotentiometre : public Consigne {
     public:
         void init(unsigned long t) override {
             Consigne::init(t);
-            pinMode(POTENTIOMETRE, INPUT);
+            pinMode(POTENTIOMETRE_PIN, INPUT);
         }
 
         float get(unsigned long) override {
-            return (analogRead(POTENTIOMETRE) - 500) * 0.5f;
+            return (analogRead(POTENTIOMETRE_PIN) - 500) * 0.5f;
         }
 
         bool ended(unsigned long) const override {

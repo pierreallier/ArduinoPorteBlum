@@ -211,6 +211,7 @@ void ordonnanceur() {
         btWireless.update();
         btCalibration.update();
         btPilotage.update();
+        
         if (btCalibration.pressed()) {
             if (machine.etat == ETAT::REPOS || machine.etat == ETAT::CALIBRATION_REQUIS) {
                 machine.changerEtat(ETAT::CALIBRATION);
