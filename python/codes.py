@@ -47,6 +47,7 @@ MSG = {
     52: 'commande get mesures : capteur inconnu',    # 'ERR_MESURE_GET'
     53: 'accéléromètre ${désactivé|activé}',    # 'INFO_ACCEL_GET'
     55: 'buzzer ${désactivé|activé}',    # 'INFO_BUZZER'
+    56: 'limite de courant du moteur $.2A',    # 'DATA_LIMITE_COURANT'
     60: 'commande do inconnue : valeur attendue : RESET / INIT / OUVRIR / FERMER / STOP / PILOTER / CALIBRATION / TEST',    # 'ERR_CMD_DO_INCONNUE'
     61: 'demande reset carte',    # 'INFO_DO_RESET'
     62: 'demande état INIT',    # 'INFO_DO_INIT'

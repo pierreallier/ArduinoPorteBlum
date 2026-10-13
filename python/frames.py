@@ -92,7 +92,7 @@ class Event:
         try:
             values = Event.PAYLOAD_STRUCT.unpack(payload)
         except struct.error:
-            return Event(f"--- Trame binaire invalide (Event) : {frame.hex().upper()} ---", frame)
+            return Event(None, f"--- Trame binaire invalide (Event) : {frame.hex().upper()} ---", frame)
         return Event.decode(values, frame)
 
     @staticmethod
@@ -102,7 +102,7 @@ class Event:
         Returns an instance of Event or a more specific subclass.
         """
         if len(values) < 3:
-            return Event(f"--- Trame Event invalide : {frame.hex().upper()} ---", frame)
+            return ASCIIEvent(f"--- Trame Event invalide : {frame.hex().upper()} ---", frame)
 
         message_type, code, value = values
         message_type_text = Event._ascii_char(message_type)
@@ -123,7 +123,7 @@ class Event:
 
         # default: create a generic Event with a readable string
         label = message_type_text if isinstance(message_type_text, str) else f"0x{message_type:02X}"
-        return Event(f"{label} : code={code} val={value}", frame)
+        return ASCIIEvent(f"{label} : code={code} val={value}", frame)
 
 
     # Presentation helpers used by GUI
@@ -320,7 +320,7 @@ class RequestEvent(Event):
 
     @staticmethod
     def get_tag_config() -> dict:
-        return {'foreground': '#4F4F4F', 'justify': 'left'}
+        return {'justify': 'left', 'underline': True}
 
     @staticmethod
     def get_prefix() -> str:
@@ -341,13 +341,13 @@ class MesureEvent(Event): # TODO : ajouter le stockage des valeurs de mesure dan
         try:
             values = MesureEvent.PAYLOAD_STRUCT.unpack(payload)
         except struct.error:
-            return Event(f"--- Trame binaire invalide (Mesures) : {frame.hex().upper()} ---", frame)
+            return Event(None, f"--- Trame binaire invalide (Mesures) : {frame.hex().upper()} ---", frame)
         return MesureEvent.decode(values, frame)
 
     @staticmethod
     def decode(values: Tuple, frame: bytes):
         if len(values) != 8:
-            return Event(f"--- Trame Mesures invalide : {frame.hex().upper()} ---", frame)
+            return Event(None, f"--- Trame Mesures invalide : {frame.hex().upper()} ---", frame)
 
         (time_ms, tension, courant_moyen, angle_moteur, vitesse_moteur, angle_porte, pwm, consigne) = values
         s = (
@@ -389,13 +389,13 @@ class AccelEvent(Event):
         try:
             values = AccelEvent.PAYLOAD_STRUCT.unpack(payload)
         except struct.error:
-            return Event(f"--- Trame binaire invalide (Accelero) : {frame.hex().upper()} ---", frame)
+            return Event(None, f"--- Trame binaire invalide (Accelero) : {frame.hex().upper()} ---", frame)
         return AccelEvent.decode(values, frame)
 
     @staticmethod
     def decode(values: Tuple, frame: bytes):
         if len(values) != 10:
-            return Event(f"--- Trame Accelero invalide : {frame.hex().upper()} ---", frame)
+            return Event(None, f"--- Trame Accelero invalide : {frame.hex().upper()} ---", frame)
 
         (time_ms, accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, heading, roll, pitch) = values
         s = (

@@ -5,7 +5,7 @@ import time
 import serial
 import threading
 
-from frames import (Event, MesureEvent, AccelEvent, ASCIIEvent, RequestEvent)
+from frames import (Event, MesureEvent, AccelEvent, ASCIIEvent, RequestEvent, GuiEvent)
 import serial.tools.list_ports
 
 DEFAULT_BAUDRATE = 115200
@@ -159,8 +159,8 @@ class SerialPortHandler:
                     self._consume_rx_buffer()
 
             except (serial.SerialException, OSError) as exc:
-                # Enqueue as an ASCIIEvent so the GUI receives Event-like objects.
-                self.rx_queue.put(ASCIIEvent(f"--- Erreur série : {exc} ---"))
+                # Enqueue as an GUIEvent so the GUI receives Event-like objects.
+                self.rx_queue.put(GuiEvent(f"--- Erreur série : {exc} ---"))
                 break
 
     def _consume_rx_buffer(self):
@@ -168,11 +168,11 @@ class SerialPortHandler:
             first_byte = self.rx_buffer[0]
 
             # choose Event class directly from first byte constant
-            if first_byte == EVENT_BINARY_ID:
+            if first_byte == 0x00:
                 frame_class = Event
-            elif first_byte == MESURES_BINARY_ID:
+            elif first_byte == 0x01:
                 frame_class = MesureEvent
-            elif first_byte == MESURES_ACCEL_BINARY_ID:
+            elif first_byte == 0x02:
                 frame_class = AccelEvent
             else:
                 frame_class = ASCIIEvent
@@ -184,7 +184,7 @@ class SerialPortHandler:
                     # wait for end of line
                     return
                 # remove the newline in the frame
-                frame = bytes(self.rx_buffer[:newline_idx])
+                frame = bytes(self.rx_buffer[:newline_idx + 1])
                 del self.rx_buffer[:newline_idx + 1]
             else:
                 size = frame_class.frame_size()
@@ -196,13 +196,14 @@ class SerialPortHandler:
             # Decode frame into Event subclass (decoder lives in Event class)
             event = frame_class.decode_from_frame(frame)
 
+            # enqueue decoded event for UI
+            self.rx_queue.put(event)
+
             # If this is an Event frame and signals init complete (code 71), request 'send mesures'
             if event.code == 71:
                 try:
                     self._write(b"SET MESURES ON\n")
                 except Exception:
                     pass
-
-            # enqueue decoded event for UI
-            self.rx_queue.put(event)
+                
             continue
