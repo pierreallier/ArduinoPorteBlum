@@ -38,27 +38,28 @@ bool has_send_accelero = false;
 void lancerTest();
 void ordonnanceur();
 
+void configButton(Bounce2::Button& button, uint8_t pin) {
+    button.attach(pin, INPUT_PULLUP);
+    button.setPressedState(LOW);
+}
+
 void setup() {
     portserie.init(); // Initialisation du port série
     buzzer.init(); // Initialiation du buzzer
 
     sendDirect(MSGTYPE::INFO, MSG::INFO_INIT_DEBUT);
 
-    // Configuration des boutons avec résistance de pull-up interne et état actif à LOW
-    btTest.attach(TEST_BT,INPUT_PULLUP);
-    btTest.setPressedState(LOW); 
-    btWireless.attach(WIRELESS_BT,INPUT_PULLUP);
-    btWireless.setPressedState(LOW);
-    btCalibration.attach(CALIBRATION_BT,INPUT_PULLUP);
-    btCalibration.setPressedState(LOW);
-    btPilotage.attach(PILOTAGE_BT,INPUT_PULLUP);
-    btPilotage.setPressedState(LOW);
+    // Configuration des boutons
+    configButton(btTest, TEST_BT);
+    configButton(btWireless, WIRELESS_BT);
+    configButton(btCalibration, CALIBRATION_BT);
+    configButton(btPilotage, PILOTAGE_BT);
 
     capteurs.init(); // Initialisation des capteurs
     moteur.init(); // Initialisation du moteur et du driver
     machine.init(); // Initialisation de la machine à états
 
-    // Mode DEV (message et envoi des mesures) sinon on n'envoi pas les mesures (à activer via le SET)
+    // Mode DEV (message et envoi des mesures) sinon on n'envoit pas les mesures (à activer via le SET)
     #if VERSION_DEV
         sendDirect(MSGTYPE::WARNING, MSG::INFO_DEV);
     #else
@@ -82,7 +83,7 @@ void setup() {
     capteurs.onMeuble() ? sendDirect(MSGTYPE::INFO, MSG::INFO_SUR_MEUBLE) : sendDirect(MSGTYPE::INFO, MSG::INFO_DEMONTE);
 
     // Vérification capteur BN0055
-    capteurs.checkBNO() ? sendDirect(MSGTYPE::INFO, MSG::INFO_ACCEL_PRESENT): sendDirect(MSGTYPE::ERROR, MSG::ERR_ACCEL_ABSENT);
+    capteurs.checkBNO() ? sendDirect(MSGTYPE::INFO, MSG::INFO_ACCEL_PRESENT): sendDirect(MSGTYPE::INFO, MSG::ERR_ACCEL_ABSENT);
     
     // Vérification buzzer
     buzzer.isEnabled() ? sendDirect(MSGTYPE::INFO, MSG::INFO_BUZZER_ACTIVE) : sendDirect(MSGTYPE::INFO, MSG::INFO_BUZZER_DESACTIVE);
@@ -91,6 +92,7 @@ void setup() {
     buzzer.sequenceInit();
     delay(1000);
 
+    // Initialisation des timers pour l'ordonnanceur
     tVerif = tMesure = tBt  = tEnvoi = tBno = millis();
     capteurs.mesures(0); // Initialise la 1er mesure
     if (capteurs.bno().isEnabled()) {
@@ -99,16 +101,16 @@ void setup() {
 }
 
 void loop() {
-    portserie.task();
+    portserie.task(); // Vérifie les commandes recues
     if (portserie.testRequired()) {
         lancerTest();
     } else {
-        machine.exec();
-        moteur.update();
-        capteurs.bno().update();
-        ordonnanceur();
+        machine.exec(); // Exécute la machine à états
+        moteur.update(); // Met à jour l'état du moteur en fonction de la consigne et des capteurs
+        capteurs.bno().update(); // Met à jour l'état du capteur BN0055 (accéléromètre)
+        ordonnanceur(); // Exécute les tâches périodiques (mesures, sécurités, envois, boutons)
     }
-    buzzer.task();
+    buzzer.task(); // Met à jour l'état du buzzer
 }
 
 void lancerTest() {
@@ -125,11 +127,11 @@ void lancerTest() {
 }
 
 void ordonnanceur() {
+    // Récupération de la période d'envoi des mesures si changée
     uint32_t PERIODE_ENVOI = portserie.getMesurePeriode();
     uint32_t PERIODE_MESURE = min(PERIODE_ENVOI,25);
     float pwm = moteur.getPWM();
 
-    // Tâches périodiques
     uint32_t maintenant = millis();
 
     // Mesures - Sécurités (toutes les 5 ms)
@@ -139,13 +141,14 @@ void ordonnanceur() {
         capteurs.updateSecurities(pwm);
         is_time_securite = true;
     }
+
     // Mesures des autres grandeurs (au maximum toutes les 25 ms) pour conserver le même timestamps que les sécurités
     if (maintenant - tMesure >= PERIODE_MESURE) {
         tMesure += PERIODE_MESURE;
         capteurs.mesures(pwm);
     }
 
-    // Vérifications des sécurités 
+    // Vérifications des sécurités (toutes les 5 ms)
     if (is_time_securite) {
         is_time_securite = false;
         if (machine.etat != ETAT::CALIBRATION) {

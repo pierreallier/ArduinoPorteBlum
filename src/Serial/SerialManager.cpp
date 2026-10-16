@@ -38,7 +38,7 @@ void SerialManager::readSerial() {
         } else if (command.startsWith("DO")) {
             _DO(command.substring(2));
         } else {
-            sendError(MSG::ERR_CMD_INCONNUE);
+            sendReponseNOK(MSG::ERR_CMD_INCONNUE);
         }
     }
 }
@@ -224,7 +224,7 @@ void SerialManager::_SET(String commande) {
         sendReponseOK(MSG::INFO_BUZZER,buzzer.isEnabled());
     }
     else {
-        sendError(MSG::ERR_CMD_SET_INCONNUE);
+        sendReponseNOK(MSG::ERR_CMD_SET_INCONNUE);
         return;
     }
 
@@ -335,7 +335,7 @@ void SerialManager::_GET(String commande) {
         sendReponseOK(MSG::INFO_BUZZER, buzzer.isEnabled());
     }
     else
-        sendError(MSG::ERR_CMD_GET_INCONNUE);
+        sendReponseNOK(MSG::ERR_CMD_GET_INCONNUE);
 }
 
 void SerialManager::_DO(String commande) {
@@ -375,14 +375,14 @@ void SerialManager::_DO(String commande) {
     }
     else if (commande.startsWith("PILOTER")) {
         machine.changerEtat(ETAT::PILOTAGE);
-        sendReponseOK(MSG::INFO_DO_PILOTER);
+        sendDirect(MSGTYPE::REPONSE_OK,MSG::INFO_DO_PILOTER); // On envoie le message tout de suite pour démarrer l'acquistion
     }
     else if (commande.startsWith("CALIBRATION")) {
         machine.changerEtat(ETAT::CALIBRATION);
         sendReponseOK(MSG::INFO_DO_CALIBRATION);
     }
     else {
-        sendError(MSG::ERR_CMD_DO_INCONNUE);
+        sendReponseNOK(MSG::ERR_CMD_DO_INCONNUE);
         return;
     }
     

@@ -10,8 +10,10 @@
  * 
  * Exemple d'utilisation :
  * CurrentMoySensor courantSensor(MOTOR_CURRENT_PIN);
+ * courantSensor.init(); // Calibrage de l'offset et initialisation de la table de mesures
  * courantSensor.setLimit(2.0f); // Limite de courant à 2.0A
- * int16_t current = courantSensor.read(); // Lecture du courant moyen en A*100
+ * float current = courantSensor.read(); // Lecture du courant en A
+ * float currentMoy = courantSensor.getMoy(); // Lecture du courant moyen en A
  * bool isLimitReached = courantSensor.isLimitReached(); // Vérifie si la limite est atteinte
  * 
  */

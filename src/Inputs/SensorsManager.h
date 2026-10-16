@@ -32,6 +32,7 @@ class SensorsManager {
         void init();
         void mesures(int pwm);
 
+        // Sécurités 
         void updateSecurities(int pwm);
         bool isBlocage();
         bool isLimiteCourant();
@@ -44,6 +45,7 @@ class SensorsManager {
         inline bool hasPower() { return _mesures.tension > 500;}
 
         inline Mesures getMesures() const { return _mesures;}
+
         // Retourne les mesures converties en unités physiques (float)
         inline float getTension() const { return _mesures.tension / 100.0f;}
         inline float getCourant() const { return _mesures.courant_moyen / 100.0f;}
@@ -63,12 +65,13 @@ class SensorsManager {
         CalibrationData& getCalibration() {return calibrationData;}
 
         inline BN0055& bno()          { return _bno; }
-        inline MT6701& codeurPorte()  { return _codeurPorte; }
-        inline bool checkCodeurPorte() { return _codeurPorte.checkPresence();}
         bool checkBNO();
         inline void setBNO(bool etat) { _bno.setEnabled(etat);}
 
-    private:
+        inline MT6701& codeurPorte()  { return _codeurPorte; }
+        inline bool checkCodeurPorte() { return _codeurPorte.checkPresence();}
+
+        // Ensemble des capteurs gérés par le SensorsManager
         AnalogStateDetector _meuble = AnalogStateDetector(DETECTEUR_MEUBLE, 100, 50, 500); // Binaire 
         Sensor<uint16_t> _tension = Sensor<uint16_t>(MOTOR_VOLTAGE_PIN, COEFF_TENSION); // en V*100
         Sensor<float> _potentiometre = Sensor<float>(POTENTIOMETRE_PIN, COEFF_POTENTIOMETRE, 500); // BRUT
@@ -77,6 +80,7 @@ class SensorsManager {
         BN0055 _bno = BN0055(BN0055_ADDRESS);
         ABEncoder _codeurMoteur = ABEncoder(COEFF_CODEUR_MOTEUR); // en rad*100 et rad/s*100
 
+    private:
         Mesures _mesures;
 
         bool limite_haute = false;
