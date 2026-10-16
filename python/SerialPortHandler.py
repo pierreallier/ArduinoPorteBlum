@@ -5,18 +5,11 @@ import time
 import serial
 import threading
 
-from frames import (Event, MesureEvent, AccelEvent, ASCIIEvent, RequestEvent, GuiEvent)
+from frames import (ErrorEvent, WarningEvent, InfoEvent, StateEvent, ResponseEvent, TestEvent, MesureEvent, AccelEvent, ASCIIEvent, RequestEvent, GuiEvent)
 import serial.tools.list_ports
 
 DEFAULT_BAUDRATE = 115200
 SERIAL_TIMEOUT = 0.1
-
-# Identifiers for frame types (first byte of each frame), else ASCIIEvent is assumed 
-# TODO : a déplacer dans le fichier codes.py
-EVENT_BINARY_ID = 0x00
-MESURES_BINARY_ID = 0x01
-MESURES_ACCEL_BINARY_ID = 0x02
-
 
 class SerialPortHandler:
     """Handles serial port I/O, buffering and decoding of frames.
@@ -164,46 +157,46 @@ class SerialPortHandler:
                 break
 
     def _consume_rx_buffer(self):
+        """Decode complete frames, keeping partial frames for the next read."""
         while self.rx_buffer:
-            first_byte = self.rx_buffer[0]
+            if self.rx_buffer[0] == 0x01:
+                if len(self.rx_buffer) < 2:
+                    return
 
-            # choose Event class directly from first byte constant
-            if first_byte == 0x00:
-                frame_class = Event
-            elif first_byte == 0x01:
-                frame_class = MesureEvent
-            elif first_byte == 0x02:
-                frame_class = AccelEvent
+                frame_class = {
+                    ord('A'): AccelEvent,
+                    ord('M'): MesureEvent,
+                    ord('E'): ErrorEvent,
+                    ord('W'): WarningEvent,
+                    ord('I'): InfoEvent,
+                    ord('S'): StateEvent,
+                    ord('R'): ResponseEvent,
+                    ord('O'): ResponseEvent,
+                    ord('N'): ResponseEvent,
+                    ord('T'): TestEvent,
+                }.get(self.rx_buffer[1], ASCIIEvent)
+                size = frame_class.frame_size()
+                if len(self.rx_buffer) < size:
+                    return
             else:
                 frame_class = ASCIIEvent
-
-            # Special handling for ASCII frames: read until newline
-            if frame_class is ASCIIEvent:
                 newline_idx = self.rx_buffer.find(b"\n")
-                if newline_idx == -1:
-                    # wait for end of line
+                start_idx = self.rx_buffer.find(bytes([0x01]))
+                if start_idx != -1 and (newline_idx == -1 or start_idx < newline_idx):
+                    # Deliver text preceding a binary frame, even without a newline.
+                    size = start_idx
+                elif newline_idx != -1:
+                    size = newline_idx + 1
+                else:
                     return
-                # remove the newline in the frame
-                frame = bytes(self.rx_buffer[:newline_idx + 1])
-                del self.rx_buffer[:newline_idx + 1]
-            else:
-                size = frame_class.frame_size()
-                if len(self.rx_buffer) < size: # not enough bytes yet
-                    return
-                frame = bytes(self.rx_buffer[:size])
-                del self.rx_buffer[:size]
 
-            # Decode frame into Event subclass (decoder lives in Event class)
+            frame = bytes(self.rx_buffer[:size])
+            del self.rx_buffer[:size]
             event = frame_class.decode_from_frame(frame)
-
-            # enqueue decoded event for UI
             self.rx_queue.put(event)
 
-            # If this is an Event frame and signals init complete (code 71), request 'send mesures'
             if event.code == 71:
                 try:
                     self._write(b"SET MESURES ON\n")
                 except Exception:
                     pass
-                
-            continue

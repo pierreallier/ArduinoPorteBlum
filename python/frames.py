@@ -329,7 +329,7 @@ class RequestEvent(Event):
 
 class MesureEvent(Event): # TODO : ajouter le stockage des valeurs de mesure dans l'instance sous la forme d'une array ?
     TYPE = "M"
-    PAYLOAD_STRUCT = struct.Struct("<IHhiiHhi")
+    PAYLOAD_STRUCT = struct.Struct("<BIHhiiHhi")
 
     @staticmethod
     def frame_size() -> int:
@@ -346,10 +346,10 @@ class MesureEvent(Event): # TODO : ajouter le stockage des valeurs de mesure dan
 
     @staticmethod
     def decode(values: Tuple, frame: bytes):
-        if len(values) != 8:
+        if len(values) != 9:
             return Event(None, f"--- Trame Mesures invalide : {frame.hex().upper()} ---", frame)
 
-        (time_ms, tension, courant_moyen, angle_moteur, vitesse_moteur, angle_porte, pwm, consigne) = values
+        (type, time_ms, tension, courant_moyen, angle_moteur, vitesse_moteur, angle_porte, pwm, consigne) = values
         s = (
             "Mesures : "
             f"t={time_ms}ms "
@@ -377,7 +377,7 @@ class MesureEvent(Event): # TODO : ajouter le stockage des valeurs de mesure dan
 
 class AccelEvent(Event):
     TYPE = "A"
-    PAYLOAD_STRUCT = struct.Struct("<Ihhhiiiiii")
+    PAYLOAD_STRUCT = struct.Struct("<BIhhhiiiiii")
 
     @staticmethod
     def frame_size() -> int:
@@ -394,10 +394,10 @@ class AccelEvent(Event):
 
     @staticmethod
     def decode(values: Tuple, frame: bytes):
-        if len(values) != 10:
+        if len(values) != 11:
             return Event(None, f"--- Trame Accelero invalide : {frame.hex().upper()} ---", frame)
 
-        (time_ms, accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, heading, roll, pitch) = values
+        (type, time_ms, accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, heading, roll, pitch) = values
         s = (
             "Accéléro : "
             f"t={time_ms}ms "

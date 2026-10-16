@@ -12,8 +12,9 @@ struct CalibrationData {
 };
 
 // @brief Structure pour stocker les mesures du capteur BN0055
-struct MesuresBN0055 { // TAILLE = 35 octets
-    uint8_t bin = 0x02;
+struct MesuresBN0055 { // TAILLE = 36 octets
+    uint8_t start = 0x01;
+    uint8_t type = 'A';
     uint32_t time = 0; // ms
     int16_t accelX = 0; // degrés/s²*100
     int16_t accelY = 0; // degrés/s²*100
@@ -27,8 +28,9 @@ struct MesuresBN0055 { // TAILLE = 35 octets
 };
 
 // @brief Structure pour stocker les mesures du système
-struct Mesures { // TAILLE = 25 octets
-    uint8_t bin = 0x01;
+struct Mesures { // TAILLE = 26 octets
+    uint8_t start = 0x01;
+    uint8_t type = 'M';
     uint32_t time = 0; // ms
     uint16_t tension = 0; // V*100
     int16_t courant_moyen = 0; // A*100
@@ -41,7 +43,7 @@ struct Mesures { // TAILLE = 25 octets
 
 // @brief Message hors mesure : TYPE;CODE;VAL (6 octets en RAM).
 struct Event { // TAILLE = 7 octets
-    uint8_t bin = 0x00; // 0x00 pour message binaire
+    uint8_t start = 0x01; // octet de début
     char    type; // I, W, E, S, O, N, R, T
     MSG     code; //uint8_t
     int32_t val;

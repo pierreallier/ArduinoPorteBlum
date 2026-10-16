@@ -8,7 +8,7 @@
 #include "../Config/Types.h"
 
 enum class MSGTYPE : char {
-    NONE = ' ',
+    NONE = 'X',
     REQUETE = 'R',
     REPONSE_OK = 'O',
     REPONSE_NOK = 'N',

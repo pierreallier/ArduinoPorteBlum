@@ -343,7 +343,7 @@ void SerialManager::_DO(String commande) {
     commande.toUpperCase(); // Convertit la commande
 
     if (commande.startsWith("RESET")) {
-        sendDirect(MSGTYPE::INFO,MSG::INFO_DO_RESET);
+        sendDirect(MSGTYPE::REPONSE_OK,MSG::INFO_DO_RESET);
         resetArduino();
         return;
     }
