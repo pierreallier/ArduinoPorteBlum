@@ -84,6 +84,7 @@ void setup() {
 
     // Vérification capteur BN0055
     capteurs.checkBNO() ? sendDirect(MSGTYPE::INFO, MSG::INFO_ACCEL_PRESENT): sendDirect(MSGTYPE::INFO, MSG::ERR_ACCEL_ABSENT);
+    capteurs.bno().setEnabled(false); // Désactive le capteur pour économiser de l'énergie (il sera activé si nécessaire par la suite)
     
     // Vérification buzzer
     buzzer.isEnabled() ? sendDirect(MSGTYPE::INFO, MSG::INFO_BUZZER_ACTIVE) : sendDirect(MSGTYPE::INFO, MSG::INFO_BUZZER_DESACTIVE);
