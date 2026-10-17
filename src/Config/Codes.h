@@ -79,6 +79,8 @@ enum class MSG : uint8_t {
     DATA_MODE_POSITION = 82,    // "mode de pilotage en position"
     DATA_MODE_VITESSE = 83,    // "mode de pilotage en vitesse"
     DATA_MODE_PV = 84,    // "mode de pilotage en vitesse et position"
+    INFO_PILOTAGE_DEMARRE = 85,    // "pilotage démarré"
+    INFO_PILOTAGE_FINI = 86,    // "pilotage terminé"
     DATA_PID_VITESSE_KP = 90,    // "PID vitesse :  Kp = $.3"
     DATA_PID_VITESSE_KI = 91,    // "PID vitesse :  Ki = $.3"
     DATA_PID_VITESSE_KD = 92,    // "PID vitesse :  Kd = $.3"
@@ -195,6 +197,8 @@ inline const __FlashStringHelper* msgName(MSG msg)
         case MSG::DATA_MODE_POSITION: return F("DATA_MODE_POSITION");
         case MSG::DATA_MODE_VITESSE: return F("DATA_MODE_VITESSE");
         case MSG::DATA_MODE_PV: return F("DATA_MODE_PV");
+        case MSG::INFO_PILOTAGE_DEMARRE: return F("INFO_PILOTAGE_DEMARRE");
+        case MSG::INFO_PILOTAGE_FINI: return F("INFO_PILOTAGE_FINI");
         case MSG::DATA_PID_VITESSE_KP: return F("DATA_PID_VITESSE_KP");
         case MSG::DATA_PID_VITESSE_KI: return F("DATA_PID_VITESSE_KI");
         case MSG::DATA_PID_VITESSE_KD: return F("DATA_PID_VITESSE_KD");

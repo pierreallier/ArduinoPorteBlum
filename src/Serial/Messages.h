@@ -154,8 +154,6 @@ inline bool sendMesures(Mesures message) {
     Serial.print(";");
     Serial.print(message.vitesse_moteur / 100.0f);
     Serial.print(";");
-    Serial.print(message.pwm / 100.0f);
-    Serial.print(";");
     Serial.println(message.consigne / 100.0f);
     return true;
     #else

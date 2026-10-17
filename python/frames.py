@@ -327,9 +327,9 @@ class RequestEvent(Event):
         return '▶'  # No prefix for centered/info messages
 
 
-class MesureEvent(Event): # TODO : ajouter le stockage des valeurs de mesure dans l'instance sous la forme d'une array ?
+class MesureEvent(Event):
     TYPE = "M"
-    PAYLOAD_STRUCT = struct.Struct("<BIHhiiHhi")
+    PAYLOAD_STRUCT = struct.Struct("<BIhhiiHi")
 
     @staticmethod
     def frame_size() -> int:
@@ -346,10 +346,10 @@ class MesureEvent(Event): # TODO : ajouter le stockage des valeurs de mesure dan
 
     @staticmethod
     def decode(values: Tuple, frame: bytes):
-        if len(values) != 9:
+        if len(values) != 8:
             return Event(None, f"--- Trame Mesures invalide : {frame.hex().upper()} ---", frame)
 
-        (type, time_ms, tension, courant_moyen, angle_moteur, vitesse_moteur, angle_porte, pwm, consigne) = values
+        (type, time_ms, tension, courant_moyen, angle_moteur, vitesse_moteur, angle_porte, consigne) = values
         s = (
             "Mesures : "
             f"t={time_ms}ms "
@@ -358,7 +358,6 @@ class MesureEvent(Event): # TODO : ajouter le stockage des valeurs de mesure dan
             f"angle_moteur={angle_moteur / 100:.2f}° "
             f"vitesse_moteur={vitesse_moteur / 100:.2f}rad/s "
             f"angle_porte={angle_porte / 100:.2f}° "
-            f"pwm={pwm / 100:.2f} "
             f"consigne={consigne / 100:.2f}"
         )
         inst = MesureEvent(None, s, frame)

@@ -83,6 +83,8 @@
     DATA_MODE_POSITION          ; 82    ; "mode de pilotage en position"
     DATA_MODE_VITESSE           ; 83    ; "mode de pilotage en vitesse"
     DATA_MODE_PV                ; 84    ; "mode de pilotage en vitesse et position"
+    INFO_PILOTAGE_DEMARRE       ; 85    ; "pilotage démarré"
+    INFO_PILOTAGE_FINI          ; 86    ; "pilotage terminé"
 
 # PID ----------------------------------------------------------------------------------------------------------
     DATA_PID_VITESSE_KP         ; 90    ; "PID vitesse :  Kp = $.3"      #val : valeur *1000

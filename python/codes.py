@@ -73,6 +73,8 @@ MSG = {
     82: 'mode de pilotage en position',    # 'DATA_MODE_POSITION'
     83: 'mode de pilotage en vitesse',    # 'DATA_MODE_VITESSE'
     84: 'mode de pilotage en vitesse et position',    # 'DATA_MODE_PV'
+    85: 'pilotage démarré',    # 'INFO_PILOTAGE_DEMARRE'
+    86: 'pilotage terminé',    # 'INFO_PILOTAGE_FINI'
     90: 'PID vitesse :  Kp = $.3',    # 'DATA_PID_VITESSE_KP'
     91: 'PID vitesse :  Ki = $.3',    # 'DATA_PID_VITESSE_KI'
     92: 'PID vitesse :  Kd = $.3',    # 'DATA_PID_VITESSE_KD'

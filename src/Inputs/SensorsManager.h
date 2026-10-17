@@ -14,10 +14,12 @@
 
 // Coefficient de conversion pour les capteurs analogiques (tension, courant, potentiomètre)
 const float COEFF_TENSION = 29.8f / ADC_MAX * 100; // Convertit la valeur brute du capteur de tension en V*100 (29.8V max)
+const float COEFF_PWM = 1 / 255.0f; // Convertit le PWM en pourcentage de tension appliquée au moteur
 const float COEFF_COURANT = 5.0f / ADC_MAX / 0.400f; // Convertit la valeur brute du capteur de courant en A (0.400V/A)
 const float COEFF_POTENTIOMETRE = 0.5f * 100; // Convertit la valeur brute du potentiomètre en pourcentage (0 à 100)
 const float COEFF_CODEUR_PORTE = 360.0f / ADC_MAX * 100; // Convertit la sortie analogique du codeur en degrés*100
 const float COEFF_CODEUR_MOTEUR = 2.0f * PI / 128.0f * 100; // Convertit les ticks du codeur en rad*100
+
 
 // Détections butées
 const int PWM_MIN = 50;
@@ -42,17 +44,18 @@ class SensorsManager {
         bool resetSecurities();
         inline bool onMeuble() const {return _meuble.etat();}
         inline bool meubleChanged() {return _meuble.changed();}
-        inline bool hasPower() { return _mesures.tension > 500;}
+        inline bool hasPower() { return _tension.get() > 500;}
 
         inline Mesures getMesures() const { return _mesures;}
 
         // Retourne les mesures converties en unités physiques (float)
-        inline float getTension() const { return _mesures.tension / 100.0f;}
+        inline float getTension() const { return _tension.get() / 100.0f;}
+        inline float getTensionMoteur() const { return _mesures.tension / 100.0f;}
         inline float getCourant() const { return _mesures.courant_moyen / 100.0f;}
         inline float getAnglePorte() const { return _mesures.angle_porte / 100.0f;}
         inline float getAngleMoteur() const { return _mesures.angle_moteur / 100.0f;}
         inline float getVitesseMoteur() const { return _mesures.vitesse_moteur / 100.0f;}
-        inline float getPWM() const { return _mesures.pwm / 100.0f;}
+        inline float getPWM() const { return pwm / 100.0f;}
         inline float getConsigne() const { return _mesures.consigne / 100.0f;}
         inline float getPotentiometre() const { return _potentiometre.get() / 100.0f;}
         inline float getLimiteBasse() const { return calibrationData.lowLimit;}
@@ -88,6 +91,8 @@ class SensorsManager {
         bool blocage_detecte = false;
         bool limite_courant_atteinte = false;
         uint8_t compteur_blocage = 0;
+
+        int16_t pwm = 0;
 
         CalibrationData calibrationData;
 

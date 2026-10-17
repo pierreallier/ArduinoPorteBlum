@@ -28,17 +28,16 @@ struct MesuresBN0055 { // TAILLE = 36 octets
 };
 
 // @brief Structure pour stocker les mesures du système
-struct Mesures { // TAILLE = 26 octets
+struct Mesures { // TAILLE = 24 octets
     uint8_t start = 0x01;
     uint8_t type = 'M';
     uint32_t time = 0; // ms
-    uint16_t tension = 0; // V*100
+    int16_t tension = 0; // V*100
     int16_t courant_moyen = 0; // A*100
     int32_t angle_moteur = 0; // °*100
     int32_t vitesse_moteur = 0; // rad/s*100
     uint16_t angle_porte = 0;  // °*100 
-    int16_t pwm = 0; // *100
-    int32_t consigne = 0; // °*100 ou rad/s*100
+    int32_t consigne = 0; // PWM*100 ou °*100 ou rad/s*100
 };
 
 // @brief Message hors mesure : TYPE;CODE;VAL (6 octets en RAM).

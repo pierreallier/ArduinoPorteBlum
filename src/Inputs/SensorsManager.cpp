@@ -83,10 +83,11 @@ void SensorsManager::mesures(int p) {
     _mesures.time = millis();
     _mesures.angle_moteur = _codeurMoteur.getAngle();
     _mesures.vitesse_moteur = _codeurMoteur.getSpeed();
-    _mesures.tension = _tension.read();
+    // Multiplication sur 32 bits pour eviter le debordement 16 bits sur AVR.
+    _mesures.tension = static_cast<int16_t>(static_cast<int32_t>(_tension.read()) * p / 255);
+    pwm = p * 100; // avant la lecture de la tension car nécessaire
     _mesures.courant_moyen = static_cast<int>(_courant.getMoy() * 100); // le courant a été lu dans updateSecurities()
     _potentiometre.read();
-    _mesures.pwm = p * 100;
     _meuble.update();
 }
 

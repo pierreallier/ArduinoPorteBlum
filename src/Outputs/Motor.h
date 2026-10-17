@@ -33,7 +33,7 @@ class Motor {
         // Accesseurs si besoin
         bool isEnabled() const { return enabled; }
         Motor::DIR getDirection() const { return direction; }
-        int getPWM() const { return pwm; }
+        int getPWM() const { return direction == DIR::OUVERTURE ? pwm : -pwm; }
 
     private:
         int pwm = 0; // valeur PWM pour la vitesse du moteur (0-255)
