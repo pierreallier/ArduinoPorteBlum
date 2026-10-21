@@ -19,12 +19,12 @@ struct MesuresBN0055 { // TAILLE = 36 octets
     int16_t accelX = 0; // degrés/s²*100
     int16_t accelY = 0; // degrés/s²*100
     int16_t accelZ = 0; // degrés/s²*100
-    int32_t gyroX = 0; // degrés/s*100
-    int32_t gyroY = 0; // degrés/s*100
-    int32_t gyroZ = 0; // degrés/s*100
-    int32_t heading = 0; // degrés*100
-    int32_t roll = 0; // degrés*100
-    int32_t pitch = 0; // degrés*100
+    int16_t gyroX = 0; // 1/16 °/s
+    int16_t gyroY = 0; // 1/16 °/s
+    int16_t gyroZ = 0; // 1/16 °/s
+    int16_t heading = 0; // degrés*100
+    int16_t roll = 0; // degrés*100
+    int16_t pitch = 0; // degrés*100
 };
 
 // @brief Structure pour stocker les mesures du système

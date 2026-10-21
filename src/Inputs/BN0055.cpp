@@ -213,15 +213,17 @@ bool BN0055::readData() {
         return false;
     // Conversion du buffer brut
     // Gyroscope
-    _mesures.gyroX = ((int32_t)makeInt16(_dataBuffer, 0) * 100) >> 4; // Conversion en centi-degrés/s
-    _mesures.gyroY = ((int32_t)makeInt16(_dataBuffer, 2) * 100) >> 4;
-    _mesures.gyroZ = ((int32_t)makeInt16(_dataBuffer, 4) * 100) >> 4;
+    _mesures.gyroX = makeInt16(_dataBuffer, 0); // unité 1/16 °/s
+    _mesures.gyroY = makeInt16(_dataBuffer, 2); // unité 1/16 °/s
+    _mesures.gyroZ = makeInt16(_dataBuffer, 4); // unité 1/16 °/s
     // Euler
-    _mesures.heading = ((int32_t)makeInt16(_dataBuffer, 6) * 100) >> 4; // Conversion en centi-degrés
-    _mesures.roll    = ((int32_t)makeInt16(_dataBuffer, 8) * 100) >> 4;
-    _mesures.pitch   = ((int32_t)makeInt16(_dataBuffer, 10) * 100) >> 4;
+    int32_t heading = ((int32_t)makeInt16(_dataBuffer, 6) * 100) >> 4; // Conversion en centi-degrés
+    if (_mesures.heading > 18000) _mesures.heading -= 36000; // Normalisation sur [-180, 180°] * 100
+    _mesures.heading = (int16_t)heading;
+    _mesures.roll    = (int16_t)((int32_t)makeInt16(_dataBuffer, 8) * 100) >> 4;
+    _mesures.pitch   = (int16_t)((int32_t)makeInt16(_dataBuffer, 10) * 100) >> 4;
     // Accélération linéaire
-    _mesures.accelX = makeInt16(_dataBuffer, 20); // Conversion en centi-degrés/s²
+    _mesures.accelX = makeInt16(_dataBuffer, 20); // Conversion en centi-m/s²
     _mesures.accelY = makeInt16(_dataBuffer, 22);
     _mesures.accelZ = makeInt16(_dataBuffer, 24);
     // Mesure consommée

@@ -379,7 +379,7 @@ class MesureEvent(Event):
 
 class AccelEvent(Event):
     TYPE = "A"
-    PAYLOAD_STRUCT = struct.Struct("<BIhhhiiiiii")
+    PAYLOAD_STRUCT = struct.Struct("<BIhhhhhhhhh")
 
     @staticmethod
     def frame_size() -> int:
@@ -403,8 +403,8 @@ class AccelEvent(Event):
         s = (
             "Accéléro : "
             f"t={time_ms}ms "
-            f"accel=({accel_x / 100:.2f},{accel_y / 100:.2f},{accel_z / 100:.2f}) rad/s² "
-            f"gyro=({gyro_x / 100:.2f},{gyro_y / 100:.2f},{gyro_z / 100:.2f})rad/s "
+            f"accel=({accel_x / 100:.2f},{accel_y / 100:.2f},{accel_z / 100:.2f}) m/s² "
+            f"gyro=({gyro_x / 16:.2f},{gyro_y / 16:.2f},{gyro_z / 16:.2f})°/s "
             f"euler=({heading / 100:.2f},{roll / 100:.2f},{pitch / 100:.2f})°"
         )
         inst = AccelEvent(None, s, frame)
