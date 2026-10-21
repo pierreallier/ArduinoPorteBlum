@@ -26,9 +26,9 @@ Motor moteur(capteurs);
 StateMachine machine(capteurs, moteur, buzzer);
 SerialManager portserie(capteurs, machine, buzzer);
 
-uint32_t tVerif = 0;
-uint32_t tBt = 0;
-uint32_t tMesure = 0;
+uint32_t tVerif = 0;    constexpr uint32_t PERIODE_SECURITE = 1*1000UL;
+uint32_t tBt = 0;       constexpr uint32_t PERIODE_BOUTONS = 50UL*1000UL;
+uint32_t tMesure = 0;   constexpr uint32_t PERIODE_MESURES = 25UL*1000UL;
 uint32_t tEnvoi = 0;
 uint32_t tBno = 0;
 
@@ -48,6 +48,7 @@ void setup() {
     buzzer.init(); // Initialiation du buzzer
 
     sendDirect(MSGTYPE::INFO, MSG::INFO_INIT_DEBUT);
+    sendDirect(MSGTYPE::INFO, MSG::INFO_VERSION_SOFT, VERSION_SOFT);
 
     // Configuration des boutons
     configButton(btTest, TEST_BT);
@@ -94,10 +95,10 @@ void setup() {
     delay(1000);
 
     // Initialisation des timers pour l'ordonnanceur
-    tVerif = tMesure = tBt  = tEnvoi = tBno = millis();
+    tVerif = tMesure = tBt  = tEnvoi = tBno = micros();
     capteurs.mesures(0); // Initialise la 1er mesure
     if (capteurs.bno().isEnabled()) {
-        capteurs.bno().requestData(millis());
+        capteurs.bno().requestData();
     }
 }
 
@@ -129,29 +130,23 @@ void lancerTest() {
 
 void ordonnanceur() {
     // Récupération de la période d'envoi des mesures si changée
-    uint32_t PERIODE_ENVOI = portserie.getMesurePeriode();
-    uint32_t PERIODE_MESURE = min(PERIODE_ENVOI,25);
+    uint32_t PERIODE_ENVOI = portserie.getMesurePeriode()*1000;
+    uint32_t PERIODE_MESURE = min(PERIODE_ENVOI,PERIODE_MESURES);
     float pwm = moteur.getPWM();
 
-    uint32_t maintenant = millis();
+    uint32_t maintenant = micros();
 
-    // Mesures - Sécurités (toutes les 5 ms)
-    if (maintenant - tVerif >= 5) {
-        tVerif += 5;   
-        // Vérifications des sécurités
+    // Gestion des sécurités (toutes les PERIODE_SECURITE)
+    if (maintenant - tVerif >= PERIODE_SECURITE) {
+        tVerif += PERIODE_SECURITE;   
+        // Acquisition des sécurités
         capteurs.updateSecurities(pwm);
-        is_time_securite = true;
-    }
-
-    // Mesures des autres grandeurs (au maximum toutes les 25 ms) pour conserver le même timestamps que les sécurités
-    if (maintenant - tMesure >= PERIODE_MESURE) {
-        tMesure += PERIODE_MESURE;
-        capteurs.mesures(pwm);
-    }
-
-    // Vérifications des sécurités (toutes les 5 ms)
-    if (is_time_securite) {
-        is_time_securite = false;
+        // Acquisition des autres grandeurs (au maximum toutes les PERIODE_MESURE)
+        if (maintenant - tMesure >= PERIODE_MESURE) {
+            tMesure += PERIODE_MESURE;
+            capteurs.mesures(pwm);
+        }
+        // Vérification des sécurités
         if (machine.etat != ETAT::CALIBRATION) {
             // On vérifie les sécurités uniquement si on n'est pas en calibration (géré côté calibration)
             if (capteurs.isLimiteAngle() && (machine.etat != ETAT::DEBRAYAGE && machine.etat != ETAT::REPOS)) {
@@ -188,7 +183,7 @@ void ordonnanceur() {
     }
 
     // Envoies des mesures sur le port série
-    if (PERIODE_ENVOI <= 1000 && maintenant - tEnvoi >= PERIODE_ENVOI) {
+    if (PERIODE_ENVOI <= 1000UL*1000UL && maintenant - tEnvoi >= PERIODE_ENVOI) {
         tEnvoi += PERIODE_ENVOI;
         sendMesures(capteurs.getMesures());
         if (capteurs.bno().isEnabled() && maintenant - tBno >= 5 * PERIODE_ENVOI) {
@@ -197,7 +192,7 @@ void ordonnanceur() {
                 capteurs.bno().readData();
                 sendMesures(capteurs.bno().getMesures());
             }
-            capteurs.bno().requestData(maintenant);
+            capteurs.bno().requestData();
             has_send_accelero = true;
         } else {
             has_send_accelero = false;
@@ -208,8 +203,8 @@ void ordonnanceur() {
     }
 
     // Vérification des boutons de commande (50ms)
-    if (maintenant - tBt >= 50) {
-        tBt += 50;
+    if (maintenant - tBt >= PERIODE_BOUTONS) {
+        tBt += PERIODE_BOUTONS;
         
         btTest.update();
         btWireless.update();

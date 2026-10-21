@@ -48,12 +48,14 @@ enum class MSG : uint8_t {
     INFO_CONSIGNE_SET = 42,    // "consigne mise à jour"
     INFO_PID_SET = 43,    // "configuration du PID effectuée"
     INFO_ACCEL_SET = 44,    // "${désactivation|activation} de l'accéléromètre"
+    INFO_MESURES_SAUVEGARDE = 45,    // "période d'envoi des mesures enregistrée à : $ ms"
     ERR_CMD_GET_INCONNUE = 50,    // "commande get inconnue : valeur attendue : LIMITS / CALIBRATION / MODE / PID / MESURES / ACCEL / BUZZER"
     ERR_MODE_GET = 51,    // "mode de pilotage erroné"
     ERR_MESURE_GET = 52,    // "commande get mesures : capteur inconnu"
     INFO_ACCEL_GET = 53,    // "accéléromètre ${désactivé|activé}"
     INFO_BUZZER = 55,    // "buzzer ${désactivé|activé}"
     DATA_LIMITE_COURANT = 56,    // "limite de courant du moteur $.2A"
+    INFO_DO_FONCTIONNEMENT = 59,    // "demande état ACTIONNER"
     ERR_CMD_DO_INCONNUE = 60,    // "commande do inconnue : valeur attendue : RESET / INIT / OUVRIR / FERMER / STOP / PILOTER / CALIBRATION / TEST"
     INFO_DO_RESET = 61,    // "demande reset carte"
     INFO_DO_INIT = 62,    // "demande état INIT"
@@ -114,7 +116,7 @@ enum class MSG : uint8_t {
     DATA_FREQ_MESURES = 151,    // "envoi des mesures toutes les $ ms"
     DATA_ANGLE_PORTE = 152,    // "angle de la porte $.2°"
     DATA_TENSION = 153,    // "tension d'alimentation $.2V"
-    DATA_COURANT = 154,    // "courant consommé $.2A"
+    DATA_COURANT = 154,    // "courant moyen consommé $.2A"
     DATA_ANGLE_MOTEUR = 155,    // "angle moteur $.2°"
     DATA_VITESSE_MOTEUR = 156,    // "vitesse moteur $.2 rad/s"
     DATA_PWM = 157,    // "PWM moteur $.2"
@@ -123,6 +125,8 @@ enum class MSG : uint8_t {
     INFO_DEMONTE = 160,    // "servodrive non monté sur le meuble"
     INFO_BN0055_ABSENT = 161,    // "capteur BN0055 absent"
     INFO_BN0055_PRESENT = 162,    // "capteur BN0055 détecté"
+    DATA_TENSION_MOTEUR = 163,    // "tension moteur $.2V"
+    DATA_LAST_COURANT = 164,    // "dernier courant moteur mesuré $.2A"
     ETAT_PROD = 250,    // "etat de prod"
     ETAT_CALIBRATION = 251,    // "etat de calibration"
 };
@@ -166,12 +170,14 @@ inline const __FlashStringHelper* msgName(MSG msg)
         case MSG::INFO_CONSIGNE_SET: return F("INFO_CONSIGNE_SET");
         case MSG::INFO_PID_SET: return F("INFO_PID_SET");
         case MSG::INFO_ACCEL_SET: return F("INFO_ACCEL_SET");
+        case MSG::INFO_MESURES_SAUVEGARDE: return F("INFO_MESURES_SAUVEGARDE");
         case MSG::ERR_CMD_GET_INCONNUE: return F("ERR_CMD_GET_INCONNUE");
         case MSG::ERR_MODE_GET: return F("ERR_MODE_GET");
         case MSG::ERR_MESURE_GET: return F("ERR_MESURE_GET");
         case MSG::INFO_ACCEL_GET: return F("INFO_ACCEL_GET");
         case MSG::INFO_BUZZER: return F("INFO_BUZZER");
         case MSG::DATA_LIMITE_COURANT: return F("DATA_LIMITE_COURANT");
+        case MSG::INFO_DO_FONCTIONNEMENT: return F("INFO_DO_FONCTIONNEMENT");
         case MSG::ERR_CMD_DO_INCONNUE: return F("ERR_CMD_DO_INCONNUE");
         case MSG::INFO_DO_RESET: return F("INFO_DO_RESET");
         case MSG::INFO_DO_INIT: return F("INFO_DO_INIT");
@@ -241,6 +247,8 @@ inline const __FlashStringHelper* msgName(MSG msg)
         case MSG::INFO_DEMONTE: return F("INFO_DEMONTE");
         case MSG::INFO_BN0055_ABSENT: return F("INFO_BN0055_ABSENT");
         case MSG::INFO_BN0055_PRESENT: return F("INFO_BN0055_PRESENT");
+        case MSG::DATA_TENSION_MOTEUR: return F("DATA_TENSION_MOTEUR");
+        case MSG::DATA_LAST_COURANT: return F("DATA_LAST_COURANT");
         case MSG::ETAT_PROD: return F("ETAT_PROD");
         case MSG::ETAT_CALIBRATION: return F("ETAT_CALIBRATION");
 

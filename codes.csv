@@ -44,6 +44,7 @@
     INFO_CONSIGNE_SET           ; 42    ; "consigne mise à jour"
     INFO_PID_SET                ; 43    ; "configuration du PID effectuée"
     INFO_ACCEL_SET              ; 44    ; "${désactivation|activation} de l'accéléromètre"
+    INFO_MESURES_SAUVEGARDE     ; 45    ; "période d'envoi des mesures enregistrée à : $ ms"   # val : temps en ms
 
 # GET ----------------------------------------------------------------------------------------------------------
     ERR_CMD_GET_INCONNUE        ; 50    ; "commande get inconnue : valeur attendue : LIMITS / CALIBRATION / MODE / PID / MESURES / ACCEL / BUZZER"
@@ -54,6 +55,7 @@
     DATA_LIMITE_COURANT         ; 56    ; "limite de courant du moteur $.2A"      # val : courant (*100)A
 
 # DO -----------------------------------------------------------------------------------------------------------
+    INFO_DO_FONCTIONNEMENT      ; 59    ; "demande état ACTIONNER"
     ERR_CMD_DO_INCONNUE         ; 60    ; "commande do inconnue : valeur attendue : RESET / INIT / OUVRIR / FERMER / STOP / PILOTER / CALIBRATION / TEST"
     INFO_DO_RESET               ; 61    ; "demande reset carte"
     INFO_DO_INIT                ; 62    ; "demande état INIT"
@@ -124,7 +126,7 @@
     DATA_FREQ_MESURES           ; 151   ; "envoi des mesures toutes les $ ms"   # val : temps en ms
     DATA_ANGLE_PORTE            ; 152   ; "angle de la porte $.2°"              # val : angle (*100)°
     DATA_TENSION                ; 153   ; "tension d'alimentation $.2V"         # val : tension (*100)V
-    DATA_COURANT                ; 154   ; "courant consommé $.2A"               # val : courant (*100)A
+    DATA_COURANT                ; 154   ; "courant moyen consommé $.2A"         # val : courant (*100)A
     DATA_ANGLE_MOTEUR           ; 155   ; "angle moteur $.2°"                   # val : angle (*100)°
     DATA_VITESSE_MOTEUR         ; 156   ; "vitesse moteur $.2 rad/s"            # val : vitesse (*100)rad/s
     DATA_PWM                    ; 157   ; "PWM moteur $.2"                      # val : PWM (*100)
@@ -133,7 +135,8 @@
     INFO_DEMONTE                ; 160   ; "servodrive non monté sur le meuble"
     INFO_BN0055_ABSENT          ; 161   ; "capteur BN0055 absent"
     INFO_BN0055_PRESENT         ; 162   ; "capteur BN0055 détecté"
-
+    DATA_TENSION_MOTEUR         ; 163   ; "tension moteur $.2V"                 # val : tension moteur (*100)V
+    DATA_LAST_COURANT           ; 164   ; "dernier courant moteur mesuré $.2A"  # val : dernier courant moteur (*100)A
 
 #ETATS ---------------------------------------------------------------------------------------------------------
     ETAT_PROD                   ; 250   ; "etat de prod"

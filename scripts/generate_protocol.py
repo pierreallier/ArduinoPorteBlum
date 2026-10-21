@@ -26,7 +26,7 @@ try:
 except Exception:
     ROOT = Path(__file__).resolve().parent.parent
 
-CSV_FILE = ROOT / "protocol.csv"
+CSV_FILE = ROOT / "codes.csv"
 ETATS_CSV_FILE = ROOT / "etats.csv"
 
 CPP_OUTPUT = ROOT / "src" / "Config" / "Codes.h"
