@@ -28,12 +28,17 @@ class ConsigneManager {
             return consigneActive != nullptr;
         }
 
+        // Ajoute un point à la consigne TABLEAU si elle est active
+        bool appendTableau(unsigned long time, float val);
+        
+
     private:
         ConsignePotentiometre consignePotentiometre;
         ConsigneEchelon       consigneEchelon;
         ConsigneRampe         consigneRampe;
         ConsigneTrapeze       consigneTrapeze;
         ConsigneSinus         consigneSinus;
+        ConsigneTableau       consigneTableau;
 
         Consigne* consigneActive = nullptr;
 };

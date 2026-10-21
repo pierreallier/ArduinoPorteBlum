@@ -223,3 +223,145 @@ class ConsigneSinus : public Consigne {
         unsigned long periode = 0;
         unsigned long duree = 0;
 };
+
+/* @brief Consigne à partir d'un tableau de valeurs (échantillons).
+ *
+ * La consigne est définie par un tableau de valeurs à deux entrée
+ * La consigne évolue suivant les valeurs du tableau, avec interpolation 
+ * linéaire entre les échantillons.
+ * 
+ * La durée totale de la consigne est déterminée par le nombre d'échantillons
+ * et l'intervalle de temps entre eux.
+ * 
+ * 
+ */
+class ConsigneTableau : public Consigne {
+    public:
+        explicit ConsigneTableau(unsigned int nb_points = 0) {
+            reserve(nb_points);
+        }
+
+        ConsigneTableau(const ConsigneTableau&) = delete;
+        ConsigneTableau& operator=(const ConsigneTableau&) = delete;
+
+        ConsigneTableau(ConsigneTableau&& other) noexcept {
+            points = other.points;
+            count = other.count;
+            capacity = other.capacity;
+            other.points = nullptr;
+            other.count = 0;
+            other.capacity = 0;
+        }
+
+        ConsigneTableau& operator=(ConsigneTableau&& other) noexcept {
+            if (this == &other)
+                return *this;
+
+            if (points != nullptr)
+                free(points);
+
+            points = other.points;
+            count = other.count;
+            capacity = other.capacity;
+
+            other.points = nullptr;
+            other.count = 0;
+            other.capacity = 0;
+            return *this;
+        }
+
+        ~ConsigneTableau() override {
+            if (points != nullptr) {
+                free(points);
+                points = nullptr;
+            }
+            capacity = 0;
+            count = 0;
+        }
+
+        bool reserve(unsigned int nb_points) {
+            if (nb_points <= capacity)
+                return true;
+
+            Point* nouveau = static_cast<Point*>(realloc(points, nb_points * sizeof(Point)));
+            if (nouveau == nullptr)
+                return false;
+
+            points = nouveau;
+            capacity = nb_points;
+            return true;
+        }
+
+        void clear() {
+            count = 0;
+        }
+
+        bool append(unsigned long time, float val) {
+            if (count >= capacity) {
+                unsigned int nouvelleCapacite = (capacity == 0) ? 8 : (capacity * 2);
+                if (!reserve(nouvelleCapacite))
+                    return false;
+            }
+
+            if (count > 0 && time < points[count - 1].time)
+                return false;
+
+            points[count].time = time;
+            points[count].valeur = val;
+            count++;
+            return true;
+        }
+
+        unsigned int size() const {
+            return count;
+        }
+
+        float get(unsigned long t) override {
+            if (count == 0 || points == nullptr)
+                return 0.0f;
+            if (count == 1)
+                return points[0].valeur;
+
+            unsigned long dt = t - t_init;
+            if (dt >= points[count - 1].time)
+                return 0.0f;
+
+            if (dt <= points[0].time)
+                return points[0].valeur;
+
+            for (unsigned int i = 0; i + 1 < count; i++) {
+                const unsigned long t0 = points[i].time;
+                const unsigned long t1 = points[i + 1].time;
+
+                if (dt < t1) {
+                    if (t1 <= t0)
+                        return points[i + 1].valeur;
+
+                    float progression = static_cast<float>(dt - t0) / static_cast<float>(t1 - t0);
+                    return points[i].valeur + progression * (points[i + 1].valeur - points[i].valeur);
+                }
+            }
+
+            return 0.0f;
+        }
+
+        bool ended(unsigned long t) const override {
+            if (count == 0 || points == nullptr)
+                return true;
+            return (t - t_init >= points[count - 1].time);
+        }
+
+        const char* getName() const override {
+            return "TABLEAU";
+        }
+
+    private:
+        struct Point {
+            unsigned long time = 0;
+            float valeur = 0.0f;
+        };
+
+        Point* points = nullptr;
+        unsigned int count = 0;
+        unsigned int capacity = 0;
+};

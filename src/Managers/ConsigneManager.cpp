@@ -1,5 +1,11 @@
 #include "ConsigneManager.h"
 
+bool ConsigneManager::appendTableau(unsigned long time, float val) {
+    if (consigneActive != &consigneTableau)
+        return false;
+    return consigneTableau.append(time, val);
+}
+
 bool ConsigneManager::setConsigne( const String& type, const String* params, int nbParams) {
     if (type == "POTENTIOMETRE") {
         consigneActive = &consignePotentiometre; // On ignore s'il y a des paramètres en plus
@@ -48,6 +54,29 @@ bool ConsigneManager::setConsigne( const String& type, const String* params, int
         consigneSinus.configure( amplitude, periode, duree, offset);
         consigneActive = &consigneSinus;
         return true;
+    }
+    if (type == "TABLEAU") {
+        if (nbParams < 1 || nbParams > 3)
+            return false;
+        // Initialisation: SET CONSIGNE TABLEAU <nbPoints>
+        if (nbParams == 1) {
+            long nbPointsLong = params[0].toInt();
+            if (nbPointsLong < 0)
+                return false;
+            unsigned int nbPoints = static_cast<unsigned int>(nbPointsLong);
+            // Reconstruction complète de l'objet (reset état + nouveau buffer)
+            consigneTableau = ConsigneTableau(nbPoints);
+            if (!consigneTableau.reserve(nbPoints))
+                return false;
+            consigneActive = &consigneTableau;
+            return true;
+        }
+        // Ajout de point: SET CONSIGNE TABLEAU <time> <valeur>
+        if (consigneActive != &consigneTableau)
+            return false;
+        float time = params[0].toFloat();
+        float valeur = params[1].toFloat();
+        return consigneTableau.append(time, valeur);
     }
     // Type inconnu
     return false;
