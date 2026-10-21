@@ -20,7 +20,7 @@ class StateMachine {
         void suspendre() {_activated = false;};  // Stoppe le fonctionnement de la machine à états
         void reprendre() {_activated = true;};   // Restaure le fonctionnement de la machine à états
 
-        /* @brief vérifie la possibilité de changer d'état
+        /* @brief vérifie la possibilité de changer d'état (ne devrait pas être surchargé)
          * @return False si aucun changement d'état effectué, True si l'état a été changé
          */
         bool changerEtat(Etat etat_demande) { 

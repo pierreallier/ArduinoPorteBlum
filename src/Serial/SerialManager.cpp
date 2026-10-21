@@ -83,15 +83,7 @@ void SerialManager::_SET(String commande) {
     }
     // Configuration du mode de pilotage
     else if (commande.startsWith("MODE") && machine.getEtat() != ETAT::PILOTAGE) {
-        String mode = getNextItem(commande);
-        if (mode == "PWM")
-            machine.setMode(BlumMachine::MODE_PILOTAGE::PWM);
-        else if (mode == "VITESSE")
-            machine.setMode(BlumMachine::MODE_PILOTAGE::VITESSE);
-        else if (mode == "POSITION")
-            machine.setMode(BlumMachine::MODE_PILOTAGE::POSITION);
-        else if (mode == "POSITION_VITESSE")
-            machine.setMode(BlumMachine::MODE_PILOTAGE::POSITION_VITESSE);
+        machine.pilotageMachine().setMode(commande);
         // C'est le stateMachine qui renvoie le message de la bonne execution du changement
     }
     // Configuration des Consignes
@@ -102,7 +94,7 @@ void SerialManager::_SET(String commande) {
             sendReponseNOK(MSG::ERR_CONSIGNE_SET);
             return;
         }
-        if (machine.setConsigne(items[1], &items[2], nbItems - 2)) {
+        if (machine.pilotageMachine().setConsigne(items[1], &items[2], nbItems - 2)) {
             sendReponseOK(MSG::INFO_CONSIGNE_SET);
         } else {
             sendReponseNOK(MSG::ERR_CONSIGNE_SET);
@@ -121,9 +113,9 @@ void SerialManager::_SET(String commande) {
         float ki = items[3].toFloat();
         float kd = items[4].toFloat();
         if (type_pid == "VITESSE")
-            machine.setPIDVitesse(kp, ki, kd);
+            machine.pilotageMachine().setPIDVitesse(kp, ki, kd);
         else if (type_pid == "POSITION")
-            machine.setPIDPosition(kp, ki, kd);
+            machine.pilotageMachine().setPIDPosition(kp, ki, kd);
         else {
             sendReponseNOK(MSG::ERR_PID_TYPE_SET);
             return;
@@ -279,20 +271,20 @@ void SerialManager::_GET(String commande) {
         }
     }
     else if (commande.startsWith("MODE")) {
-        switch (machine.modePilotage) {
-            case BlumMachine::MODE_PILOTAGE::PWM: {
+        switch (machine.pilotageMachine().getMode()) {
+            case PilotageMachine::MODE::PWM: {
                 sendReponseOK(MSG::DATA_MODE_PWM);
                 break;
             }
-            case BlumMachine::MODE_PILOTAGE::VITESSE: {
+            case PilotageMachine::MODE::VITESSE: {
                 sendReponseOK(MSG::DATA_MODE_VITESSE);
                 break;
             }
-            case BlumMachine::MODE_PILOTAGE::POSITION: {
+            case PilotageMachine::MODE::POSITION: {
                 sendReponseOK(MSG::DATA_MODE_POSITION);
                 break;
             }
-            case BlumMachine::MODE_PILOTAGE::POSITION_VITESSE: {
+            case PilotageMachine::MODE::POSITION_VITESSE: {
                 sendReponseOK(MSG::DATA_MODE_PV);
                 break;
             }
@@ -303,12 +295,14 @@ void SerialManager::_GET(String commande) {
         }
     }
     else if (commande.startsWith("PID")) {
-        sendMessage(MSG::DATA_PID_VITESSE_KP);
-        sendMessage(MSG::DATA_PID_VITESSE_KI);
-        sendMessage(MSG::DATA_PID_VITESSE_KD);
-        sendMessage(MSG::DATA_PID_POSITION_KP);
-        sendMessage(MSG::DATA_PID_POSITION_KI);
-        sendReponseOK(MSG::DATA_PID_POSITION_KD);
+        PID pidVitesse = machine.pilotageMachine().getPIDVitesse();
+        PID pidPosition = machine.pilotageMachine().getPIDPosition();
+        sendMessage(MSG::DATA_PID_VITESSE_KP, pidVitesse.kp);
+        sendMessage(MSG::DATA_PID_VITESSE_KI, pidVitesse.ki);
+        sendMessage(MSG::DATA_PID_VITESSE_KD, pidVitesse.kd);
+        sendMessage(MSG::DATA_PID_POSITION_KP, pidPosition.kp);
+        sendMessage(MSG::DATA_PID_POSITION_KI, pidPosition.ki);
+        sendReponseOK(MSG::DATA_PID_POSITION_KD, pidPosition.kd);
     }
     else if (commande.startsWith("VERSION")) {
         sendMessage(MSG::INFO_VERSION_CARTE,VERSION_CARTE);

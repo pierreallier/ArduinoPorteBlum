@@ -1,18 +1,15 @@
 #include "BlumMachine.h"
 
 BlumMachine::BlumMachine(SensorsManager& s, Motor& m, Buzzer& b) 
-        : StateMachine<ETAT>(s,m,b), calibration(s,m,b), consigne() {
+        : StateMachine<ETAT>(s,m,b), calibration(s,m,b), pilotage(s,m,b) {
     name = MSG::ETAT_PROD;
 }
 
 void BlumMachine::init() {
-    
     ledCalibration.init();
     ledError.init();
-    ledPilotage.init();
-
     calibration.init();
-
+    pilotage.init();
 }
 
 void BlumMachine::start() {
@@ -21,7 +18,6 @@ void BlumMachine::start() {
         sendDirect(MSGTYPE::WARNING, MSG::ERR_CALIBRATION_REQUISE);
         changerEtat(ETAT::CALIBRATION_REQUIS);
     }
-    modePilotage = BlumMachine::MODE_PILOTAGE::PWM;
     StateMachine<ETAT>::start();    
 }
 
@@ -53,8 +49,7 @@ bool BlumMachine::changerEtat(ETAT etat_demande) {
 void BlumMachine::execStateExit(ETAT etat) {
     switch (etat) {
         case ETAT::PILOTAGE: {
-            ledPilotage.off();
-            butee_desactivated = false;
+            pilotage.stop();
             break;
         }
         case ETAT::CALIBRATION: {
@@ -92,13 +87,9 @@ void BlumMachine::execStateEntry(ETAT etat) {
             break;
         }
         case ETAT::PILOTAGE: {
-            pidPosition.reset();
-            pidVitesse.reset();
-            consigne.init(_time_etat);
             moteur.enable();
             ledError.off();
-            ledPilotage.on();
-            butee_desactivated = true;
+            pilotage.start();
             break;
         }
         case ETAT::CALIBRATION_REQUIS: {
@@ -127,28 +118,6 @@ void BlumMachine::execStateEntry(ETAT etat) {
         default:
             break;
     }
-}
-
-void BlumMachine::setMode(BlumMachine::MODE_PILOTAGE mode) {
-    Serial.println("Setting mode to " + String(static_cast<int>(mode)));
-    switch (mode) {
-        case BlumMachine::MODE_PILOTAGE::PWM:
-            sendReponseOK(MSG::DATA_MODE_PWM);
-            break;
-        case BlumMachine::MODE_PILOTAGE::VITESSE:
-            sendReponseOK(MSG::DATA_MODE_VITESSE);
-            break;
-        case BlumMachine::MODE_PILOTAGE::POSITION:
-            sendReponseOK(MSG::DATA_MODE_POSITION);
-            break;
-        case BlumMachine::MODE_PILOTAGE::POSITION_VITESSE:
-            sendReponseOK(MSG::DATA_MODE_PV);
-            break;
-        default:
-            sendReponseNOK(MSG::ERR_PILOTAGE_SET);
-            return;
-    }
-    modePilotage = mode;
 }
 
 void BlumMachine::execState(ETAT etat) {
@@ -184,7 +153,7 @@ void BlumMachine::execState(ETAT etat) {
             break;
         }
         case ETAT::PILOTAGE: {
-            if (etatPilote()) {
+            if (!pilotage.exec()) {
                 changerEtat(ETAT::DEBRAYAGE);
             }
             break;
@@ -239,74 +208,6 @@ void BlumMachine::execState(ETAT etat) {
     }
 }
 
-bool BlumMachine::etatOuverture(uint16_t speed) {
-    /* Gestion de l'ouverture de la porte en BO, retourne false si en cours, true si fini */
-    moteur.ouvrir(speed);
-    if (capteurs.isLimiteHaute()) {
-        moteur.stop();
-        return true;
-    }
-    return false;
-}
-
-bool BlumMachine::etatFermeture(uint16_t speed) {
-    /* Gestion de la fermeture de la porte en BO, retourne false si en cours, true si fini */
-    moteur.fermer(speed);
-    if (capteurs.isLimiteBasse()) {
-        moteur.stop();
-        return true;
-    }
-    return false;
-}
-
-
-bool BlumMachine::etatPilote() {
-    /* Gestion du pilotage de la porte via consigne */
-    unsigned long time = millis();
-    if (consigne.ended(time)) {
-        moteur.stop();
-        buzzer.sequenceFinPilotage(); // Si mode Potentiomètre, la consigne ne se termine pas, donc pas de bip
-        return true;
-    }
-    float consigne_value = consigne.get(time);
-    float pwm = 0.0f;
-    switch (modePilotage) {
-        case BlumMachine::MODE_PILOTAGE::PWM: {
-            pwm = constrain(consigne_value,-255,255);
-            capteurs.setConsigne(pwm);
-            break;
-        }
-        case BlumMachine::MODE_PILOTAGE::VITESSE: {
-            capteurs.setConsigne(consigne_value);
-            pwm = pidVitesse.compute(consigne_value,capteurs.getVitesseMoteur(),time);
-            break;
-        }
-        case BlumMachine::MODE_PILOTAGE::POSITION: {
-            consigne_value = constrain(consigne_value,-150,150);
-            capteurs.setConsigne(consigne_value);
-            pwm = pidPosition.compute(consigne_value,capteurs.getAnglePorte(),time);
-            break;
-        }
-        case BlumMachine::MODE_PILOTAGE::POSITION_VITESSE: {
-            consigne_value = constrain(consigne_value,-120,180);
-            capteurs.setConsigne(consigne_value);
-            float consigneVitesse = pidPosition.compute(consigne_value,capteurs.getAnglePorte(),time);
-            pwm = pidVitesse.compute(consigneVitesse,capteurs.getVitesseMoteur(), time);
-            break;
-        }
-    }
-    moteur.setSpeedDir(pwm);
-    return false;
-}
-
-bool BlumMachine::setConsigne(const String& type, const String* params, int nbParams) {
-    if (_etat == ETAT::PILOTAGE) {
-        sendError(MSG::ERR_CONSIGNE_EN_PILOTAGE);
-        return false;
-    }
-    return consigne.setConsigne(type, params, nbParams);
-}
-
 void BlumMachine::suspendre() {
     moteur.stop();
     moteur.disable();
@@ -316,11 +217,15 @@ void BlumMachine::suspendre() {
 
 void BlumMachine::reprendre() {
     capteurs.isBlocage();   // Efface un éventuel blocage mémorisé avant le test
-    if (_etat == ETAT::CALIBRATION) {
+    if (getEtat() == ETAT::CALIBRATION) {
         // Calibration interrompue : retour à REPOS avec calibration requise (LED clignotante)
         changerEtat(ETAT::CALIBRATION_REQUIS);
         sendInfo(MSG::ERR_CALIBRATION_ANNULEE);
-        return;
+    }
+    if (getEtat() == ETAT::PILOTAGE) {
+        // Pilotage interrompu : retour à REPOS
+        changerEtat(ETAT::REPOS);
+        sendInfo(MSG::ERR_PILOTAGE_STOPPE);
     }
     StateMachine<ETAT>::reprendre();
 }

@@ -1,7 +1,7 @@
 #ifndef ETATS_H
 #define ETATS_H
 
-#include <stdint.h>
+#include <Arduino.h>
 #include "Constantes.h"
 
 /*
@@ -37,6 +37,13 @@ enum class ETAT_CALIBRATION : uint8_t {
     FIN = 28,    // "FIN"
 };
 
+enum class ETAT_PILOTAGE : uint8_t {
+    INIT = 40,    // "INIT"
+    EN_COURS = 41,    // "EN_COURS"
+    ERREUR = 42,    // "ERREUR"
+    FIN = 43,    // "FIN"
+};
+
 inline const __FlashStringHelper* etatName(ETAT etat)
 {
     switch (etat) {
@@ -69,6 +76,19 @@ inline const __FlashStringHelper* etatName(ETAT_CALIBRATION etat)
         case ETAT_CALIBRATION::ENREGISTREMENT: return F("ENREGISTREMENT");
         case ETAT_CALIBRATION::ERREUR: return F("ERREUR");
         case ETAT_CALIBRATION::FIN: return F("FIN");
+
+        default:
+            return F("UNKNOWN");
+    }
+}
+
+inline const __FlashStringHelper* etatName(ETAT_PILOTAGE etat)
+{
+    switch (etat) {
+        case ETAT_PILOTAGE::INIT: return F("INIT");
+        case ETAT_PILOTAGE::EN_COURS: return F("EN_COURS");
+        case ETAT_PILOTAGE::ERREUR: return F("ERREUR");
+        case ETAT_PILOTAGE::FIN: return F("FIN");
 
         default:
             return F("UNKNOWN");

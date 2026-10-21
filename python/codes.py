@@ -2,7 +2,7 @@
 Fichier généré automatiquement.
 Ne pas modifier manuellement.
 
-Source : protocol.csv + etats.csv + Constantes.h
+Source : etats.csv + codes.csv
 """
 
 MSG = {
@@ -77,6 +77,7 @@ MSG = {
     84: 'mode de pilotage en vitesse et position',    # 'DATA_MODE_PV'
     85: 'pilotage démarré',    # 'INFO_PILOTAGE_DEMARRE'
     86: 'pilotage terminé',    # 'INFO_PILOTAGE_FINI'
+    87: 'pilotage interrompu',    # 'ERR_PILOTAGE_STOPPE'
     90: 'PID vitesse :  Kp = $.3',    # 'DATA_PID_VITESSE_KP'
     91: 'PID vitesse :  Ki = $.3',    # 'DATA_PID_VITESSE_KI'
     92: 'PID vitesse :  Kd = $.3',    # 'DATA_PID_VITESSE_KD'
@@ -123,6 +124,7 @@ MSG = {
     164: 'dernier courant moteur mesuré $.2A',    # 'DATA_LAST_COURANT'
     250: 'etat de prod',    # 'ETAT_PROD'
     251: 'etat de calibration',    # 'ETAT_CALIBRATION'
+    252: 'etat de pilotage',    # 'ETAT_PILOTAGE'
 }
 
 ETAT_PROD = {
@@ -149,4 +151,11 @@ ETAT_CALIBRATION = {
     26: "ENREGISTREMENT",
     27: "ERREUR",
     28: "FIN",
+}
+
+ETAT_PILOTAGE = {
+    40: "INIT",
+    41: "EN_COURS",
+    42: "ERREUR",
+    43: "FIN",
 }

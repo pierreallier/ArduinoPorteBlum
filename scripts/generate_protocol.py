@@ -108,6 +108,7 @@ def read_codes():
 def read_states_csv():
     prod = []
     cali = []
+    pilote = []
 
     with ETATS_CSV_FILE.open("r", encoding="utf-8") as f:
         for line_number, line in enumerate(f, start=1):
@@ -162,15 +163,17 @@ def read_states_csv():
             elif type_upper == "CALI":
                 cali.append(row)
             else :
-                # PILOTE : ignoré pour l'instant
+                pilote.append(row)
                 pass
 
     if not prod:
         raise ValueError(f"Aucun état PROD trouvé dans {ETATS_CSV_FILE}")
     if not cali:
         raise ValueError(f"Aucun état CALI trouvé dans {ETATS_CSV_FILE}")
+    if not pilote:
+        raise ValueError(f"Aucun état PILOTE trouvé dans {ETATS_CSV_FILE}")
 
-    return prod, cali
+    return prod, cali, pilote
 
 # ============================================================
 # Vérifications
@@ -229,14 +232,14 @@ def generate_cpp(messages):
         "#ifndef CODES_H",
         "#define CODES_H",
         "",
-        "#include <stdint.h>",
+        "#include <Arduino.h>",
         "#include \"Constantes.h\"",
         "",
         "/*",
         " * Fichier généré automatiquement.",
         " * Ne pas modifier manuellement.",
         " *",
-        " * Source : protocol.csv",
+        " * Source : codes.csv",
         " */",
         "",
         "enum class MSG : uint8_t {",
@@ -279,12 +282,12 @@ def generate_cpp(messages):
 # ============================================================
 # Génération du fichier Etats.h
 # ============================================================
-def generate_etats_h(prod_states, calibration_states):
+def generate_etats_h(prod_states, calibration_states, pilotage_states):
     lines = [
         "#ifndef ETATS_H",
         "#define ETATS_H",
         "",
-        "#include <stdint.h>",
+        "#include <Arduino.h>",
         "#include \"Constantes.h\"",
         "",
         "/*",
@@ -307,6 +310,15 @@ def generate_etats_h(prod_states, calibration_states):
     ])
 
     for state in sorted(calibration_states, key=lambda state: state["value"]):
+        lines.append(f'    {state["etat"]} = {state["value"]},    // "{state["name"]}"')
+
+    lines.extend([
+        "};",
+        "",
+        "enum class ETAT_PILOTAGE : uint8_t {",
+    ])
+
+    for state in sorted(pilotage_states, key=lambda state: state["value"]):
         lines.append(f'    {state["etat"]} = {state["value"]},    // "{state["name"]}"')
 
     lines.extend([
@@ -344,6 +356,23 @@ def generate_etats_h(prod_states, calibration_states):
         "    }",
         "}",
         "",
+        "inline const __FlashStringHelper* etatName(ETAT_PILOTAGE etat)",
+        "{",
+        "    switch (etat) {",
+    ])
+
+    for state in sorted(pilotage_states, key=lambda state: state["value"]):
+        lines.append(
+            f'        case ETAT_PILOTAGE::{state["etat"]}: return F("{state["name"]}");'
+        )
+
+    lines.extend([
+        "",
+        "        default:",
+        '            return F("UNKNOWN");',
+        "    }",
+        "}",
+        "",
         "#endif",
         "",
     ])
@@ -355,13 +384,13 @@ def generate_etats_h(prod_states, calibration_states):
 # ============================================================
 # Génération du fichier Python
 # ============================================================
-def generate_python(messages, prod_states, calibration_states):
+def generate_python(messages, prod_states, calibration_states, pilotage_states):
     lines = [
         '"""',
         "Fichier généré automatiquement.",
         "Ne pas modifier manuellement.",
         "",
-        "Source : protocol.csv + etats.csv + Constantes.h",
+        "Source : etats.csv + codes.csv",
         '"""',
         "",
         "MSG = {",
@@ -391,6 +420,15 @@ def generate_python(messages, prod_states, calibration_states):
         lines.append(f'    {state["value"]}: "{state["name"]}",')
 
     lines.extend([
+            "}",
+            "",
+            "ETAT_PILOTAGE = {",
+        ])
+    
+    for state in sorted(pilotage_states, key=lambda state: state["value"]):
+        lines.append(f'    {state["value"]}: "{state["name"]}",')
+
+    lines.extend([
         "}",
         "",
     ])
@@ -409,15 +447,16 @@ def generer_fichiers():
         if not messages:
             raise ValueError("Aucun code trouvé dans le fichier CSV")
 
-        prod_states, calibration_states = read_states_csv()
+        prod_states, calibration_states, pilotage_states = read_states_csv()
 
         check_codes(messages)
         check_states(prod_states, "PROD")
         check_states(calibration_states, "CALI")
+        check_states(pilotage_states, "PILOTE")
 
         generate_cpp(messages)
-        generate_etats_h(prod_states, calibration_states)
-        generate_python(messages, prod_states, calibration_states)
+        generate_etats_h(prod_states, calibration_states, pilotage_states)
+        generate_python(messages, prod_states, calibration_states, pilotage_states)
 
     except ValueError as error:
         log(f"\nERREUR : {error}", file=sys.stderr)

@@ -1,14 +1,14 @@
 #ifndef CODES_H
 #define CODES_H
 
-#include <stdint.h>
+#include <Arduino.h>
 #include "Constantes.h"
 
 /*
  * Fichier généré automatiquement.
  * Ne pas modifier manuellement.
  *
- * Source : protocol.csv
+ * Source : codes.csv
  */
 
 enum class MSG : uint8_t {
@@ -83,6 +83,7 @@ enum class MSG : uint8_t {
     DATA_MODE_PV = 84,    // "mode de pilotage en vitesse et position"
     INFO_PILOTAGE_DEMARRE = 85,    // "pilotage démarré"
     INFO_PILOTAGE_FINI = 86,    // "pilotage terminé"
+    ERR_PILOTAGE_STOPPE = 87,    // "pilotage interrompu"
     DATA_PID_VITESSE_KP = 90,    // "PID vitesse :  Kp = $.3"
     DATA_PID_VITESSE_KI = 91,    // "PID vitesse :  Ki = $.3"
     DATA_PID_VITESSE_KD = 92,    // "PID vitesse :  Kd = $.3"
@@ -129,6 +130,7 @@ enum class MSG : uint8_t {
     DATA_LAST_COURANT = 164,    // "dernier courant moteur mesuré $.2A"
     ETAT_PROD = 250,    // "etat de prod"
     ETAT_CALIBRATION = 251,    // "etat de calibration"
+    ETAT_PILOTAGE = 252,    // "etat de pilotage"
 };
 
 inline const __FlashStringHelper* msgName(MSG msg)
@@ -205,6 +207,7 @@ inline const __FlashStringHelper* msgName(MSG msg)
         case MSG::DATA_MODE_PV: return F("DATA_MODE_PV");
         case MSG::INFO_PILOTAGE_DEMARRE: return F("INFO_PILOTAGE_DEMARRE");
         case MSG::INFO_PILOTAGE_FINI: return F("INFO_PILOTAGE_FINI");
+        case MSG::ERR_PILOTAGE_STOPPE: return F("ERR_PILOTAGE_STOPPE");
         case MSG::DATA_PID_VITESSE_KP: return F("DATA_PID_VITESSE_KP");
         case MSG::DATA_PID_VITESSE_KI: return F("DATA_PID_VITESSE_KI");
         case MSG::DATA_PID_VITESSE_KD: return F("DATA_PID_VITESSE_KD");
@@ -251,6 +254,7 @@ inline const __FlashStringHelper* msgName(MSG msg)
         case MSG::DATA_LAST_COURANT: return F("DATA_LAST_COURANT");
         case MSG::ETAT_PROD: return F("ETAT_PROD");
         case MSG::ETAT_CALIBRATION: return F("ETAT_CALIBRATION");
+        case MSG::ETAT_PILOTAGE: return F("ETAT_PILOTAGE");
 
         default:
             return F("UNKNOWN");
