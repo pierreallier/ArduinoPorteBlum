@@ -86,13 +86,11 @@ void Motor::stop(){
 void Motor::ouvrir(uint16_t speed) {
     setDirection(DIR::OUVERTURE);
     setSpeed(speed);
-    capteurs.setConsigne(speed);
 }
 
 void Motor::fermer(uint16_t speed) {
     setDirection(DIR::FERMETURE);
     setSpeed(speed);
-    capteurs.setConsigne(speed);
 }
 
 void Motor::update() {
