@@ -123,12 +123,12 @@ void BlumMachine::execStateEntry(ETAT etat) {
 void BlumMachine::execState(ETAT etat) {
     switch(etat) {
         case ETAT::INIT: {
-            capteurs.setConsigne(0);
+            //capteurs.setConsigne(0);
             changerEtat(ETAT::REPOS);
             break;
         }
         case ETAT::REPOS: {
-            capteurs.setConsigne(0);
+            //capteurs.setConsigne(0);
             break;
         }
         case ETAT::FONCTIONNEMENT: {
@@ -167,19 +167,19 @@ void BlumMachine::execState(ETAT etat) {
                     changerEtat(ETAT::REPOS);
                 }
             }
-            capteurs.setConsigne(moteur.getPWM());
+            //capteurs.setConsigne(moteur.getPWM());
             break;
         }
         case ETAT::CALIBRATION_REQUIS: {
             ledCalibration.update(); // Update the calibration LED blinking
-            capteurs.setConsigne(0);
+            //capteurs.setConsigne(0);
             break;
         }
         case ETAT::CALIBRATION: {
             if (!calibration.exec()) {
                 changerEtat(ETAT::DEBRAYAGE);
             }
-            capteurs.setConsigne(moteur.getPWM());
+            //capteurs.setConsigne(moteur.getPWM());
             break;
         }
         case ETAT::ERREUR: {

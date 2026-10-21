@@ -113,4 +113,5 @@ void Motor::update() {
         analogWrite(PWM_REV_PIN, 0);
     }
     ledMotor.update(); // Update the motor LED state (for blinking)
+    capteurs.setConsigne(getPWM()); // Update the consigne in the SensorsManager
 }
