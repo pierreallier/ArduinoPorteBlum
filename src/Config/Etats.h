@@ -26,7 +26,7 @@ enum class ETAT : uint8_t {
 };
 
 enum class ETAT_CALIBRATION : uint8_t {
-    DEBUT = 20,    // "INIT"
+    INIT = 20,    // "INIT"
     OUVERTURE = 21,    // "OUVERTURE"
     ATTENTE_HAUT = 22,    // "ATTENTE_HAUT"
     BUTEE_BASSE = 23,    // "BUTEE_BASSE"
@@ -34,7 +34,7 @@ enum class ETAT_CALIBRATION : uint8_t {
     BUTEE_HAUTE = 25,    // "BUTEE_HAUTE"
     ENREGISTREMENT = 26,    // "ENREGISTREMENT"
     ERREUR = 27,    // "ERREUR"
-    NONE = 28,    // "NONE"
+    FIN = 28,    // "FIN"
 };
 
 inline const __FlashStringHelper* etatName(ETAT etat)
@@ -60,7 +60,7 @@ inline const __FlashStringHelper* etatName(ETAT etat)
 inline const __FlashStringHelper* etatName(ETAT_CALIBRATION etat)
 {
     switch (etat) {
-        case ETAT_CALIBRATION::DEBUT: return F("INIT");
+        case ETAT_CALIBRATION::INIT: return F("INIT");
         case ETAT_CALIBRATION::OUVERTURE: return F("OUVERTURE");
         case ETAT_CALIBRATION::ATTENTE_HAUT: return F("ATTENTE_HAUT");
         case ETAT_CALIBRATION::BUTEE_BASSE: return F("BUTEE_BASSE");
@@ -68,7 +68,7 @@ inline const __FlashStringHelper* etatName(ETAT_CALIBRATION etat)
         case ETAT_CALIBRATION::BUTEE_HAUTE: return F("BUTEE_HAUTE");
         case ETAT_CALIBRATION::ENREGISTREMENT: return F("ENREGISTREMENT");
         case ETAT_CALIBRATION::ERREUR: return F("ERREUR");
-        case ETAT_CALIBRATION::NONE: return F("NONE");
+        case ETAT_CALIBRATION::FIN: return F("FIN");
 
         default:
             return F("UNKNOWN");

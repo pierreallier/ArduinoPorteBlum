@@ -38,7 +38,7 @@ class BlumMachine : public StateMachine<ETAT> {
         ETAT checkTransition(ETAT etat_demande) override;
         void execStateExit(ETAT etat) override;
         void execStateEntry(ETAT etat) override;
-        bool execState(ETAT etat) override;
+        void execState(ETAT etat) override;
         void suspendre();   // Stoppe le fonctionnement avant le test
         void reprendre();   // Restaure le fonctionnement après le test
 

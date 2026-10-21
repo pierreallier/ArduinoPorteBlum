@@ -130,10 +130,10 @@ def read_states_csv():
             if type_upper == "TYPE":
                 continue
 
-            if type_upper not in ("PROD", "CALI"):
+            if type_upper not in ("PROD", "CALI", "PILOTE"):
                 raise ValueError(
                     f"Ligne {line_number}: TYPE invalide {raw_type!r} "
-                    f"(attendu: PROD ou CALI)"
+                    f"(attendu: PROD, CALI ou PILOTE)"
                 )
 
             if not etat_name:
@@ -159,8 +159,11 @@ def read_states_csv():
 
             if type_upper == "PROD":
                 prod.append(row)
-            else:
+            elif type_upper == "CALI":
                 cali.append(row)
+            else :
+                # PILOTE : ignoré pour l'instant
+                pass
 
     if not prod:
         raise ValueError(f"Aucun état PROD trouvé dans {ETATS_CSV_FILE}")

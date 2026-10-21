@@ -1,7 +1,8 @@
 #include "BlumMachine.h"
 
-BlumMachine::BlumMachine(SensorsManager& s, Motor& m, Buzzer& b) : StateMachine<ETAT>(s,m,b),
-                                                                     calibration(s,m), consigne() {
+BlumMachine::BlumMachine(SensorsManager& s, Motor& m, Buzzer& b) 
+        : StateMachine<ETAT>(s,m,b), calibration(s,m,b), consigne() {
+    name = MSG::ETAT_PROD;
 }
 
 void BlumMachine::init() {
@@ -15,7 +16,7 @@ void BlumMachine::init() {
 }
 
 void BlumMachine::start() {
-    _etat = ETAT::INIT;
+    setEtat(ETAT::INIT);
     if (calibration.isNotCalibrated()) {
         sendDirect(MSGTYPE::WARNING, MSG::ERR_CALIBRATION_REQUISE);
         changerEtat(ETAT::CALIBRATION_REQUIS);
@@ -30,9 +31,8 @@ ETAT BlumMachine::checkTransition(ETAT etat_demande) {
             etat_demande == ETAT::CALIBRATION_REQUIS || 
             etat_demande == ETAT::NO_POWER) {
             return etat_demande;
-        } else if (_etat == ETAT::CALIBRATION) {
+        } else if (_etat == ETAT::CALIBRATION && etat_demande != ETAT::CALIBRATION) {
             sendError(MSG::ERR_CALIBRATION_ANNULEE);
-            calibration.changerEtat(ETAT_CALIBRATION::ERREUR);
             return ETAT::ERREUR;
         } else if (etat_demande != ETAT::CALIBRATION_REQUIS) {
             sendWarning(MSG::ERR_CALIBRATION_REQUISE);
@@ -47,22 +47,21 @@ bool BlumMachine::changerEtat(ETAT etat_demande) {
         sendError(MSG::ERR_PUISSANCE, capteurs.getTension()*100);
         etat_demande = ETAT::NO_POWER;
     }
-    if (StateMachine::changerEtat(etat_demande)) {
-        sendEtat(MSG::ETAT_PROD,(uint32_t)_etat);
-        return true;
-    }
-    return false;
+    return StateMachine::changerEtat(etat_demande);
 }
 
 void BlumMachine::execStateExit(ETAT etat) {
     switch (etat) {
-        case ETAT::PILOTAGE:
+        case ETAT::PILOTAGE: {
             ledPilotage.off();
             butee_desactivated = false;
             break;
-        case ETAT::CALIBRATION:
+        }
+        case ETAT::CALIBRATION: {
+            calibration.stop();
             ledCalibration.off();
             break;
+        }
         default:
             break;
     }
@@ -80,12 +79,18 @@ void BlumMachine::execStateEntry(ETAT etat) {
             moteur.startDebrayage();
             break;
         }
-        case ETAT::OUVERTURE:
-        case ETAT::FERMETURE:
+        case ETAT::OUVERTURE: {
             moteur.enable();
             ledError.off();
+            moteur.ouvrir(255);
             break;
-
+        }
+        case ETAT::FERMETURE: {
+            moteur.enable();
+            ledError.off();
+            moteur.fermer(255);
+            break;
+        }
         case ETAT::PILOTAGE: {
             pidPosition.reset();
             pidVitesse.reset();
@@ -102,7 +107,7 @@ void BlumMachine::execStateEntry(ETAT etat) {
             break;
         }
         case ETAT::CALIBRATION: {
-            calibration.changerEtat(ETAT_CALIBRATION::DEBUT);
+            calibration.start();
             ledCalibration.on(); // Turn on the calibration LED to indicate calibration is in progress
             ledError.off();
             break;
@@ -146,7 +151,7 @@ void BlumMachine::setMode(BlumMachine::MODE_PILOTAGE mode) {
     modePilotage = mode;
 }
 
-bool BlumMachine::execState(ETAT etat) {
+void BlumMachine::execState(ETAT etat) {
     switch(etat) {
         case ETAT::INIT: {
             capteurs.setConsigne(0);
@@ -165,13 +170,15 @@ bool BlumMachine::execState(ETAT etat) {
             break;
         }
         case ETAT::OUVERTURE: {
-            if (etatOuverture(255)) {
+            if (capteurs.isLimiteHaute()) {
+                moteur.stop();
                 changerEtat(ETAT::DEBRAYAGE);
             }
             break;
         }
         case ETAT::FERMETURE: {
-            if (etatFermeture(255)) {
+            if (capteurs.isLimiteBasse()) {
+                moteur.stop();
                 changerEtat(ETAT::DEBRAYAGE);
             }
             break;
@@ -200,7 +207,7 @@ bool BlumMachine::execState(ETAT etat) {
             break;
         }
         case ETAT::CALIBRATION: {
-            if (calibration.exec()) {
+            if (!calibration.exec()) {
                 changerEtat(ETAT::DEBRAYAGE);
             }
             capteurs.setConsigne(moteur.getPWM());
@@ -230,7 +237,6 @@ bool BlumMachine::execState(ETAT etat) {
             break;
         }
     }
-    return true;
 }
 
 bool BlumMachine::etatOuverture(uint16_t speed) {
@@ -312,7 +318,6 @@ void BlumMachine::reprendre() {
     capteurs.isBlocage();   // Efface un éventuel blocage mémorisé avant le test
     if (_etat == ETAT::CALIBRATION) {
         // Calibration interrompue : retour à REPOS avec calibration requise (LED clignotante)
-        calibration.changerEtat(ETAT_CALIBRATION::DEBUT);
         changerEtat(ETAT::CALIBRATION_REQUIS);
         sendInfo(MSG::ERR_CALIBRATION_ANNULEE);
         return;

@@ -148,5 +148,5 @@ ETAT_CALIBRATION = {
     25: "BUTEE_HAUTE",
     26: "ENREGISTREMENT",
     27: "ERREUR",
-    28: "NONE",
+    28: "FIN",
 }

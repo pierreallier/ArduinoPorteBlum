@@ -274,12 +274,15 @@ class StateEvent(Event):
 
     def __init__(self, code: Optional[int] = None, value: int = 0, frame: Optional[bytes] = None):
         if code == 250:
+            machine_name = "PRODUCTION"
             state_name = ETAT_PROD.get(value, str(value))
         elif code == 251:
+            machine_name = "CALIBRATION"
             state_name = ETAT_CALIBRATION.get(value, str(value))
         else:
+            machine_name = str(code)
             state_name = str(value)
-        s = f"State : {state_name}"
+        s = f"State de la machine {machine_name} : {state_name}"
         super().__init__(value, s, frame)
 
     @staticmethod

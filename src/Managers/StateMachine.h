@@ -1,7 +1,9 @@
 #pragma once
+#include "../Config/Codes.h"
 #include "../Inputs/SensorsManager.h"
 #include "../Outputs/Motor.h"
 #include "../Outputs/Buzzer.h"
+#include "../Serial/Messages.h"
 
 template<typename Etat>
 class StateMachine {
@@ -9,7 +11,11 @@ class StateMachine {
         StateMachine(SensorsManager& s, Motor& m, Buzzer& b) : capteurs(s), moteur(m), buzzer(b) {};
         virtual ~StateMachine() = default;
         virtual void init() {};
-        void start() { _time_etat = millis(); _activated = true;};
+        void start() { 
+            _time_etat = millis(); 
+            _activated = true;
+            execStateEntry(getEtat());
+        };
         void stop() { _activated = false;};
         void suspendre() {_activated = false;};  // Stoppe le fonctionnement de la machine à états
         void reprendre() {_activated = true;};   // Restaure le fonctionnement de la machine à états
@@ -25,24 +31,29 @@ class StateMachine {
             _etat = etat_demande;
             _time_etat = millis();
             execStateEntry(_etat);
+            sendEtat(name,(uint32_t)_etat);
             return true;
         };
 
-        bool exec() { // Execution de la machine à états (actions de l'état courant)
+        bool exec() { // Execution de la machine à états (actions de l'état courant) - faux si ne s'execute pas
             if (!_activated) return false;
-            else return execState(_etat);
+            execState(_etat);
+            return true;
         };
 
         virtual Etat checkTransition(Etat etat_demande) { // Vérifie si la transition vers l'état demandé est possible
             return etat_demande;
         };
-        virtual void execStateEntry(Etat etat) {}; // Actions à l'entrée de l'état courant
-        virtual void execStateExit(Etat etat) {}; // Actions à la sortie de l'état courant
-        virtual bool execState(Etat etat) = 0; // Actions à l'intérieur de l'état courant
+        virtual void execStateEntry(Etat etat) = 0; // Actions à l'entrée de l'état courant
+        virtual void execStateExit(Etat etat) = 0; // Actions à la sortie de l'état courant
+        virtual void execState(Etat etat) = 0; // Actions à l'intérieur de l'état courant
     
         Etat getEtat() const { return _etat; };
+        void setEtat(Etat etat) { _etat = etat;};
+        uint32_t getTimeEtat() const { return _time_etat; };
     
     protected:
+        MSG name;
         SensorsManager& capteurs;
         Motor& moteur;
         Buzzer& buzzer;
