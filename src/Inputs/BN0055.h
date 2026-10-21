@@ -47,7 +47,7 @@ public:
     //   - capteur absent
     //   - acquisition déjà en cours
     //   - initialisation en cours
-    bool requestData(uint32_t now);
+    bool requestData();
 
     // Vrai lorsqu'une nouvelle mesure est disponible.
     bool available();

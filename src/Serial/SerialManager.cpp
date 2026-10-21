@@ -28,15 +28,16 @@ void SerialManager::task() {
 
 void SerialManager::readSerial() {
     if (Serial.available() > 0) {
-        String command = Serial.readStringUntil('\n');
-        command.trim(); // Supprime les espaces et les retours à la ligne
+        String commande = Serial.readStringUntil('\n');
+        commande.trim(); // Supprime les espaces et les retours à la ligne
+        commande.toUpperCase(); // Convertit la commande
 
-        if (command.startsWith("SET")) {
-            _SET(command.substring(3));
-        } else if (command.startsWith("GET")) {
-            _GET(command.substring(3));
-        } else if (command.startsWith("DO")) {
-            _DO(command.substring(2));
+        if (commande.startsWith("SET")) {
+            _SET(commande.substring(4));
+        } else if (commande.startsWith("GET")) {
+            _GET(commande.substring(4));
+        } else if (commande.startsWith("DO")) {
+            _DO(commande.substring(3));
         } else {
             sendReponseNOK(MSG::ERR_CMD_INCONNUE);
         }
@@ -50,22 +51,18 @@ bool SerialManager::testRequired() {
 }
 
 void SerialManager::_SET(String commande) {
-    commande.trim(); // Supprime les espaces et les retours à la ligne
-    commande.toUpperCase(); // Convertit la commande
-
+    
     if (commande.startsWith("CALIBRATION") && machine.etat == ETAT::REPOS) {
-        String valeurs = commande.substring(11);
-        valeurs.trim();
-        valeurs.toUpperCase();
+        String status = getNextItem(commande); // On ignore le premier mot "CALIBRATION"
         // Lecture du statut de l'activation
         bool active;
-        if (valeurs == "ON") {
+        if (status == "ON") {
             active = true;
         }
-        else if (valeurs == "OFF") {
+        else if (status == "OFF") {
             active = false;
         }
-        else if (valeurs == "EFFACER") {
+        else if (status == "EFFACER") {
             machine.calibrationMachine().clearEeprom();
             active = machine.calibrationMachine().isEepromActive();
         }
@@ -78,9 +75,7 @@ void SerialManager::_SET(String commande) {
         return;
     }
     else if (commande.startsWith("COURANT") && machine.etat == ETAT::REPOS) {
-        String valeurs = commande.substring(8);
-        valeurs.trim();
-        float limite = valeurs.substring(0).toFloat();
+        float limite = getNextItem(commande).toFloat();
         if (capteurs.setLimitCourant(limite))
             sendReponseOK(MSG::INFO_COURANT_SET);
         else
@@ -88,15 +83,14 @@ void SerialManager::_SET(String commande) {
     }
     // Configuration du mode de pilotage
     else if (commande.startsWith("MODE") && machine.etat != ETAT::PILOTAGE) {
-        String valeur = commande.substring(5);
-        valeur.trim();
-        if (valeur == "PWM")
+        String mode = getNextItem(commande);
+        if (mode == "PWM")
             machine.setMode(StateMachine::MODE_PILOTAGE::PWM);
-        else if (valeur == "VITESSE")
+        else if (mode == "VITESSE")
             machine.setMode(StateMachine::MODE_PILOTAGE::VITESSE);
-        else if (valeur == "POSITION")
+        else if (mode == "POSITION")
             machine.setMode(StateMachine::MODE_PILOTAGE::POSITION);
-        else if (valeur == "POSITION_VITESSE")
+        else if (mode == "POSITION_VITESSE")
             machine.setMode(StateMachine::MODE_PILOTAGE::POSITION_VITESSE);
         // C'est le stateMachine qui renvoie le message de la bonne execution du changement
     }
@@ -116,20 +110,16 @@ void SerialManager::_SET(String commande) {
     }
     // Configuration des PID
     else if (commande.startsWith("PID") && machine.etat != ETAT::PILOTAGE) {
-        String parametres = commande.substring(4);
-        parametres.trim();
-        // Recherche des séparateurs
-        int sep1 = parametres.indexOf(' ');
-        int sep2 = parametres.indexOf(' ', sep1 + 1);
-        int sep3 = parametres.indexOf(' ', sep2 + 1);
-        if (sep1 == -1 || sep2 == -1 || sep3 == -1) {
+        String items[4];
+        int nbItems = splitCommande(commande, items, 4);
+        if (nbItems < 4) {
             sendReponseNOK(MSG::ERR_PID_SET);
             return;
         }
-        String type_pid = parametres.substring(0, sep1);
-        float kp = parametres.substring(sep1 + 1,sep2).toFloat();
-        float ki = parametres.substring(sep2 + 1,sep3).toFloat();
-        float kd = parametres.substring(sep3 + 1).toFloat();
+        String type_pid = items[1];
+        float kp = items[2].toFloat();
+        float ki = items[3].toFloat();
+        float kd = items[4].toFloat();
         if (type_pid == "VITESSE")
             machine.setPIDVitesse(kp, ki, kd);
         else if (type_pid == "POSITION")
@@ -142,55 +132,57 @@ void SerialManager::_SET(String commande) {
     }
     // Gestion de la fréquence d'envoie des mesures
     else if (commande.startsWith("MESURES")) {
-        String valeur = commande.substring(8);
-        valeur.trim();
+        String param = getNextItem(commande);
         // Vérification : chaîne non vide
-        if (valeur.length() == 0) {
+        if (param.length() == 0) {
             sendReponseNOK(MSG::ERR_FREQ_MESURES_SET);
             return;
         }
         // Activation (sans sauvegarde valeur)
-        if (valeur == "ON") {
+        if (param == "ON") {
             loadMesurePeriode();
             sendReponseOK(MSG::DATA_FREQ_MESURES, periode_echantillonnage_mesures);
             return;
         }
         // Désactivation (sans sauvegarde valeur)
-        if (valeur == "OFF") {
+        if (param == "OFF") {
             setMesurePeriode(0);
             sendReponseOK(MSG::INFO_MESURES_DESACTIVE);
             return;
         }
+        if (param == "SAVE") {
+            saveMesurePeriode();
+            sendReponseOK(MSG::INFO_MESURES_SAUVEGARDE, periode_echantillonnage_mesures);
+            return;
+        }
         // Vérification : uniquement des chiffres
-        for (unsigned int i = 0; i < valeur.length(); i++) {
-            if (!isDigit(valeur[i])) {
+        for (unsigned int i = 0; i < param.length(); i++) {
+            if (!isDigit(param[i])) {
                 sendReponseNOK(MSG::ERR_FREQ_MESURES_SET);
                 return;
             }
         }
-        uint16_t periode = valeur.toInt();
+        uint16_t periode = param.toInt();
         periode = (periode / 5)*5;
         if (periode > 1275) {
             sendReponseNOK(MSG::ERR_FREQ_MESURES_SET);
             return;
         }
         if (periode >= 5) {
-            setMesurePeriode(periode, true);
+            setMesurePeriode(periode, false);
             sendReponseOK(MSG::DATA_FREQ_MESURES, periode_echantillonnage_mesures);
         } else {
-            setMesurePeriode(0, true);
+            setMesurePeriode(0, false);
             sendReponseOK(MSG::INFO_MESURES_DESACTIVE);
         }
 
     }
     // Gestion de l'accéléromètre
     else if (commande.startsWith("ACCEL")) {
-        String valeur = commande.substring(6);
-        valeur.trim();
-        valeur.toUpperCase();
+        String param = getNextItem(commande);
         // Lecture du statut de l'activation
         bool active;
-        if (valeur == "ON") {
+        if (param == "ON") {
             if (capteurs.bno().isConnected()) {
                 active = true;
             } else {
@@ -198,7 +190,7 @@ void SerialManager::_SET(String commande) {
                 return;
             }
         }
-        else if (valeur == "OFF") {
+        else if (param == "OFF") {
             active = false;
         } else {
             sendReponseNOK(MSG::ERR_ACCEL_SET);
@@ -209,13 +201,11 @@ void SerialManager::_SET(String commande) {
     }
     // Gestion du buzzer
     else if (commande.startsWith("BUZZER")) {
-        String valeur = commande.substring(7);
-        valeur.trim();
-        valeur.toUpperCase();
+        String param = getNextItem(commande);
         // Lecture du statut de l'activation
-        if (valeur == "ON") {
+        if (param == "ON") {
             buzzer.enable();
-        } else if (valeur == "OFF") {
+        } else if (param == "OFF") {
             buzzer.disable();
         } else {
             sendReponseNOK(MSG::ERR_BUZZER_SET);
@@ -231,9 +221,6 @@ void SerialManager::_SET(String commande) {
 }
 
 void SerialManager::_GET(String commande) {
-    commande.trim(); // Supprime les espaces et les retours à la ligne
-    commande.toUpperCase(); // Convertit la commande
-
     if (commande.startsWith("CALIBRATION")) {
         if (machine.isCalibrated()) {
             sendMessage(MSG::DATA_COURSE, capteurs.getCalibration().highLimit);
@@ -250,43 +237,44 @@ void SerialManager::_GET(String commande) {
         sendReponseOK(MSG::INFO_CALIBRE);
     }
     else if (commande.startsWith("MESURES")) {
-        String valeur = commande.substring(7);
-        valeur.trim();
+        String capteur = getNextItem(commande); // On ignore le premier mot "MESURES"
         // Vérification : chaîne non vide
-        if (valeur.length() == 0) {
+        if (capteur.length() == 0) {
             sendReponseNOK(MSG::ERR_MESURE_GET);
             return;
         }
-        if (valeur == "PERIODE") {
+        if (capteur == "PERIODE") {
             if (getMesurePeriode() > 1000) {
                 sendReponseOK(MSG::INFO_MESURES_DESACTIVE);
             } else {
                 sendReponseOK(MSG::DATA_FREQ_MESURES,getMesurePeriode());
             }
         }
-        if (valeur == "MEUBLE") {
+        if (capteur == "MEUBLE") {
             if (machine.calibrationMachine().getEtat()) 
                 sendReponseOK(MSG::INFO_SUR_MEUBLE);
             else
                 sendReponseOK(MSG::INFO_DEMONTE);
         }
-        if (valeur == "PORTE") {
+        if (capteur == "PORTE") {
             sendReponseOK(MSG::DATA_ANGLE_PORTE, capteurs.getAnglePorte()*100);
         }
-        if (valeur == "TENSION") {
-            sendReponseOK(MSG::DATA_TENSION, capteurs.getTension()*100);
+        if (capteur == "TENSION") {
+            sendMessage(MSG::DATA_TENSION, capteurs.getTension()*100);
+            sendReponseOK(MSG::DATA_TENSION_MOTEUR, capteurs.getTensionMoteur()*100);
         }
-        if (valeur == "COURANT") {
-            sendReponseOK(MSG::DATA_COURANT, capteurs.getCourant()*100);
+        if (capteur == "COURANT") {
+            sendMessage(MSG::DATA_COURANT, capteurs.getCourant()*100);
+            sendReponseOK(MSG::DATA_LAST_COURANT, capteurs.getLastCourant()*100);
         }
-        if (valeur == "MOTEUR") {
+        if (capteur == "MOTEUR") {
             sendMessage(MSG::DATA_ANGLE_MOTEUR, capteurs.getAngleMoteur()*100);
             sendReponseOK(MSG::DATA_VITESSE_MOTEUR, capteurs.getVitesseMoteur()*100);
         }
-        if (valeur == "PWM") {
+        if (capteur == "PWM") {
             sendReponseOK(MSG::DATA_PWM, capteurs.getPWM()*100);
         }
-        if (valeur == "CONSIGNE") {
+        if (capteur == "CONSIGNE") {
             sendReponseOK(MSG::DATA_CONSIGNE, capteurs.getConsigne()*100);
         }
     }
@@ -339,8 +327,6 @@ void SerialManager::_GET(String commande) {
 }
 
 void SerialManager::_DO(String commande) {
-    commande.trim(); // Supprime les espaces et les retours à la ligne
-    commande.toUpperCase(); // Convertit la commande
 
     if (commande.startsWith("RESET")) {
         sendDirect(MSGTYPE::REPONSE_OK,MSG::INFO_DO_RESET);
@@ -360,6 +346,10 @@ void SerialManager::_DO(String commande) {
     if (commande.startsWith("INIT")) {
         machine.changerEtat(ETAT::INIT);
         sendReponseOK(MSG::INFO_DO_INIT);
+    }
+    else if (commande.startsWith("ACTIONNER")) {
+        machine.changerEtat(ETAT::FONCTIONNEMENT);
+        sendReponseOK(MSG::INFO_DO_FONCTIONNEMENT);
     }
     else if (commande.startsWith("OUVRIR")) {
         machine.changerEtat(ETAT::OUVERTURE);
@@ -393,12 +383,15 @@ void SerialManager::loadMesurePeriode() {
 }
 
 void SerialManager::setMesurePeriode(uint16_t periode, bool save) {
-    periode = (periode < 4) ? 1275 : periode;
-    uint8_t periode_eeprom = periode / 5;
+    periode_echantillonnage_mesures = (periode < 4) ? 1275 : periode;
     if (save) {
-        EEPROM.update(EEPROM_ADDR_TENVOIS, periode_eeprom);
+        saveMesurePeriode();
     }
-    periode_echantillonnage_mesures = periode_eeprom * 5;
+}
+
+void SerialManager::saveMesurePeriode() {
+    uint8_t periode_eeprom = periode_echantillonnage_mesures / 5;
+    EEPROM.update(EEPROM_ADDR_TENVOIS, periode_eeprom);
 }
 
 uint32_t SerialManager::getMesurePeriode() {
@@ -425,4 +418,17 @@ int SerialManager::splitCommande(const String& commande, String items[], int max
         debut = fin + 1;
     }
     return nbItems;
+}
+
+String SerialManager::getNextItem(const String& commande) {
+    // Découpe un message sur l'esapce et renvoie le 2nd item (après le premier mot)
+    int debut = commande.indexOf(' ');
+    if (debut == -1) {
+        return "";
+    }
+    int fin = commande.indexOf(' ', debut + 1);
+    if (fin == -1) {
+        return commande.substring(debut + 1);
+    }
+    return commande.substring(debut + 1, fin);
 }

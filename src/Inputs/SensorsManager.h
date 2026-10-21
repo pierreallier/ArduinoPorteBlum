@@ -24,8 +24,8 @@ const float COEFF_CODEUR_MOTEUR = 2.0f * PI / 128.0f * 100; // Convertit les tic
 // Détections butées
 const int PWM_MIN = 50;
 constexpr int PWM_RAPIDE = 150;
-constexpr int NB_CYCLES_BLOCAGE_RAPIDE = 10; // 10 x 5 ms = 50 ms
-constexpr int NB_CYCLES_BLOCAGE_LENT = 50;
+constexpr int NB_CYCLES_BLOCAGE_RAPIDE = 50; // 50 x 1 ms = 50 ms
+constexpr int NB_CYCLES_BLOCAGE_LENT = 250; // 250 x 1 ms = 250 ms
 const int TICKS_MIN = 2;
 
 class SensorsManager {
@@ -52,6 +52,7 @@ class SensorsManager {
         inline float getTension() const { return _tension.get() / 100.0f;}
         inline float getTensionMoteur() const { return _mesures.tension / 100.0f;}
         inline float getCourant() const { return _mesures.courant_moyen / 100.0f;}
+        inline float getLastCourant() const { return _courant.get();}
         inline float getAnglePorte() const { return _mesures.angle_porte / 100.0f;}
         inline float getAngleMoteur() const { return _mesures.angle_moteur / 100.0f;}
         inline float getVitesseMoteur() const { return _mesures.vitesse_moteur / 100.0f;}

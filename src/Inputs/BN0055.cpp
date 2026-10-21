@@ -159,7 +159,7 @@ bool BN0055::checkPresence(uint16_t timeoutMs) {
 }
 
 
-bool BN0055::requestData(uint32_t now) {
+bool BN0055::requestData() {
     if (!_enabled || !_connected || _state == READING || _state == STARTING)
         return false;
     _dataAvailable = false; // Si une ancienne mesure n'a pas été lue, on la perd.
@@ -175,7 +175,6 @@ bool BN0055::requestData(uint32_t now) {
         return false;
     }
     _state = READING;
-    _mesures.time = now;
     return true;
 }
 

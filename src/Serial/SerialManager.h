@@ -10,9 +10,6 @@
 #include "../Outputs/Buzzer.h"
 #include "../Managers/StateMachine.h"
 
-constexpr float RADS_TO_RPM = 60.0f / (2.0f * PI);
-constexpr float RAD_TO_TURN = 1.0f / (2.0f * PI);
-
 class SerialManager {
     public:
         SerialManager(SensorsManager& s, StateMachine& ma, Buzzer& b);
@@ -24,6 +21,7 @@ class SerialManager {
         uint32_t getMesurePeriode();
         void loadMesurePeriode();
         void setMesurePeriode(uint16_t periode, bool save = false);
+        void saveMesurePeriode();
 
         bool testRequired();
         inline void resync() { time_precedent = millis(); } // Resynchronise le timer après le test
@@ -43,7 +41,7 @@ class SerialManager {
         void _GET(String commande);
         void _DO(String commande);
         int splitCommande(const String& commande, String items[], int maxItems);
-  
+        String getNextItem(const String& commande);
 };
 
 

@@ -133,7 +133,7 @@ bool SensorsManager::checkBNO() {
         _bno.setEnabled(false);  // Désactivation du capteur pour éviter les erreurs de lecture
         return false;
     } else {
-        _bno.requestData(0);  // Demande de lecture initiale
+        _bno.requestData();  // Demande de lecture initiale
         return true;
     }
 }

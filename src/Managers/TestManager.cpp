@@ -161,7 +161,7 @@ bool TestManager::verifierBNO() {
     while ((uint32_t)(millis() - t0) < 50) {
         capteurs.bno().update();
         if (!demande)
-            demande = capteurs.bno().requestData(millis());   // réessaie tant qu'une lecture précédente est en cours
+            demande = capteurs.bno().requestData();   // réessaie tant qu'une lecture précédente est en cours
         else if (capteurs.bno().available())
             break;
     }
