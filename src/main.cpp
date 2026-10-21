@@ -148,10 +148,10 @@ void ordonnanceur() {
             capteurs.mesures(pwm);
         }
         // Vérification des sécurités
-        if (machine.getEtat() != ETAT::CALIBRATION) {
+        if (!machine.enCalibration()) {
             // On vérifie les sécurités uniquement si on n'est pas en calibration (géré côté calibration)
-            if (capteurs.isLimiteAngle() && (machine.getEtat() != ETAT::DEBRAYAGE && machine.getEtat() != ETAT::REPOS)) {
-                if (machine.getEtat() == ETAT::PILOTAGE) {
+            if (capteurs.isLimiteAngle() && machine.enMouvement()) {
+                if (machine.enPilotage()) {
                     // En pilotage, on ne devrait pas atteindre les limites
                     sendError(MSG::ERR_LIMITE_PORTE, capteurs.getAnglePorte());
                     machine.changerEtat(ETAT::ERREUR);

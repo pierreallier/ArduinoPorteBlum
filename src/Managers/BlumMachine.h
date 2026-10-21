@@ -37,6 +37,10 @@ class BlumMachine : public StateMachine<ETAT> {
         void actionBtPressed() { (_etat == ETAT::REPOS) ? changerEtat(ETAT::FONCTIONNEMENT) : changerEtat(ETAT::DEBRAYAGE); }
         void pilotageBtPressed() { (_etat == ETAT::REPOS) ? changerEtat(ETAT::PILOTAGE) : changerEtat(ETAT::DEBRAYAGE);}
 
+        bool enCalibration() { return _etat == ETAT::CALIBRATION; }
+        bool enPilotage() { return _etat == ETAT::PILOTAGE; }
+        bool enMouvement() { return _etat == ETAT::FONCTIONNEMENT || _etat == ETAT::OUVERTURE || _etat == ETAT::FERMETURE || _etat == ETAT::PILOTAGE || _etat == ETAT::CALIBRATION; }
+
         inline bool isCalibrated() {return calibration.isCalibrated();}
         CalibrationManager& calibrationMachine() {return calibration;}
         PilotageMachine& pilotageMachine() {return pilotage;}

@@ -219,7 +219,7 @@ inline bool sendEvents() {
         #endif
         queue.clearPerdu();
     }
-    dispo = min(dispo, 3); // on ne vide jamais plus de 3 messages d'un coup
+    dispo = min(dispo, 4); // on ne vide jamais plus de 4 messages d'un coup
     if (dispo > 0) {
         for (int i=0;i<dispo;i++) {
             #if VERSION_DEV
