@@ -1,75 +1,53 @@
-#ifndef STATEMACHINE_H
-#define STATEMACHINE_H
-
-#include <Arduino.h>
-#include "../Serial/Messages.h"
-#include "../Config/Etats.h"
-
+#pragma once
 #include "../Inputs/SensorsManager.h"
-
 #include "../Outputs/Motor.h"
 #include "../Outputs/Buzzer.h"
-#include "../Outputs/Led.h"
 
-#include "CalibrationManager.h"
-#include "PID.h"
-#include "ConsigneManager.h"
-
+template<typename Etat>
 class StateMachine {
-    public:
-        enum class MODE_PILOTAGE : uint8_t {
-            PWM,
-            POSITION,
-            VITESSE,
-            POSITION_VITESSE, // Asservissement en vitesse et position
+    public: 
+        StateMachine(SensorsManager& s, Motor& m, Buzzer& b) : capteurs(s), moteur(m), buzzer(b) {};
+        virtual ~StateMachine() = default;
+        virtual void init() {};
+        void start() { _time_etat = millis(); _activated = true;};
+        void stop() { _activated = false;};
+        void suspendre() {_activated = false;};  // Stoppe le fonctionnement de la machine à états
+        void reprendre() {_activated = true;};   // Restaure le fonctionnement de la machine à états
+
+        /* @brief vérifie la possibilité de changer d'état
+         * @return False si aucun changement d'état effectué, True si l'état a été changé
+         */
+        bool changerEtat(Etat etat_demande) { 
+            if (!_activated || _etat == etat_demande)
+                return false;
+            etat_demande = checkTransition(etat_demande);
+            execStateExit(_etat);
+            _etat = etat_demande;
+            _time_etat = millis();
+            execStateEntry(_etat);
+            return true;
         };
 
-        ETAT etat;
-        MODE_PILOTAGE modePilotage;
-        uint32_t time_etat = 0;
-
-        Led ledError = Led(LED_ERROR_PIN);
-
-        bool butee_desactivated = false; // Variable qui spécifie si on doit désactiver la détection des butées
-        bool isCalibre() { return calibration.isCalibrated(); } // Vérifie si le système est calibré
-
-        PID pidPosition;
-        PID pidVitesse;
-
-        StateMachine(SensorsManager& s, Motor& m, Buzzer& b);
-        void init();
-        void changerEtat(ETAT etat_demande);
-        void setMode(StateMachine::MODE_PILOTAGE mode);
-        void exec();
-
-        void setPIDPosition(float kp, float ki, float kd) {
-            pidPosition.setGains(kp, ki, kd);
+        bool exec() { // Execution de la machine à états (actions de l'état courant)
+            if (!_activated) return false;
+            else return execState(_etat);
         };
-        void setPIDVitesse(float kp, float ki, float kd) {
-            pidVitesse.setGains(kp, ki, kd);
+
+        virtual Etat checkTransition(Etat etat_demande) { // Vérifie si la transition vers l'état demandé est possible
+            return etat_demande;
         };
-        bool setConsigne(const String& type, const String* params, int nbParams);
-
-        void suspendre();   // Stoppe le fonctionnement avant le test
-        void reprendre();   // Restaure le fonctionnement après le test
-
-        inline bool isCalibrated() {return calibration.isCalibrated();}
-        CalibrationManager& calibrationMachine() {return calibration;}
+        virtual void execStateEntry(Etat etat) {}; // Actions à l'entrée de l'état courant
+        virtual void execStateExit(Etat etat) {}; // Actions à la sortie de l'état courant
+        virtual bool execState(Etat etat) = 0; // Actions à l'intérieur de l'état courant
     
-    private:
+        Etat getEtat() const { return _etat; };
+    
+    protected:
         SensorsManager& capteurs;
-
         Motor& moteur;
         Buzzer& buzzer;
-        Led ledPilotage = Led(LED_PILOTAGE_PIN);
-        Led ledCalibration = Led(LED_CALIBRATION_PIN);
 
-        CalibrationManager calibration;
-        ConsigneManager consigne;
- 
-        bool etatOuverture(uint16_t speed);
-        bool etatFermeture(uint16_t speed);
-        bool etatPilote();        
+        Etat _etat;
+        uint32_t _time_etat = 0;
+        bool _activated = false;
 };
-
-#endif

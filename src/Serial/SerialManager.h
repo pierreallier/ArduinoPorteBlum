@@ -8,11 +8,11 @@
 #include "../Inputs/SensorsManager.h"
 #include "../Outputs/Motor.h"
 #include "../Outputs/Buzzer.h"
-#include "../Managers/StateMachine.h"
+#include "../Managers/BlumMachine.h"
 
 class SerialManager {
     public:
-        SerialManager(SensorsManager& s, StateMachine& ma, Buzzer& b);
+        SerialManager(SensorsManager& s, BlumMachine& ma, Buzzer& b);
         void init();
         void task();
 
@@ -30,7 +30,7 @@ class SerialManager {
     
     private:
         SensorsManager& capteurs;
-        StateMachine& machine;
+        BlumMachine& machine;
         Buzzer& buzzer;
 
         uint32_t time_precedent = 0;    

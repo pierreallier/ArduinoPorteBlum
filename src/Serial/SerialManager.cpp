@@ -9,7 +9,7 @@ void resetArduino() {
     }
 }
 
-SerialManager::SerialManager(SensorsManager& s, StateMachine& ma, Buzzer& b) : capteurs(s),machine(ma),buzzer(b) {
+SerialManager::SerialManager(SensorsManager& s, BlumMachine& ma, Buzzer& b) : capteurs(s),machine(ma),buzzer(b) {
 }
 
 void SerialManager::init() {
@@ -52,7 +52,7 @@ bool SerialManager::testRequired() {
 
 void SerialManager::_SET(String commande) {
     
-    if (commande.startsWith("CALIBRATION") && machine.etat == ETAT::REPOS) {
+    if (commande.startsWith("CALIBRATION") && machine.getEtat() == ETAT::REPOS) {
         String status = getNextItem(commande); // On ignore le premier mot "CALIBRATION"
         // Lecture du statut de l'activation
         bool active;
@@ -74,7 +74,7 @@ void SerialManager::_SET(String commande) {
         sendReponseOK(MSG::INFO_CALIBRATION_SET);
         return;
     }
-    else if (commande.startsWith("COURANT") && machine.etat == ETAT::REPOS) {
+    else if (commande.startsWith("COURANT") && machine.getEtat() == ETAT::REPOS) {
         float limite = getNextItem(commande).toFloat();
         if (capteurs.setLimitCourant(limite))
             sendReponseOK(MSG::INFO_COURANT_SET);
@@ -82,20 +82,20 @@ void SerialManager::_SET(String commande) {
             sendReponseNOK(MSG::ERR_COURANT_SET);
     }
     // Configuration du mode de pilotage
-    else if (commande.startsWith("MODE") && machine.etat != ETAT::PILOTAGE) {
+    else if (commande.startsWith("MODE") && machine.getEtat() != ETAT::PILOTAGE) {
         String mode = getNextItem(commande);
         if (mode == "PWM")
-            machine.setMode(StateMachine::MODE_PILOTAGE::PWM);
+            machine.setMode(BlumMachine::MODE_PILOTAGE::PWM);
         else if (mode == "VITESSE")
-            machine.setMode(StateMachine::MODE_PILOTAGE::VITESSE);
+            machine.setMode(BlumMachine::MODE_PILOTAGE::VITESSE);
         else if (mode == "POSITION")
-            machine.setMode(StateMachine::MODE_PILOTAGE::POSITION);
+            machine.setMode(BlumMachine::MODE_PILOTAGE::POSITION);
         else if (mode == "POSITION_VITESSE")
-            machine.setMode(StateMachine::MODE_PILOTAGE::POSITION_VITESSE);
+            machine.setMode(BlumMachine::MODE_PILOTAGE::POSITION_VITESSE);
         // C'est le stateMachine qui renvoie le message de la bonne execution du changement
     }
     // Configuration des Consignes
-    else if (commande.startsWith("CONSIGNE")) {
+    else if (commande.startsWith("CONSIGNE") && machine.getEtat() != ETAT::PILOTAGE) {
         String items[10];
         int nbItems = splitCommande(commande, items, 10);
         if (nbItems < 2) {
@@ -109,7 +109,7 @@ void SerialManager::_SET(String commande) {
         }
     }
     // Configuration des PID
-    else if (commande.startsWith("PID") && machine.etat != ETAT::PILOTAGE) {
+    else if (commande.startsWith("PID") && machine.getEtat() != ETAT::PILOTAGE) {
         String items[4];
         int nbItems = splitCommande(commande, items, 4);
         if (nbItems < 4) {
@@ -280,19 +280,19 @@ void SerialManager::_GET(String commande) {
     }
     else if (commande.startsWith("MODE")) {
         switch (machine.modePilotage) {
-            case StateMachine::MODE_PILOTAGE::PWM: {
+            case BlumMachine::MODE_PILOTAGE::PWM: {
                 sendReponseOK(MSG::DATA_MODE_PWM);
                 break;
             }
-            case StateMachine::MODE_PILOTAGE::VITESSE: {
+            case BlumMachine::MODE_PILOTAGE::VITESSE: {
                 sendReponseOK(MSG::DATA_MODE_VITESSE);
                 break;
             }
-            case StateMachine::MODE_PILOTAGE::POSITION: {
+            case BlumMachine::MODE_PILOTAGE::POSITION: {
                 sendReponseOK(MSG::DATA_MODE_POSITION);
                 break;
             }
-            case StateMachine::MODE_PILOTAGE::POSITION_VITESSE: {
+            case BlumMachine::MODE_PILOTAGE::POSITION_VITESSE: {
                 sendReponseOK(MSG::DATA_MODE_PV);
                 break;
             }
@@ -334,8 +334,7 @@ void SerialManager::_DO(String commande) {
         return;
     }
     if (commande.startsWith("TEST")) {
-        if (machine.etat == ETAT::REPOS ||
-            machine.etat == ETAT::CALIBRATION) {
+        if (machine.getEtat() == ETAT::REPOS || machine.getEtat() == ETAT::CALIBRATION) {
             demandeTest = true;
             sendDirect(MSGTYPE::REPONSE_OK,MSG::INFO_DO_TEST);
         } else {

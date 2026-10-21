@@ -5,7 +5,7 @@
 
 #include "Inputs/SensorsManager.h"
 #include "Managers/TestManager.h"
-#include "Managers/StateMachine.h"
+#include "Managers/BlumMachine.h"
 
 #include "Outputs/Motor.h"
 #include "Outputs/Buzzer.h"
@@ -23,7 +23,7 @@ SensorsManager capteurs;
 Buzzer buzzer;
 Motor moteur(capteurs);
 
-StateMachine machine(capteurs, moteur, buzzer);
+BlumMachine machine(capteurs, moteur, buzzer);
 SerialManager portserie(capteurs, machine, buzzer);
 
 uint32_t tVerif = 0;    constexpr uint32_t PERIODE_SECURITE = 1*1000UL;
@@ -100,6 +100,7 @@ void setup() {
     if (capteurs.bno().isEnabled()) {
         capteurs.bno().requestData();
     }
+    machine.start(); // Démarre la machine à états
 }
 
 void loop() {
@@ -147,10 +148,10 @@ void ordonnanceur() {
             capteurs.mesures(pwm);
         }
         // Vérification des sécurités
-        if (machine.etat != ETAT::CALIBRATION) {
+        if (machine.getEtat() != ETAT::CALIBRATION) {
             // On vérifie les sécurités uniquement si on n'est pas en calibration (géré côté calibration)
-            if (capteurs.isLimiteAngle() && (machine.etat != ETAT::DEBRAYAGE && machine.etat != ETAT::REPOS)) {
-                if (machine.etat == ETAT::PILOTAGE) {
+            if (capteurs.isLimiteAngle() && (machine.getEtat() != ETAT::DEBRAYAGE && machine.getEtat() != ETAT::REPOS)) {
+                if (machine.getEtat() == ETAT::PILOTAGE) {
                     // En pilotage, on ne devrait pas atteindre les limites
                     sendError(MSG::ERR_LIMITE_PORTE, capteurs.getAnglePorte());
                     machine.changerEtat(ETAT::ERREUR);
@@ -211,25 +212,11 @@ void ordonnanceur() {
         btCalibration.update();
         btPilotage.update();
         
-        if (btCalibration.pressed()) {
-            if (machine.etat == ETAT::REPOS || machine.etat == ETAT::CALIBRATION_REQUIS) {
-                machine.changerEtat(ETAT::CALIBRATION);
-            } else if (machine.etat == ETAT::CALIBRATION) {
-                machine.changerEtat(ETAT::DEBRAYAGE);
-            }
-        }
-        if (btPilotage.pressed()) {
-            if (machine.etat == ETAT::REPOS) {
-                machine.changerEtat(ETAT::PILOTAGE);
-            }
-            else
-                machine.changerEtat(ETAT::DEBRAYAGE);
-        }
-        if (btWireless.pressed() || btTest.pressed()) {
-            if (machine.etat == ETAT::REPOS)
-                machine.changerEtat(ETAT::FONCTIONNEMENT);
-            else
-                machine.changerEtat(ETAT::DEBRAYAGE);
-        }
+        if (btCalibration.pressed())
+            machine.calibrationBtPressed();
+        if (btPilotage.pressed())
+            machine.pilotageBtPressed();
+        if (btWireless.pressed() || btTest.pressed())
+            machine.actionBtPressed();
     }
 }
