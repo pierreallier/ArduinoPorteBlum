@@ -30,7 +30,7 @@ MSG = {
     30: 'commande set inconnue : valeur attendue : COURANT / CALIBRATION / MODE / CONSIGNE / PID / MESURES / ACCEL / BUZZER',    # 'ERR_CMD_SET_INCONNUE'
     31: 'limite de courant incompatible (entre 0 et 2.5A) : valeur non modifiée ',    # 'ERR_COURANT_SET'
     32: 'commande set calibration inconnue : valeur attendue : ON / OFF / EFFACER',    # 'ERR_CALIBRATION_SET'
-    33: 'mode de pilotage inconnu : valeur attendue : PWM / POSITION / VITESSE / POSITIOB_VITESSE',    # 'ERR_PILOTAGE_SET'
+    33: 'mode de pilotage inconnu : valeur attendue : PWM / POSITION / VITESSE / POSITION_VITESSE',    # 'ERR_PILOTAGE_SET'
     34: 'type de consigne inconnu : valeur attendue : POTENTIOMETRE / ECHELON / RAMPE / TRAPEZE / SINUS / TABLEAU',    # 'ERR_CONSIGNE_SET'
     35: 'type de PID inconnu : valeur attendue VITESSE / POSITION',    # 'ERR_PID_TYPE_SET'
     36: 'réglage PID erronné : TYPE [VITESSE|POSITION] KP KI KD attendu',    # 'ERR_PID_SET'

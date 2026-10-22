@@ -83,7 +83,8 @@ void SerialManager::_SET(String commande) {
     }
     // Configuration du mode de pilotage
     else if (commande.startsWith("MODE") && machine.getEtat() != ETAT::PILOTAGE) {
-        machine.pilotageMachine().setMode(commande);
+        String mode = getNextItem(commande);
+        machine.pilotageMachine().setMode(mode);
         // C'est le stateMachine qui renvoie le message de la bonne execution du changement
     }
     // Configuration des Consignes
