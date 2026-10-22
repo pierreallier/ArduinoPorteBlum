@@ -19,7 +19,6 @@ class BlumMachine : public StateMachine<ETAT> {
         BlumMachine(SensorsManager& s, Motor& m, Buzzer& b);
         void init() override;
         void start();
-        bool changerEtat(ETAT etat_demande);
         ETAT checkTransition(ETAT etat_demande) override;
         void execStateExit(ETAT etat) override;
         void execStateEntry(ETAT etat) override;

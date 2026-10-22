@@ -16,7 +16,7 @@ void BlumMachine::start() {
     setEtat(ETAT::INIT);
     if (calibration.isNotCalibrated()) {
         sendDirect(MSGTYPE::WARNING, MSG::ERR_CALIBRATION_REQUISE);
-        changerEtat(ETAT::CALIBRATION_REQUIS);
+        setEtat(ETAT::CALIBRATION_REQUIS); // On éviter de passer par la vérif des transitions
     }
     StateMachine<ETAT>::start();    
 }
@@ -36,14 +36,6 @@ ETAT BlumMachine::checkTransition(ETAT etat_demande) {
         }
     }
     return etat_demande;
-}
-
-bool BlumMachine::changerEtat(ETAT etat_demande) {
-    if (!capteurs.hasPower() && _etat != ETAT::NO_POWER) {
-        sendError(MSG::ERR_PUISSANCE, capteurs.getTension()*100);
-        etat_demande = ETAT::NO_POWER;
-    }
-    return StateMachine::changerEtat(etat_demande);
 }
 
 void BlumMachine::execStateExit(ETAT etat) {
@@ -121,6 +113,12 @@ void BlumMachine::execStateEntry(ETAT etat) {
 }
 
 void BlumMachine::execState(ETAT etat) {
+    if (!capteurs.hasPower() && _etat != ETAT::NO_POWER) {
+        sendError(MSG::ERR_PUISSANCE, capteurs.getTension()*100);
+        changerEtat(ETAT::NO_POWER);
+        etat = ETAT::NO_POWER;
+    }
+
     switch(etat) {
         case ETAT::INIT: {
             //capteurs.setConsigne(0);
