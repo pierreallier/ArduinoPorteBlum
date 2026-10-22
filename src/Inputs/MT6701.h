@@ -22,7 +22,7 @@
 //
 // Ne pas utiliser Wire dans le projet : nI2C et Wire se partagent le même TWI.
 
-class MT6701 : public Sensor<uint16_t> {
+class MT6701 : public Sensor<int32_t> {
 public:
     MT6701(uint8_t pin, float coeff, uint8_t address = 0x06);
 
@@ -30,7 +30,7 @@ public:
     void init();
 
     // Lecture via la sortie analogique du codeur
-    uint16_t read() {_value = ((int32_t)ADC_MAX + _offset - analogRead(_pin)) % ADC_MAX * _coeff; return _value;}
+    int32_t read() {_value = ((int32_t)ADC_MAX + _offset - analogRead(_pin)) % ADC_MAX * _coeff; return _value;}
 
     // Commandes via protocole I2C
     // BLOQUANT (setup uniquement). Lit l'angle une fois et attend la fin de la
@@ -46,10 +46,10 @@ public:
 
     // Dernière mesure en degrés, [0 ; 360[, offset appliqué.
     // Retourne false si aucune nouvelle mesure n'est disponible.
-    uint16_t readAngle(float &angle);
+    int32_t readAngle(float &angle);
 
     // Valeur brute 14 bits de la dernière mesure (0..16383).
-    uint16_t getRaw() const;
+    int32_t getRaw() const;
 
     uint8_t getLastStatus() const { return _lastI2CStatus; }
 
@@ -66,7 +66,7 @@ private:
     volatile bool _busy;
     volatile bool _dataAvailable;
     volatile uint8_t _lastI2CStatus;
-    volatile uint16_t _raw;
+    volatile int32_t _raw;
 
     static MT6701 *_instance;
 

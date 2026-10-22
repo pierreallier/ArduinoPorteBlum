@@ -2,7 +2,7 @@
 
 // Version de la carte et de soft
 #define VERSION_CARTE 3
-#define VERSION_SOFT 1
+#define VERSION_SOFT 2
 #define VERSION_DEV 0
 
 // Moteur et driver

@@ -11,6 +11,16 @@ import serial.tools.list_ports
 DEFAULT_BAUDRATE = 115200
 SERIAL_TIMEOUT = 0.1
 
+def crc8(data: bytes) -> int:
+    """CRC-8/SMBUS: poly=0x07, init=0, no reflection, xorout=0."""
+    crc = 0
+    for value in data:
+        crc ^= value
+        for _ in range(8):
+            crc = ((crc << 1) ^ (0x07 if crc & 0x80 else 0)) & 0xFF
+    return crc
+
+
 class SerialPortHandler:
     """Handles serial port I/O, buffering and decoding of frames.
 
@@ -174,18 +184,25 @@ class SerialPortHandler:
                     ord('O'): ResponseEvent,
                     ord('N'): ResponseEvent,
                     ord('T'): TestEvent,
-                }.get(self.rx_buffer[1], ASCIIEvent)
+                }.get(self.rx_buffer[1])
+                if frame_class is None:
+                    self.rx_queue.put(GuiEvent("--- Type de trame binaire inconnu ---"))
+                    del self.rx_buffer[0]
+                    continue
                 size = frame_class.frame_size()
                 if len(self.rx_buffer) < size:
                     return
+                if self.rx_buffer[size - 1] != crc8(self.rx_buffer[:size - 1]):
+                    # Reject this start marker and search for the next frame.
+                    self.rx_queue.put(GuiEvent(
+                        "--- Trame binaire invalide : CRC8 incorrect ---"
+                    ))
+                    del self.rx_buffer[0]
+                    continue
             else:
                 frame_class = ASCIIEvent
                 newline_idx = self.rx_buffer.find(b"\n")
-                start_idx = self.rx_buffer.find(bytes([0x01]))
-                if start_idx != -1 and (newline_idx == -1 or start_idx < newline_idx):
-                    # Deliver text preceding a binary frame, even without a newline.
-                    size = start_idx
-                elif newline_idx != -1:
+                if newline_idx != -1:
                     size = newline_idx + 1
                 else:
                     return

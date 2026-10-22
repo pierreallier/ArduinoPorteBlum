@@ -84,11 +84,11 @@ class Event:
 
     @staticmethod
     def frame_size() -> int:
-        return 1 + Event.PAYLOAD_STRUCT.size
+        return 2 + Event.PAYLOAD_STRUCT.size
 
     @staticmethod
     def decode_from_frame(frame: bytes):
-        payload = frame[1:]
+        payload = frame[1:-1]
         try:
             values = Event.PAYLOAD_STRUCT.unpack(payload)
         except struct.error:
@@ -332,15 +332,15 @@ class RequestEvent(Event):
 
 class MesureEvent(Event):
     TYPE = "M"
-    PAYLOAD_STRUCT = struct.Struct("<BIhhiiHi")
+    PAYLOAD_STRUCT = struct.Struct("<BIhhiiii")
 
     @staticmethod
     def frame_size() -> int:
-        return 1 + MesureEvent.PAYLOAD_STRUCT.size
+        return 2 + MesureEvent.PAYLOAD_STRUCT.size
 
     @staticmethod
     def decode_from_frame(frame: bytes):
-        payload = frame[1:]
+        payload = frame[1:-1]
         try:
             values = MesureEvent.PAYLOAD_STRUCT.unpack(payload)
         except struct.error:
@@ -383,11 +383,11 @@ class AccelEvent(Event):
 
     @staticmethod
     def frame_size() -> int:
-        return 1 + AccelEvent.PAYLOAD_STRUCT.size
+        return 2 + AccelEvent.PAYLOAD_STRUCT.size
 
     @staticmethod
     def decode_from_frame(frame: bytes):
-        payload = frame[1:]
+        payload = frame[1:-1]
         try:
             values = AccelEvent.PAYLOAD_STRUCT.unpack(payload)
         except struct.error:

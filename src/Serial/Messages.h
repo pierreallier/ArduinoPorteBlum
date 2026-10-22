@@ -108,6 +108,7 @@ inline void sendDirect(MSGTYPE type, MSG code,int32_t val = 0) {
         message.type = static_cast<char>(type);
         message.code = code;
         message.val  = val;
+        updateFrameCrc(message);
         Serial.write((uint8_t*)&message, TAILLE_MESSAGE);
     #endif
 }
@@ -127,6 +128,7 @@ inline void sendTest(MSG code, int32_t val = 0) {
         message.type = static_cast<char>(MSGTYPE::TEST);
         message.code = code;
         message.val  = val;
+        updateFrameCrc(message);
         Serial.write((uint8_t*)&message, TAILLE_MESSAGE);
     #endif
 }
@@ -158,6 +160,7 @@ inline bool sendMesures(Mesures message) {
     return true;
     #else
     if (Serial.availableForWrite() >= TAILLE_MESURES) {
+        updateFrameCrc(message);
         Serial.write((uint8_t*)&message, TAILLE_MESURES);
         return true;
     }
@@ -183,6 +186,7 @@ inline bool sendMesures(MesuresBN0055 message) {
     return true;
     #else
     if (Serial.availableForWrite() >= TAILLE_MESURES_BN0055) {
+        updateFrameCrc(message);
         Serial.write((uint8_t*)&message, TAILLE_MESURES_BN0055);
         return true;
     } 
@@ -215,11 +219,12 @@ inline bool sendEvents() {
             e.type = static_cast<char>(MSGTYPE::WARNING);
             e.code = MSG::ERR_MESSAGE_PERDU;
             e.val  = queue.perdus();
+            updateFrameCrc(e);
             Serial.write((uint8_t*)&e,TAILLE_MESSAGE);
         #endif
         queue.clearPerdu();
     }
-    dispo = min(dispo, 4); // on ne vide jamais plus de 4 messages d'un coup
+    dispo = min(dispo, 3); // on ne vide jamais plus de 3 messages d'un coup
     if (dispo > 0) {
         for (int i=0;i<dispo;i++) {
             #if VERSION_DEV
@@ -242,7 +247,9 @@ inline bool sendEvents() {
                     Serial.println(data.val);
                 }
             #else
-                Serial.write((uint8_t*)&queue.peek(),TAILLE_MESSAGE);
+                Event message = queue.peek();
+                updateFrameCrc(message);
+                Serial.write((uint8_t*)&message,TAILLE_MESSAGE);
             #endif
             queue.pop();
         }

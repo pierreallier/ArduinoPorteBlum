@@ -41,7 +41,7 @@ Basé sur un graphe d'état, avec détection des obstacles.
 Communication binaire avec l'ordinateur ou textuelle si en mode DEV
 
 
-Toute ligne envoyée par la carte Arduino démarrent par une lettre et séparé par un point virgules et des informations spécifiques au type de messages (pour S,I,W,E,O,N c'est un code entier + valeur numérique optionnelle) :
+Toutes lignes envoyées par la carte Arduino démarrent par une lettre et séparé par un point virgules et des informations spécifiques au type de messages (pour S,I,W,E,O,N c'est un code entier + valeur numérique optionnelle) et se terminer par '\n' :
 
 * M : mesure
 * A : mesure accéléromètre
@@ -69,14 +69,15 @@ Suit cette commande, après un espace un mot clé \[type], suivi de paramètres 
 - COURANT $f : configuration la limite de courant à la valeur $f renseignée (flottant)
 - CALIBRATION [ON|OFF|EFFACER] : Active | désactive | efface la mémorisation de la calibration en mémoire 
 - MODE [PWM|VITESSE|POSITION|POSITION_VITESSE] : configure le mode de pilotage entre les 4 possibilités 
-- CONSIGNE [POTENTIOMETRE|ECHELON|RAMPE|TRAPEZE|SINUS] $ : configure le type de consigne de pilotage parmis les possibiltés (avec des paramètres propres $ en flottant)
+- CONSIGNE [POTENTIOMETRE|ECHELON|RAMPE|TRAPEZE|SINUS|TABLEAU] $ : configure le type de consigne de pilotage parmis les possibiltés (avec des paramètres propres $ en flottant)
     - POTENTIOMETRE : aucune valeur à renseigner
     - ECHELON $val $tf $d : $val=valeur finale de l'échelon, $tf=duré totale, $d=décalage temporel démarrage
     - RAMPE $valInit $valFin $tf $d : $valInit=valeur initiale, $valFin=valeur finale, $tf=duré totale, $d=décalage temporel démarrage
     - TRAPEZE $val $tm $tp $td $d : $val=valeur plateau, $tm=durée montée, $tp=durée plateau, $td=durée descente, $d=décalage temporel démarrage
     - SINUS $amp $p $d $o : $amp=amplitude du sinus, $p=periode du sinus, $d=durée totale, $o=offset en amplitude du signal
+    - TABLEAU $nb pour intialiser le tableau avec $nb lignes, puis suivi de commandes TABLEAU $t $v, ajoute une ligne au tableau avec pour instant $t et valeur $v (dans l'ordre croissant des instant $^t). Interpolation linéaire entre les instants du tableau.
 - PID [VITESSE|POSITION] $kp $ki $ kd : $kp=gain proportionnel, $ki=gain intégrateur, $kd=gain dérivateur (flottant)
-- MESURES [ON|OFF|$i] : active|désactive l'envoi des mesures (sans mémorisation fréquence) ou $i régle la période d'envoi tous les $i ms (arrondis à 5ms) et le mémorise en EEPROM
+- MESURES [ON|OFF|SAVE|$i] : active|désactive l'envoi des mesures (sans mémorisation fréquence) ou $i régle la période d'envoi tous les $i ms (arrondis à 5ms). Pour sauvegarder la valeur en mémoire en EEPROM, utilise ensuite le mot clé "SAVE".
 - ACCEL [ON|OFF] : active|désactive la mesure via l'accéléromètre
 - BUZZER [ON|OFF] : active|desactive le buzzer (avec mémorisation du choix en EEPROM)
 
@@ -94,6 +95,7 @@ Suit cette commande, après un espace un mot clé \[type], suivi de paramètres 
 ### Commandes DO :
 - RESET : reset la carte Arduino
 - INIT : réinitialise la machine à état
+- ACTIONNER : demande l'actionnement de la porte en fonction de sa position initiale (ouverte ou fermeture).
 - OUVRIR : demande l'ouverture de la porte (sans asservissement)
 - FERMER : demande la fermeture de la porte (sans asservissement)
 - STOP : demande l'arrêt du mouvement de la porte
