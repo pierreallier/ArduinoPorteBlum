@@ -32,10 +32,10 @@ class SensorsManager {
     public:
 
         void init();
-        void mesures(int pwm);
+        void mesures();
 
         // Sécurités 
-        void updateSecurities(int pwm);
+        void updateSecurities(int16_t pwm);
         bool isBlocage();
         bool isLimiteCourant();
         bool isLimiteAngle();
@@ -56,7 +56,7 @@ class SensorsManager {
         inline float getAnglePorte() const { return _mesures.angle_porte / 100.0f;}
         inline float getAngleMoteur() const { return _mesures.angle_moteur / 100.0f;}
         inline float getVitesseMoteur() const { return _mesures.vitesse_moteur / 100.0f;}
-        inline float getPWM() const { return pwm / 100.0f;}
+        inline float getPWM() const { return _pwm;}
         inline float getConsigne() const { return _mesures.consigne / 100.0f;}
         inline float getPotentiometre() const { return _potentiometre.get() / 100.0f;}
         inline float getLimiteBasse() const { return calibrationData.lowLimit;}
@@ -93,7 +93,7 @@ class SensorsManager {
         bool limite_courant_atteinte = false;
         uint8_t compteur_blocage = 0;
 
-        int16_t pwm = 0;
+        int16_t _pwm = 0; // Valeur PWM actuelle (+/-255)
 
         CalibrationData calibrationData;
 

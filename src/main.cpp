@@ -44,6 +44,8 @@ void configButton(Bounce2::Button& button, uint8_t pin) {
 }
 
 void setup() {
+    Led ledError = Led(LED_ERROR_PIN);
+    
     portserie.init(); // Initialisation du port série
     buzzer.init(); // Initialiation du buzzer
 
@@ -59,10 +61,12 @@ void setup() {
     capteurs.init(); // Initialisation des capteurs
     moteur.init(); // Initialisation du moteur et du driver
     machine.init(); // Initialisation de la machine à états
+    ledError.init(); // Initialisation de la LED d'erreur
 
     // Mode DEV (message et envoi des mesures) sinon on n'envoit pas les mesures (à activer via le SET)
     #if VERSION_DEV
         sendDirect(MSGTYPE::WARNING, MSG::INFO_DEV);
+        portserie.setMesurePeriode(1000); // Envoi des mesures toutes les secondes
     #else
         portserie.setMesurePeriode(0);
     #endif
@@ -72,13 +76,13 @@ void setup() {
     while (!capteurs.checkCodeurPorte()) {
         if (!send_error) {
             sendDirect(MSGTYPE::ERROR, MSG::ERR_CAPTEUR_ABSENT);
-            machine.ledError.on(); // Allume la LED d'erreur pour indiquer un problème avec le capteur 
+            ledError.on(); // Allume la LED d'erreur pour indiquer un problème avec le capteur 
             send_error = true;         
         }
         delay(1000);  // Petite pause pour éviter de saturer le CPU
     }
     sendDirect(MSGTYPE::INFO, MSG::INFO_CAPTEUR_PRESENT);
-    machine.ledError.off();
+    ledError.off();
 
     // Vérification type de montage 
     capteurs.onMeuble() ? sendDirect(MSGTYPE::INFO, MSG::INFO_SUR_MEUBLE) : sendDirect(MSGTYPE::INFO, MSG::INFO_DEMONTE);
@@ -96,7 +100,8 @@ void setup() {
 
     // Initialisation des timers pour l'ordonnanceur
     tVerif = tMesure = tBt  = tEnvoi = tBno = micros();
-    capteurs.mesures(0); // Initialise la 1er mesure
+    capteurs.updateSecurities(0); // Initialisation des sécurités
+    capteurs.mesures(); // Initialise la 1er mesure
     if (capteurs.bno().isEnabled()) {
         capteurs.bno().requestData();
     }
@@ -133,7 +138,7 @@ void ordonnanceur() {
     // Récupération de la période d'envoi des mesures si changée
     uint32_t PERIODE_ENVOI = portserie.getMesurePeriode()*1000;
     uint32_t PERIODE_MESURE = min(PERIODE_ENVOI,PERIODE_MESURES);
-    float pwm = moteur.getPWM();
+    uint16_t pwm = moteur.getPWM();
 
     uint32_t maintenant = micros();
 
@@ -145,7 +150,7 @@ void ordonnanceur() {
         // Acquisition des autres grandeurs (au maximum toutes les PERIODE_MESURE)
         if (maintenant - tMesure >= PERIODE_MESURE) {
             tMesure += PERIODE_MESURE;
-            capteurs.mesures(pwm);
+            capteurs.mesures();
         }
         // Vérification des sécurités
         if (!machine.enCalibration()) {

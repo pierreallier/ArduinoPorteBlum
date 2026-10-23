@@ -83,12 +83,12 @@ void Motor::stop(){
     ledMotor.stopBlinking(); // Stop blinking the motor LED
 }
 
-void Motor::ouvrir(uint16_t speed) {
+void Motor::ouvrir(int speed) {
     setDirection(DIR::OUVERTURE);
     setSpeed(speed);
 }
 
-void Motor::fermer(uint16_t speed) {
+void Motor::fermer(int speed) {
     setDirection(DIR::FERMETURE);
     setSpeed(speed);
 }

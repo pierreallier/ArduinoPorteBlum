@@ -137,6 +137,12 @@ void CalibrationManager::execStateEntry(ETAT_CALIBRATION etat) {
       moteur.ouvrir(PWM_CALIBRATION);
       break;
     }
+    case ETAT_CALIBRATION::ERREUR: {
+      moteur.stop();
+      LedError.on();
+      buzzer.sequenceErreur();
+      break;
+    }
     default:
       break;
   }
@@ -213,6 +219,7 @@ void CalibrationManager::execState(ETAT_CALIBRATION etat) {
         sendReponseOK(MSG::INFO_CALIBRATION_ACHEVEE);
         setCalibration(getConfig(), course-2, 0, angle_butee_basse);
         changerEtat(ETAT_CALIBRATION::FIN);
+        buzzer.sequenceFinPilotage();
       }
       break;
     }

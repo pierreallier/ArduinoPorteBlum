@@ -9,7 +9,7 @@ void SensorsManager::init() {
     _mesures.time = millis();
 }
 
-void SensorsManager::updateSecurities(int pwm) {
+void SensorsManager::updateSecurities(int16_t pwm) {
     // Mets à jours les sécurité pour le fonctionnement du système : 
     //  - Limites extrémales de la porte
     //  - Limite de courant du moteur
@@ -25,8 +25,11 @@ void SensorsManager::updateSecurities(int pwm) {
     _courant.read();
     limite_courant_atteinte = _courant.isLimitReached();
 
+    // PWM
+    _pwm = pwm; // Valeur PWM actuelle (+/-255)
+
     // Détection blocage
-    uint8_t pwm_abs = abs(pwm);
+    int pwm_abs = abs(pwm);
     if (pwm_abs < PWM_MIN) { // PWM trop faible pour détecter un blocage mécanique
         compteur_blocage = 0;
         blocage_detecte = false;
@@ -78,14 +81,13 @@ bool SensorsManager::resetSecurities() {
 }
 
 
-void SensorsManager::mesures(int p) {
+void SensorsManager::mesures() {
     _codeurMoteur.read();
     _mesures.time = millis();
     _mesures.angle_moteur = _codeurMoteur.getAngle();
     _mesures.vitesse_moteur = _codeurMoteur.getSpeed();
     // Multiplication sur 32 bits pour eviter le debordement 16 bits sur AVR.
-    _mesures.tension = static_cast<int16_t>(static_cast<int32_t>(_tension.read()) * p / 255);
-    pwm = p * 100; // avant la lecture de la tension car nécessaire
+    _mesures.tension = static_cast<int16_t>(static_cast<int32_t>(_tension.read()) * _pwm / 255);
     _mesures.courant_moyen = static_cast<int>(_courant.getMoy() * 100); // le courant a été lu dans updateSecurities()
     _potentiometre.read();
     _meuble.update();

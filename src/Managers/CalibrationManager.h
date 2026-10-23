@@ -72,6 +72,8 @@ class CalibrationManager : public StateMachine<ETAT_CALIBRATION> {
         // Limites mesurées lors de la calibration
         uint16_t angle_butee_basse;
         uint16_t angle_butee_haute;
+
+        Led LedError = Led(LED_ERROR_PIN);
 };
 
 #endif
