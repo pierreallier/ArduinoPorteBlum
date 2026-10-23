@@ -36,6 +36,9 @@ class ABEncoder {
             _nb_ticks = 0;
             _time = micros();
             _last_time = _time;
+            _raw_speed = 0;
+            _filtered_speed = 0.0f;
+            _speed_alpha = 0.0f;
         }
 
         void read() {
@@ -46,6 +49,7 @@ class ABEncoder {
             ticks = 0;
             interrupts();
             _nb_ticks += _delta_ticks;
+            updateSpeed();
         } 
 
         inline int32_t getDeltaTicks() { return _delta_ticks; }
@@ -53,16 +57,46 @@ class ABEncoder {
         
         inline uint32_t getTime() { return _time; }
         inline int32_t getAngle() { return static_cast<int32_t>(_nb_ticks * coeff());}
-        inline int32_t getDeltaAngle() { return static_cast<int32_t>(_delta_ticks * coeff());} // Variation angulaire
-        int32_t getSpeed() {
-            uint32_t dt = _time - _last_time;
-            if (dt < 10) return 0; // Evite la division par zéro
-            int32_t angle = static_cast<int64_t>(getDeltaAngle()) * 1000000LL / dt;
-            return angle;
-        }
+        int32_t getSpeed() const { return static_cast<int32_t>(_filtered_speed); }
+        int32_t getRawSpeed() const { return _raw_speed; }
+        float getSpeedAlpha() const { return _speed_alpha; }
         
     private:
+        // Constantes de temps en secondes : lissage stable / suivi des variations.
+        static constexpr float SPEED_TAU_STABLE = 0.150f;
+        static constexpr float SPEED_TAU_DYNAMIC = 0.010f;
+        // Ecart donnant la reactivite maximale : plancher + fraction de la vitesse.
+        // Le plancher est dans les memes unites que getSpeed() (rad/s * 100).
+        static constexpr float SPEED_CHANGE_FLOOR = 100.0f;
+        static constexpr float SPEED_CHANGE_RATIO = 0.25f;
+
         float _coeff;
+
+        int32_t _raw_speed = 0;
+        float _filtered_speed = 0.0f;
+        float _speed_alpha = 0.0f;
+
+        void updateSpeed() {
+            const uint32_t dt = _time - _last_time;
+            if (dt < 10) return;
+
+            // Calcul de la vitesse brute en rad/s * 100, avec conversion de dt en secondes.
+            const float raw_speed = _delta_ticks * coeff() * (1000000.0f / dt);
+            _raw_speed = static_cast<int32_t>(raw_speed);
+            
+            // Calcul de la vitesse filtrée avec un filtre passe-bas adaptatif.
+            const float error = raw_speed - _filtered_speed;
+            const float magnitude = _filtered_speed < 0.0f ? -_filtered_speed : _filtered_speed;
+            const float deviation = error < 0.0f ? -error : error;
+            float activity = deviation / (SPEED_CHANGE_FLOOR + SPEED_CHANGE_RATIO * magnitude);
+            if (activity > 1.0f) activity = 1.0f;
+
+            const float tau = SPEED_TAU_STABLE + activity * (SPEED_TAU_DYNAMIC - SPEED_TAU_STABLE);
+            const float dt_seconds = dt * 0.000001f;
+            // EMA avec alpha adapté au temps écoulé et à la variation de vitesse.
+            _speed_alpha = dt_seconds / (tau + dt_seconds);
+            _filtered_speed += _speed_alpha * error;
+        }
 
         int32_t _delta_ticks = 0;
         uint32_t _time = 0;
