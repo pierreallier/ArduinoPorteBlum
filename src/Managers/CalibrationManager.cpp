@@ -228,7 +228,11 @@ void CalibrationManager::execState(ETAT_CALIBRATION etat) {
           break;
         }
         sendReponseOK(MSG::INFO_CALIBRATION_ACHEVEE);
-        setCalibration(getConfig(), course-2, 0, angle_butee_basse);
+        if (capteurs.onMeuble()){
+          setCalibration(getConfig(), course, 0, angle_butee_basse);
+        } else {
+          setCalibration(getConfig(), course-5, 5, angle_butee_basse);
+        }
         changerEtat(ETAT_CALIBRATION::FIN);
         buzzer.sequenceFinPilotage();
       }

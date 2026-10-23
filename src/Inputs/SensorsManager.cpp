@@ -16,8 +16,8 @@ void SensorsManager::updateSecurities(int16_t pwm) {
     //  - Vérifie les blocages
 
     // Détection des limites extrémales de la porte
-    _mesures.angle_porte = _codeurPorte.read();
-    float angle = getAnglePorte();
+    const int32_t angle = _codeurPorte.readRaw(); // lit la valeur brute du codeur absolu pour comparaisons limites
+    _mesures.angle_porte = angle * _codeurPorte.getCoeff(); // Converti en °*100
     limite_haute = (angle >= calibrationData.highLimit);
     limite_basse = (angle <= calibrationData.lowLimit);
 

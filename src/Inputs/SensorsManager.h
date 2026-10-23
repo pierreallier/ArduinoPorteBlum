@@ -42,7 +42,7 @@ class SensorsManager {
         inline bool isLimiteHaute() {return limite_haute;}
         inline bool isLimiteBasse() {return limite_basse;}
         bool resetSecurities();
-        inline bool onMeuble() const {return _meuble.etat();}
+        inline bool onMeuble() const {return false;} // pour l'instant tjr hors meuble _meuble.etat()
         inline bool meubleChanged() {return _meuble.changed();}
         inline bool hasPower() { return _tension.get() > 500;}
 

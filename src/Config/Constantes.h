@@ -13,6 +13,7 @@
 // Codeur incrémental du moteur
 #define CODEUR_A_PIN 19
 #define CODEUR_B_PIN 18
+#define ABENC_MODE_QUADRATURE
 
 #if VERSION_CARTE == 2
     // Capteurs

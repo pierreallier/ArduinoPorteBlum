@@ -18,6 +18,7 @@ class Sensor {
         void reset() {_value = 0;}
         void setOffset(T offset) {_offset = offset;}
         T getOffset() const { return _offset;}
+        float getCoeff() const { return _coeff;}
     
     protected:
         uint8_t _pin;

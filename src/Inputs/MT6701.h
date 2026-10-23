@@ -29,8 +29,9 @@ public:
     // Enregistre le composant auprès de nI2C (à appeler dans setup()).
     void init();
 
-    // Lecture via la sortie analogique du codeur
-    int32_t read() {_value = ((int32_t)ADC_MAX + _offset - analogRead(_pin)) % ADC_MAX * _coeff; return _value;}
+    // Lecture via la sortie analogique du codeur corrigée de l'offset.
+    int32_t readRaw() { return ((int32_t)ADC_MAX + _offset - analogRead(_pin)) % ADC_MAX; }
+    int32_t read() {_value = readRaw() * _coeff; return _value;}
 
     // Commandes via protocole I2C
     // BLOQUANT (setup uniquement). Lit l'angle une fois et attend la fin de la
