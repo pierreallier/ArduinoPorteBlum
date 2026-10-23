@@ -3,6 +3,7 @@
 #include <Arduino.h>
 
 #include "Consigne.h"
+#include "../Serial/Messages.h"
 
 /**
  * @brief Gestionnaire des consignes de pilotage.

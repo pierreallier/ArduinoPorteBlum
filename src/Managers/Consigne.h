@@ -82,9 +82,9 @@ class ConsigneEchelon : public Consigne {
         }
 
     private:
-        float valeur = 0.0f;
-        unsigned long duree = 0;
-        unsigned long delai = 0;
+        float valeur = 0.0f; // valeur de l'échelon
+        unsigned long duree = 0; // durée de l'échelon en millisecondes
+        unsigned long delai = 0; // délai avant le début de l'échelon en millisecondes
 };
 
 /**
@@ -122,10 +122,10 @@ class ConsigneRampe : public Consigne {
         }
 
     private:
-        float valeurInitiale = 0.0f;
-        float valeurFinale = 0.0f;
-        unsigned long duree = 0;
-        unsigned long delai = 0;
+        float valeurInitiale = 0.0f; // valeur initiale de la rampe
+        float valeurFinale = 0.0f; // valeur finale de la rampe
+        unsigned long duree = 0; // durée de la rampe en millisecondes
+        unsigned long delai = 0; // délai avant le début de la rampe en millisecondes
 };
 
 /**
@@ -177,11 +177,11 @@ class ConsigneTrapeze : public Consigne {
         }
 
     private:
-        float valeur = 0.0f;
-        unsigned long dureeMontee = 0;
-        unsigned long dureePlateau = 0;
-        unsigned long dureeDescente = 0;
-        unsigned long delai = 0;
+        float valeur = 0.0f; // Valeur maximale du trapèze
+        unsigned long dureeMontee = 0; // Durée de la montée en millisecondes
+        unsigned long dureePlateau = 0; // Durée du plateau en millisecondes
+        unsigned long dureeDescente = 0; // Durée de la descente en millisecondes
+        unsigned long delai = 0; // Délai avant le début du trapèze en millisecondes
 };
 
 /**
@@ -218,10 +218,10 @@ class ConsigneSinus : public Consigne {
         }
 
     private:
-        float amplitude = 0.0f;
-        float offset = 0.0f;
-        unsigned long periode = 0;
-        unsigned long duree = 0;
+        float amplitude = 0.0f; // Amplitude de la sinusoïde
+        float offset = 0.0f; // Offset de la sinusoïde
+        unsigned long periode = 0; // période de la sinusoïde en millisecondes
+        unsigned long duree = 0; // durée totale de la consigne en millisecondes
 };
 
 /* @brief Consigne à partir d'un tableau de valeurs (échantillons).
@@ -299,7 +299,7 @@ class ConsigneTableau : public Consigne {
         bool append(unsigned long time, float val) {
             if (count >= capacity) {
                 unsigned int nouvelleCapacite = (capacity == 0) ? 8 : (capacity * 2);
-                if (!reserve(nouvelleCapacite))
+                if (nouvelleCapacite >= 100 || !reserve(nouvelleCapacite))
                     return false;
             }
 
@@ -357,12 +357,12 @@ class ConsigneTableau : public Consigne {
 
     private:
         struct Point {
-            unsigned long time = 0;
-            float valeur = 0.0f;
+            unsigned long time = 0; // Temps en millisecondes depuis le début de la consigne
+            float valeur = 0.0f; // Valeur du point
         };
 
         Point* points = nullptr;
-        unsigned int count = 0;
+        unsigned int count = 0; // Nombre de points actuellement stockés
         unsigned int capacity = 0;
 };
 
