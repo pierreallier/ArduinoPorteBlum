@@ -8,6 +8,7 @@
 #include "BN0055.h"
 #include "CurrentMoySensor.h"
 #include "ABEncoder.h"
+#include "ExpFilter.h"
 
 #include "../Config/Constantes.h"
 #include "../Config/Types.h"
@@ -91,6 +92,8 @@ class SensorsManager {
 
     private:
         Mesures _mesures;
+        // Filtrage du courant moyen en A : tau stable/dynamique (s), seuil (A), ratio.
+        ExpFilter _courantFilter{0.150f, 0.010f, 0.100f, 0.25f};
 
         bool limite_haute = false;
         bool limite_basse = false;
@@ -102,10 +105,6 @@ class SensorsManager {
 
         CalibrationData calibrationData;
 
-        void readCodeurPorte();
-        void readCourant();
-        void readTension();
-        void readPotentiometre();
 };
 
 #endif

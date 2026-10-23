@@ -6,6 +6,7 @@ void SensorsManager::init() {
     _bno.init(); // Initialisation du capteur BN0055
     _codeurMoteur.init(); // Initialisation du codeur du moteur
     _courant.init(); // Initialisation du capteur de courant
+    _courantFilter.reset();
     _mesures.time = millis();
 }
 
@@ -88,29 +89,10 @@ void SensorsManager::mesures() {
     _mesures.vitesse_moteur = _codeurMoteur.getSpeed();
     // Multiplication sur 32 bits pour eviter le debordement 16 bits sur AVR.
     _mesures.tension = static_cast<int16_t>(static_cast<int32_t>(_tension.read()) * _pwm / 255);
-    _mesures.courant_moyen = static_cast<int>(_courant.getMoy() * 100); // le courant a été lu dans updateSecurities()
+    _mesures.courant_moyen = static_cast<int>(_courantFilter.get(_courant.getMoy()) * 100.0f); // A * 100
     _potentiometre.read();
     _meuble.update();
 }
-
-void SensorsManager::readCodeurPorte() {
-    // Lecture du codeur
-    _mesures.angle_porte = _codeurPorte.read();
-}
-
-void SensorsManager::readCourant() {
-    _courant.read();
-    _mesures.courant_moyen = static_cast<int>(_courant.getMoy() * 100); // Converti en A*100
-}
-
-void SensorsManager::readTension() {
-    _mesures.tension = _tension.read();
-}
-
-void SensorsManager::readPotentiometre() {
-    _potentiometre.read();
-}
-
 
 
 void SensorsManager::setCalibration(CalibrationData c) {
