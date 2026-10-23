@@ -1,11 +1,5 @@
 #include "ConsigneManager.h"
 
-bool ConsigneManager::appendTableau(unsigned long time, float val) {
-    if (consigneActive != &consigneTableau)
-        return false;
-    return consigneTableau.append(time, val);
-}
-
 bool ConsigneManager::setConsigne( const String& type, const String* params, int nbParams) {
     if (type == "POTENTIOMETRE") {
         consigneActive = &consignePotentiometre; // On ignore s'il y a des paramètres en plus
@@ -74,24 +68,28 @@ bool ConsigneManager::setConsigne( const String& type, const String* params, int
         // Ajout de point: SET CONSIGNE TABLEAU <time> <valeur>
         if (consigneActive != &consigneTableau)
             return false;
-        float time = params[0].toFloat();
+        unsigned long time = params[0].toInt();
         float valeur = params[1].toFloat();
         return consigneTableau.append(time, valeur);
+    }
+    if (type == "TEST") {
+        consigneActive = &consigneTest; // On ignore s'il y a des paramètres en plus
+        return true;
     }
     // Type inconnu
     return false;
 }
 
-void ConsigneManager::init(unsigned long t) {
+void ConsigneManager::init(unsigned long t) { // time en microseconds
     if (consigneActive != nullptr)
         consigneActive->init(t);
 }
 
-float ConsigneManager::get(unsigned long t) {
+float ConsigneManager::get(unsigned long t) { // time en microseconds
     return consigneActive->get(t);
 }
 
-bool ConsigneManager::ended(unsigned long t) const{
+bool ConsigneManager::ended(unsigned long t) const{ // time en microseconds
     return consigneActive->ended(t);
 }
 

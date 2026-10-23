@@ -50,7 +50,7 @@ void PilotageMachine::execStateExit(ETAT_PILOTAGE etat) {
     if (etat == ETAT_PILOTAGE::INIT) {
         pidPosition.reset();
         pidVitesse.reset();
-        consigne.init(millis());
+        consigne.init(micros());
         capteurs.setConsigne(0);
     }
 }
@@ -134,7 +134,7 @@ bool PilotageMachine::setConsigne(const String& type, const String* params, int 
 
 bool PilotageMachine::etatPilote() {
     /* Gestion du pilotage de la porte via consigne */
-    unsigned long time = millis();
+    uint32_t time = micros();
     if (consigne.ended(time)) {
         moteur.stop();
         capteurs.setConsigne(0);

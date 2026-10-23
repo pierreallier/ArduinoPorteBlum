@@ -58,7 +58,7 @@ void Motor::startDebrayage() {
     // Arrête le moteur en enregistrant quelques mesures
     codeur_avant_debrayage = capteurs.getAngleMoteur();
     courant_avant_debrayage = capteurs.getCourant();
-    time_avant_debrayage = millis();
+    time_avant_debrayage = micros();
     if (direction == Motor::DIR::OUVERTURE) {
        setSpeedDir(-150); // Apply a small reverse speed to stop the motor
     } else if (direction == Motor::DIR::FERMETURE) {
@@ -70,7 +70,7 @@ void Motor::startDebrayage() {
 bool Motor::isDebraye() {
     int32_t delta_angle = abs(capteurs.getAngleMoteur() - codeur_avant_debrayage);
     //float delta_courant = abs(1 - courant_avant_debrayage/capteurs.getCourant());
-    if (millis() - time_avant_debrayage >= 200 || delta_angle > 100 ) { //|| delta_courant > 0.5) {
+    if (micros() - time_avant_debrayage >= 200000UL || delta_angle > 100 ) { //|| delta_courant > 0.5) {
         stop();
         return true;
     }

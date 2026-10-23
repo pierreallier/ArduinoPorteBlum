@@ -127,7 +127,7 @@ void lancerTest() {
     machine.reprendre();
 
     // Resynchronisation des timers pour éviter le rattrapage des cycles manqués
-    tVerif = tMesure = tBt  = tEnvoi = tBno = millis();
+    tVerif = tMesure = tBt  = tEnvoi = tBno = micros();
     portserie.resync();
 
     // Évite qu'un appui pendant le test soit pris pour une nouvelle commande

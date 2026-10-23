@@ -20,18 +20,14 @@ class ConsigneManager {
     public:
         ConsigneManager() : consigneActive(&consignePotentiometre) { } // Par défaut, la consigne active est la consigne potentiomètre
         bool setConsigne( const String& type, const String* params, int nbParams); // de configurer et sélectionner une consigne à partir de paramètres textuels
-        void init(unsigned long t); // Initialiser la consigne active
-        float get(unsigned long t); //Calculer sa valeur de la consigne à un instant donné
-        bool ended(unsigned long t) const; // Déterminer si l'exécution de la consigne est terminée
+        void init(unsigned long t); // Initialiser la consigne active (t en microseconds)
+        float get(unsigned long t); //Calculer sa valeur de la consigne à un instant donné (t en microseconds)
+        bool ended(unsigned long t) const; // Déterminer si l'exécution de la consigne est terminée (t en microseconds)
         const char* getName() const; // Obtenir son nom
         bool hasConsigne() const { // Vérifie qu'une consigne est bien active
             return consigneActive != nullptr;
         }
-
-        // Ajoute un point à la consigne TABLEAU si elle est active
-        bool appendTableau(unsigned long time, float val);
         
-
     private:
         ConsignePotentiometre consignePotentiometre;
         ConsigneEchelon       consigneEchelon;
@@ -39,6 +35,7 @@ class ConsigneManager {
         ConsigneTrapeze       consigneTrapeze;
         ConsigneSinus         consigneSinus;
         ConsigneTableau       consigneTableau;
+        ConsigneTest          consigneTest;
 
         Consigne* consigneActive = nullptr;
 };

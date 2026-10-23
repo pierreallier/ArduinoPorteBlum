@@ -11,7 +11,7 @@ class PID {
         void setOutputLimits(float min, float max);
         void setIntegraleLimit(float limite);
         void reset();
-        float compute(float consigne, float mesure, unsigned long time);
+        float compute(float consigne, float mesure, unsigned long time); // time en microsecondes
 
         float kp, ki, kd;
 

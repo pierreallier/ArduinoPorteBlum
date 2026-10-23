@@ -65,16 +65,16 @@ class ConsigneEchelon : public Consigne {
 
         float get(unsigned long t) override {
             unsigned long dt = t - t_init;
-            if (dt < delai)
+            if (dt < delai*1000UL)
                 return 0.0f;
-            dt -= delai;
-            if (dt < duree)
+            dt -= delai*1000UL;
+            if (dt < duree*1000UL)
                 return valeur;
             return 0.0f;
         }
 
         bool ended(unsigned long t) const override {
-            return (t - t_init >= delai + duree);
+            return (t - t_init >= (delai + duree)*1000UL);
         }
 
         const char* getName() const override {
@@ -104,17 +104,17 @@ class ConsigneRampe : public Consigne {
 
         float get(unsigned long t) override {
             unsigned long dt = t - t_init;
-            if (dt < delai)
+            if (dt < delai*1000UL)
                 return valeurInitiale;
-            dt -= delai;
-            if (duree == 0 || dt >= duree)
+            dt -= delai*1000UL;
+            if (duree == 0 || dt >= duree*1000UL)
                 return valeurFinale;
-            float progression = static_cast<float>(dt) / static_cast<float>(duree);
+            float progression = static_cast<float>(dt) / static_cast<float>(duree) * 0.001f;
             return valeurInitiale + progression * (valeurFinale - valeurInitiale);
         }
 
         bool ended(unsigned long t) const override {
-            return (t - t_init >= delai + duree);
+            return (t - t_init >= (delai + duree)*1000UL);
         }
 
         const char* getName() const override {
@@ -146,30 +146,30 @@ class ConsigneTrapeze : public Consigne {
 
         float get(unsigned long t) override {
             unsigned long dt = t - t_init;
-            if (dt < delai)
+            if (dt < delai*1000UL)
                 return 0.0f;
-            dt -= delai;
-            if (dt < dureeMontee) {
+            dt -= delai*1000UL;
+            if (dt < dureeMontee*1000UL) {
                 if (dureeMontee == 0)
                     return valeur;
-                float progression = static_cast<float>(dt) / static_cast<float>(dureeMontee);
+                float progression = static_cast<float>(dt) / static_cast<float>(dureeMontee) * 0.001f;
                 return valeur * progression;
             }
-            dt -= dureeMontee;
-            if (dt < dureePlateau)
+            dt -= dureeMontee*1000UL;
+            if (dt < dureePlateau*1000UL)
                 return valeur;
-            dt -= dureePlateau;
-            if (dt < dureeDescente) {
+            dt -= dureePlateau*1000UL;
+            if (dt < dureeDescente*1000UL) {
                 if (dureeDescente == 0)
                     return 0.0f;
-                float progression = static_cast<float>(dt) / static_cast<float>(dureeDescente);
+                float progression = static_cast<float>(dt) / static_cast<float>(dureeDescente) * 0.001f;
                 return valeur * (1.0f - progression);
             }
             return 0.0f;
         }
 
         bool ended(unsigned long t) const override {
-            return (t - t_init >= delai + dureeMontee + dureePlateau + dureeDescente);
+            return (t - t_init >= (delai + dureeMontee + dureePlateau + dureeDescente)*1000UL);
         }
 
         const char* getName() const override {
@@ -201,16 +201,16 @@ class ConsigneSinus : public Consigne {
 
         float get(unsigned long t) override {
             unsigned long dt = t - t_init;
-            if (dt >= duree)
-                return 0.0f;
+            if (dt >= duree*1000UL)
+                return offset;
             if (periode == 0)
                 return offset;
-            float angle = 2.0f * PI * static_cast<float>(dt) / static_cast<float>(periode);
+            float angle = 2.0f * PI * static_cast<float>(dt) / static_cast<float>(periode) * 0.001f;
             return offset + amplitude * sin(angle);
         }
 
         bool ended(unsigned long t) const override {
-            return (t - t_init >= duree);
+            return (t - t_init >= duree*1000UL);
         }
 
         const char* getName() const override {
@@ -323,15 +323,15 @@ class ConsigneTableau : public Consigne {
                 return points[0].valeur;
 
             unsigned long dt = t - t_init;
-            if (dt >= points[count - 1].time)
+            if (dt >= points[count - 1].time*1000UL)
                 return 0.0f;
 
-            if (dt <= points[0].time)
+            if (dt <= points[0].time*1000UL)
                 return points[0].valeur;
 
             for (unsigned int i = 0; i + 1 < count; i++) {
-                const unsigned long t0 = points[i].time;
-                const unsigned long t1 = points[i + 1].time;
+                const unsigned long t0 = points[i].time*1000UL;
+                const unsigned long t1 = points[i + 1].time*1000UL;
 
                 if (dt < t1) {
                     if (t1 <= t0)
@@ -348,7 +348,7 @@ class ConsigneTableau : public Consigne {
         bool ended(unsigned long t) const override {
             if (count == 0 || points == nullptr)
                 return true;
-            return (t - t_init >= points[count - 1].time);
+            return (t - t_init >= points[count - 1].time*1000UL);
         }
 
         const char* getName() const override {
@@ -364,4 +364,31 @@ class ConsigneTableau : public Consigne {
         Point* points = nullptr;
         unsigned int count = 0;
         unsigned int capacity = 0;
+};
+
+/* @brief Consigne de test.
+ *   
+ * Consigne qui ne fait rien et se termine après 10 secondes.
+ * Pour test du code sans mouvement moteur.
+ */
+class ConsigneTest : public Consigne {
+    public:
+        void init(unsigned long t) override {
+            Consigne::init(t);
+        }
+
+        float get(unsigned long t) override {
+            return 0.0f;
+        }
+
+        bool ended(unsigned long t) const override {
+            if (t - t_init >= 10000UL*1000UL) {
+                return true;
+            }
+            return false;
+        }
+
+        const char* getName() const override {
+            return "TEST";
+        }
 };
