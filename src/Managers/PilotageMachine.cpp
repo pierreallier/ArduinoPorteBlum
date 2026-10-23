@@ -36,7 +36,6 @@ void PilotageMachine::execStateEntry(ETAT_PILOTAGE etat) {
             break;
         }
         case ETAT_PILOTAGE::FIN: {
-            sendInfo(MSG::INFO_PILOTAGE_FINI);
             capteurs.setConsigne(0);
             stop();
             break;

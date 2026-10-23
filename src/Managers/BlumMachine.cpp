@@ -28,7 +28,6 @@ ETAT BlumMachine::checkTransition(ETAT etat_demande) {
             etat_demande == ETAT::NO_POWER) {
             return etat_demande;
         } else if (_etat == ETAT::CALIBRATION && etat_demande != ETAT::CALIBRATION) {
-            sendError(MSG::ERR_CALIBRATION_ANNULEE);
             return ETAT::ERREUR;
         } else if (etat_demande != ETAT::CALIBRATION_REQUIS) {
             sendWarning(MSG::ERR_CALIBRATION_REQUISE);
@@ -41,10 +40,16 @@ ETAT BlumMachine::checkTransition(ETAT etat_demande) {
 void BlumMachine::execStateExit(ETAT etat) {
     switch (etat) {
         case ETAT::PILOTAGE: {
+            if (pilotage.isRunning()) {
+                sendWarning(MSG::ERR_PILOTAGE_STOPPE);
+            }
             pilotage.stop();
             break;
         }
         case ETAT::CALIBRATION: {
+            if (calibration.isRunning()) {
+                sendWarning(MSG::ERR_CALIBRATION_ANNULEE);
+            }
             calibration.stop();
             ledCalibration.off();
             break;
@@ -159,6 +164,7 @@ void BlumMachine::execState(ETAT etat) {
         }
         case ETAT::PILOTAGE: {
             if (!pilotage.exec()) {
+                sendInfo(MSG::INFO_PILOTAGE_FINI);
                 changerEtat(ETAT::DEBRAYAGE);
             }
             // Le setConsigne est fait dans pilotage.exec()

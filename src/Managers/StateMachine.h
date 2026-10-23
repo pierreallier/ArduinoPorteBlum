@@ -51,6 +51,7 @@ class StateMachine {
         Etat getEtat() const { return _etat; };
         void setEtat(Etat etat) { _etat = etat;};
         uint32_t getTimeEtat() const { return _time_etat; };
+        bool isRunning() const { return _activated; };
     
     protected:
         MSG name;
