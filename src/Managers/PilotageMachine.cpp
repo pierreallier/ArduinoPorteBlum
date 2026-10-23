@@ -31,11 +31,13 @@ void PilotageMachine::execStateEntry(ETAT_PILOTAGE etat) {
             break;
         }
         case ETAT_PILOTAGE::ERREUR: {
+            capteurs.setConsigne(0);
             stop();
             break;
         }
         case ETAT_PILOTAGE::FIN: {
             sendInfo(MSG::INFO_PILOTAGE_FINI);
+            capteurs.setConsigne(0);
             stop();
             break;
         }
@@ -49,6 +51,7 @@ void PilotageMachine::execStateExit(ETAT_PILOTAGE etat) {
         pidPosition.reset();
         pidVitesse.reset();
         consigne.init(millis());
+        capteurs.setConsigne(0);
     }
 }
 
@@ -134,6 +137,7 @@ bool PilotageMachine::etatPilote() {
     unsigned long time = millis();
     if (consigne.ended(time)) {
         moteur.stop();
+        capteurs.setConsigne(0);
         buzzer.sequenceFinPilotage(); // Si mode Potentiomètre, la consigne ne se termine pas, donc pas de bip
         return false;
     }

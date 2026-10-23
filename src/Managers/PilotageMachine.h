@@ -40,6 +40,7 @@ class PilotageMachine : public StateMachine<ETAT_PILOTAGE> {
             pidVitesse.setGains(kp, ki, kd);
         };
         bool setConsigne(const String& type, const String* params, int nbParams);
+        
 
     protected:
         PID pidPosition;

@@ -123,24 +123,34 @@ void CalibrationManager::execStateEntry(ETAT_CALIBRATION etat) {
       angle_butee_haute = 0;
       moteur.enable();
       moteur.setSpeed(0);
+      capteurs.setConsigne(0);
       break;
     }
     case ETAT_CALIBRATION::OUVERTURE: {
       moteur.ouvrir(PWM_CALIBRATION);
+      capteurs.setConsigne(PWM_CALIBRATION);
       break;
     }
     case ETAT_CALIBRATION::BUTEE_BASSE: {
       moteur.fermer(PWM_CALIBRATION);
+      capteurs.setConsigne(-PWM_CALIBRATION);
       break;
     }
     case ETAT_CALIBRATION::BUTEE_HAUTE: {
       moteur.ouvrir(PWM_CALIBRATION);
+      capteurs.setConsigne(PWM_CALIBRATION);
       break;
     }
     case ETAT_CALIBRATION::ERREUR: {
       moteur.stop();
+      capteurs.setConsigne(0);
       LedError.on();
       buzzer.sequenceErreur();
+      break;
+    }
+    case ETAT_CALIBRATION::FIN: {
+      moteur.stop();
+      capteurs.setConsigne(0);
       break;
     }
     default:
@@ -153,8 +163,9 @@ void CalibrationManager::execStateExit(ETAT_CALIBRATION etat) {
   switch (etat) {
     case ETAT_CALIBRATION::OUVERTURE:
     case ETAT_CALIBRATION::BUTEE_BASSE:
-    case ETAT_CALIBRATION::BUTEE_HAUTE:
+    case ETAT_CALIBRATION::BUTEE_HAUTE: 
       moteur.stop();
+      capteurs.setConsigne(0);
       break;
     default:
       break;

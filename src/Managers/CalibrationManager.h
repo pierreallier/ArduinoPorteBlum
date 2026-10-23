@@ -73,7 +73,7 @@ class CalibrationManager : public StateMachine<ETAT_CALIBRATION> {
         uint16_t angle_butee_basse;
         uint16_t angle_butee_haute;
 
-        Led LedError = Led(LED_ERROR_PIN);
+        Led LedError = Led(LED_ERROR_PIN); // recrée, car on allume seulement
 };
 
 #endif
