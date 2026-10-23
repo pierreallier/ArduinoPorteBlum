@@ -1,0 +1,117 @@
+#include "Motor.h"
+
+Motor::Motor(SensorsManager& c) : capteurs(c) {
+    direction = Motor::DIR::OUVERTURE;
+}
+
+void Motor::init() {
+    TCCR4B = (TCCR4B & 0b11111000) | 0x01;
+    // Initialisation du moteur et du driver
+    pinMode(PWM_REV_PIN, OUTPUT);
+    pinMode(PWM_FOR_PIN, OUTPUT);
+    pinMode(STBY_PIN, OUTPUT);
+    ledMotor.init();
+    disable();
+}
+
+void Motor::setDirection(Motor::DIR dir) {
+    // Définit la direction du moteur
+    direction = dir;
+}
+
+void Motor::start() {
+    // Démarre le moteur
+    enable();
+}
+
+void Motor::setSpeed(int speed) {
+    // Définit la vitesse du moteur (0 - 255)
+    speed = constrain(speed, 0, 255);
+    pwm = speed;
+}
+
+void Motor::setSpeedDir(int speed) {
+    speed = constrain(speed, -255, 255);
+    if (speed < 0) {
+        setDirection(Motor::DIR::FERMETURE);
+        pwm = -speed;
+    } else {
+        setDirection(Motor::DIR::OUVERTURE);
+        pwm = speed;
+    }
+}
+
+void Motor::enable() {
+    // Active le moteur
+    enabled = true;
+    ledMotor.on(); // Indique que le moteur est activé
+}
+
+void Motor::disable() {
+    // Désactive le moteur
+    enabled = false;
+    pwm = 0;
+    ledMotor.off(); // Indique que le moteur est désactivé
+}
+
+void Motor::startDebrayage() {
+    // Arrête le moteur en enregistrant quelques mesures
+    codeur_avant_debrayage = capteurs.getAngleMoteur();
+    courant_avant_debrayage = capteurs.getCourant();
+    time_avant_debrayage = micros();
+    if (direction == Motor::DIR::OUVERTURE) {
+       setSpeedDir(-150); // Apply a small reverse speed to stop the motor
+    } else if (direction == Motor::DIR::FERMETURE) {
+        setSpeedDir(150); // Apply a small forward speed to stop the motor
+    }
+    ledMotor.blink(10); // Blink the motor LED to indicate debrayage
+}
+
+bool Motor::isDebraye() {
+    int32_t delta_angle = abs(capteurs.getAngleMoteur() - codeur_avant_debrayage);
+    //float delta_courant = abs(1 - courant_avant_debrayage/capteurs.getCourant());
+    if (micros() - time_avant_debrayage >= 200000UL || delta_angle > 100 ) { //|| delta_courant > 0.5) {
+        stop();
+        return true;
+    }
+    return false;
+}
+
+void Motor::stop(){
+    // Arrête le moteur
+    setSpeed(0);
+    ledMotor.stopBlinking(); // Stop blinking the motor LED
+}
+
+void Motor::ouvrir(int speed) {
+    setDirection(DIR::OUVERTURE);
+    setSpeed(speed);
+}
+
+void Motor::fermer(int speed) {
+    setDirection(DIR::FERMETURE);
+    setSpeed(speed);
+}
+
+void Motor::update() {
+    // Met à jour l'état du moteur en fonction de la consigne et des capteurs
+    if (enabled == true) {
+        digitalWrite(STBY_PIN, HIGH); // Ensure the motor driver is enabled
+        ledMotor.on(); // Indicate motor enabled
+    } else {
+        digitalWrite(STBY_PIN, LOW); // Ensure the motor driver is disabled
+        ledMotor.off(); // Indicate motor disabled
+    }
+    if (direction == Motor::DIR::OUVERTURE && !capteurs.isLimiteHaute()) {
+        analogWrite(PWM_FOR_PIN, pwm);
+        analogWrite(PWM_REV_PIN, 0);
+    } else if (direction == Motor::DIR::FERMETURE && !capteurs.isLimiteBasse()) {
+        analogWrite(PWM_REV_PIN, pwm);
+        analogWrite(PWM_FOR_PIN, 0);
+    } else {
+        analogWrite(PWM_FOR_PIN, 0);
+        analogWrite(PWM_REV_PIN, 0);
+    }
+    ledMotor.update(); // Update the motor LED state (for blinking)
+    capteurs.setConsigne(getPWM()); // Update the consigne in the SensorsManager
+}

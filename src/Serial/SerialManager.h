@@ -1,0 +1,48 @@
+#ifndef SERIALMANAGER_H
+#define SERIALMANAGER_H
+
+#include <Arduino.h>
+#include "Messages.h"
+#include "../Config/Codes.h"
+
+#include "../Inputs/SensorsManager.h"
+#include "../Outputs/Motor.h"
+#include "../Outputs/Buzzer.h"
+#include "../Managers/BlumMachine.h"
+
+class SerialManager {
+    public:
+        SerialManager(SensorsManager& s, BlumMachine& ma, Buzzer& b);
+        void init();
+        void task();
+
+        void readSerial();
+
+        uint32_t getMesurePeriode();
+        void loadMesurePeriode();
+        void setMesurePeriode(uint16_t periode, bool save = false);
+        void saveMesurePeriode();
+
+        bool testRequired();
+        inline void resync() { time_precedent = millis(); } // Resynchronise le timer après le test
+
+        
+    
+    private:
+        SensorsManager& capteurs;
+        BlumMachine& machine;
+        Buzzer& buzzer;
+
+        uint32_t time_precedent = 0;    
+        uint16_t periode_echantillonnage_mesures = T_ENVOI;
+        bool demandeTest = false;
+
+        void _SET(String commande);
+        void _GET(String commande);
+        void _DO(String commande);
+        int splitCommande(const String& commande, String items[], int maxItems);
+        String getNextItem(const String& commande);
+};
+
+
+#endif
