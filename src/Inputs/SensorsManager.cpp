@@ -111,9 +111,7 @@ void SensorsManager::readPotentiometre() {
     _potentiometre.read();
 }
 
-void SensorsManager::setConsigne(int c) {
-    _mesures.consigne = c * 100;
-}
+
 
 void SensorsManager::setCalibration(CalibrationData c) {
     calibrationData = c;

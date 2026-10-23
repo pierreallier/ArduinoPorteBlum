@@ -62,7 +62,12 @@ class SensorsManager {
         inline float getLimiteBasse() const { return calibrationData.lowLimit;}
         inline float getLimiteHaute() const { return calibrationData.highLimit;}
         
-        void setConsigne(int consigne);
+        // Plusieurs surcharges pour définir la consigne en fonction du type de donnée (int, float, etc.)
+        void setConsigne(uint16_t consigne) { _mesures.consigne = static_cast<int32_t>(consigne) * 100; }
+        void setConsigne(int16_t consigne) { _mesures.consigne = static_cast<int32_t>(consigne) * 100; }
+        void setConsigne(int32_t consigne) { _mesures.consigne = consigne * 100; }
+        void setConsigne(float consigne) { _mesures.consigne = static_cast<int32_t>(consigne * 100.0f); }
+        
         inline float getLimitCourant() const { return _courant.getLimit();}
         bool setLimitCourant(float limite);
         void setCalibration(CalibrationData c);
